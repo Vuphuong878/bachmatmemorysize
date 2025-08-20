@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, GenerateContentResponse, HarmCategory, HarmBlockThreshold } from '@google/genai';
-import { WorldCreationState, GameState, GameTurn, NPCUpdate, CharacterStatUpdate, NPC, Skill, NarrativePerspective, LustModeFlavor, NpcMindset, DestinyCompassMode } from '../types';
+import { WorldCreationState, GameState, GameTurn, NPCUpdate, CharacterStatUpdate, NPC, Skill, NarrativePerspective, LustModeFlavor, NpcMindset, DestinyCompassMode, ChronicleEntry } from '../types';
 
 // --- SCHEMA DEFINITIONS ---
 
@@ -83,6 +83,21 @@ const npcUpdatePayloadCoreSchema = {
     }
 };
 
+const chronicleEntrySchema = {
+    type: Type.OBJECT,
+    properties: {
+        summary: { type: Type.STRING, description: "Một bản tóm tắt súc tích (1-2 câu) về các sự kiện chính trong phân cảnh." },
+        eventType: { type: Type.STRING, description: "Phân loại sự kiện. Ví dụ: 'Chiến thắng', 'Mất mát', 'Khám phá', 'Gặp gỡ NPC', 'Chuyển cảnh'." },
+        involvedNpcIds: {
+            type: Type.ARRAY,
+            description: "Một mảng các ID của những NPC QUAN TRỌNG tham gia vào phân cảnh này.",
+            items: { type: Type.STRING }
+        },
+        isUnforgettable: { type: Type.BOOLEAN, description: "Đặt thành true nếu đây là một sự kiện CỰC KỲ quan trọng, một cột mốc không thể quên của câu chuyện." }
+    },
+    required: ['summary', 'eventType', 'involvedNpcIds', 'isUnforgettable']
+};
+
 // Unified schema for the Core Logic AI (Request 1)
 const coreLogicSchema = {
     type: Type.OBJECT,
@@ -127,6 +142,14 @@ const coreLogicSchema = {
             type: Type.ARRAY,
             description: "QUAN TRỌNG: Một mảng các ID của TẤT CẢ NPC thực sự có mặt vật lý trong cảnh truyện vừa viết. KHÔNG bao gồm NPC chỉ được nhắc đến tên. Nếu không có NPC nào, trả về một mảng RỖNG.",
             items: { type: Type.STRING }
+        },
+        isMajorEvent: {
+            type: Type.BOOLEAN,
+            description: "TÙY CHỌN: Đặt thành 'true' nếu lượt chơi này chứa một sự kiện CỰC KỲ quan trọng ảnh hưởng lớn đến cốt truyện (ví dụ: một nhân vật chính chết, một bí mật lớn được tiết lộ, một mục tiêu chính của game được hoàn thành)."
+        },
+        isSceneBreak: {
+            type: Type.BOOLEAN,
+            description: "TÙY CHỌN: Đặt thành 'true' nếu bạn cho rằng một phân cảnh hoặc một chuỗi sự kiện tại một địa điểm đã kết thúc, và lượt chơi tiếp theo sẽ bắt đầu một phân cảnh mới. Ví dụ: khi rời khỏi một thành phố, sau khi một trận chiến lớn kết thúc."
         }
     },
     required: ['storyText', 'choices', 'playerStatUpdates', 'npcUpdates', 'presentNpcIds']
@@ -537,6 +560,9 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
     1.  **TUYỆT ĐỐI CẤM:** Bạn bị CẤM tuyệt đối việc tự ý tạo ra một chỉ số có tên bắt đầu bằng \`Lĩnh ngộ:\`. Việc học kỹ năng phải do người chơi xác nhận qua giao diện.
     2.  **NHẬN DIỆN CƠ HỘI:** Nếu câu chuyện vừa viết tạo ra một cơ hội rõ ràng để người chơi học một kỹ năng mới (ví dụ: nhặt được bí kíp, được truyền thụ, lĩnh ngộ sức mạnh mới), bạn BẮT BUỘC phải tạo một đối tượng kỹ năng đầy đủ (tên, mô tả, các chiêu thức ban đầu) và đặt nó vào trường \`newlyAcquiredSkill\`.
     3.  **HỌC TỪ VẬT PHẨM:** Nếu hành động của người chơi là học một kỹ năng từ một vật phẩm họ đang có (ví dụ: 'nghiên cứu bí kíp...', 'lĩnh ngộ ABC'), và bạn thấy họ có chỉ số tương ứng (ví dụ: 'Bí kíp: XYZ'), hãy coi đây là một cơ hội học kỹ năng và tạo đối tượng trong \`newlyAcquiredSkill\`. Câu chuyện của bạn phải mô tả quá trình lĩnh ngộ thành công.
+- **QUẢN LÝ CỐT TRUYỆN DÀI HẠN (QUAN TRỌNG):**
+    1.  **SỰ KIỆN LỚN (\`isMajorEvent\`):** Đánh giá tầm quan trọng của lượt chơi. Nếu nó chứa một bước ngoặt lớn (một nhân vật quan trọng chết, một mục tiêu chính của game hoàn thành, một bí mật thay đổi thế giới được tiết lộ), hãy đặt trường \`isMajorEvent\` thành \`true\`.
+    2.  **KẾT THÚC PHÂN CẢNH (\`isSceneBreak\`):** Đánh giá dòng chảy của câu chuyện. Nếu bạn cảm thấy một phân cảnh (một chuỗi sự kiện tại một địa điểm hoặc trong một khoảng thời gian) đã kết thúc một cách tự nhiên, hãy đặt trường \`isSceneBreak\` thành \`true\`. Các dấu hiệu bao gồm: nhân vật rời khỏi một địa điểm quan trọng, một trận chiến lớn kết thúc, một khoảng thời gian dài trôi qua, hoặc nhóm nhân vật chính thay đổi đáng kể.
 - **TUYỆT ĐỐI CẤM:** Bạn không được phép tạo ra các trường \`status\` và \`lastInteractionSummary\` trong payload của NPC. Đồng thời, bạn cũng tuyệt đối không được tạo ra một chỉ số động (stat) có \`statName\` là "status". Các thông tin này sẽ được xử lý bởi một AI khác chuyên trách.
 
 **ĐỊNH DẠNG ĐẦU RA:** Câu trả lời của bạn BẮT BUỘC phải là một đối tượng JSON hợp lệ duy nhất, tuân thủ schema được cung cấp, không có bất kỳ văn bản nào khác bên ngoài.`;
@@ -576,7 +602,13 @@ Mục tiêu chính của bạn là **bảo tồn trí nhớ** của NPC. Chỉ c
 \`id: lac_than | status: Bắt đầu kể lại câu chuyện của mình. | summary: Được Bách Mật hỏi về quá khứ.\`
 (Lưu ý: 'summary' đã được cập nhật)`;
 
-const CHRONICLE_SUMMARIZER_PROMPT = `Bạn là một AI ghi chép biên niên sử. Nhiệm vụ của bạn là đọc các diễn biến gần đây của một câu chuyện và tóm tắt chúng lại thành 1-2 câu văn súc tích. Chỉ tập trung vào những tình tiết CỐT LÕI và QUAN TRỌNG NHẤT có ảnh hưởng đến đường dây câu chuyện chính, đặc biệt là những sự kiện **tạo tiền đề cho tương lai** hoặc **giải quyết các tình tiết cũ**. Ví dụ: nhân vật quan trọng mới xuất hiện, một bí mật lớn được tiết lộ, một vật phẩm huyền thoại được tìm thấy, một mục tiêu lớn được hoàn thành, một bước ngoặt lớn của cốt truyện. Tuyệt đối BỎ QUA các chi tiết nhỏ, mô tả chiến đấu vụn vặt, các đoạn hội thoại không quan trọng, hoặc các thông tin đã được tóm tắt trước đó. Hãy viết như một nhà sử học ghi lại những dấu mốc.`;
+const CHRONICLE_SUMMARIZER_PROMPT = `Bạn là một AI ghi chép biên niên sử. Nhiệm vụ của bạn là đọc các diễn biến của một phân cảnh truyện và tóm tắt chúng thành một đối tượng JSON duy nhất.
+1.  **Đọc và Hiểu:** Phân tích các lượt chơi để nắm bắt được sự kiện cốt lõi, những nhân vật tham gia và bản chất của sự kiện.
+2.  **Tóm tắt (summary):** Viết một bản tóm tắt súc tích (1-2 câu) chỉ tập trung vào những tình tiết quan trọng nhất. Bỏ qua các chi tiết vụn vặt.
+3.  **Phân loại (eventType):** Chọn một loại sự kiện phù hợp nhất từ các ví dụ sau: 'Chiến thắng', 'Mất mát', 'Khám phá', 'Gặp gỡ NPC', 'Chuyển cảnh', 'Phát triển nhân vật', 'Xung đột xã hội'.
+4.  **Liệt kê NPC (involvedNpcIds):** Liệt kê ID của tất cả các NPC có vai trò quan trọng trong phân cảnh.
+5.  **Đánh giá tầm quan trọng (isUnforgettable):** Đặt thành \`true\` nếu đây là một cột mốc không thể quên, thay đổi vĩnh viễn câu chuyện. Ngược lại, đặt \`false\`.
+6.  **Trả về JSON:** Phản hồi của bạn BẮT BUỘC phải là một đối tượng JSON duy nhất tuân thủ schema được cung cấp.`;
 
 const SKILL_GENERATOR_PROMPT = `Bạn là một AI chuyên thiết kế kỹ năng game. Nhiệm vụ duy nhất của bạn là dựa vào tên một năng lực và bối cảnh thế giới được cung cấp, sau đó tạo ra một bộ kỹ năng (Skill object) hoàn chỉnh theo schema JSON.
 QUAN TRỌNG:
@@ -654,7 +686,6 @@ export async function initializeStory(worldState: WorldCreationState, geminiServ
     initialPlayerStatUpdates: CharacterStatUpdate[];
     initialNpcUpdates: NPCUpdate[];
     initialPlayerSkills: Skill[];
-    plotChronicle: string;
     presentNpcIds: string[];
 }> {
     const { genre, description, character, isNsfw, narrativePerspective } = worldState;
@@ -747,7 +778,8 @@ Dựa trên bối cảnh thế giới và tiểu sử nhân vật được cung 
         playerAction: null, 
         storyText: coreResponse.storyText, 
         choices: coreResponse.choices,
-        tokenCount: coreTokens + creativeTokens
+        tokenCount: coreTokens + creativeTokens,
+        isMajorEvent: true, // First turn is always a major event
     };
     
     return { 
@@ -755,7 +787,6 @@ Dựa trên bối cảnh thế giới và tiểu sử nhân vật được cung 
         initialPlayerStatUpdates: coreResponse.playerStatUpdates || [], 
         initialNpcUpdates: npcUpdates,
         initialPlayerSkills: coreResponse.playerSkills || [],
-        plotChronicle: "", // Initialize empty chronicle
         presentNpcIds
     };
 }
@@ -765,10 +796,35 @@ export async function continueStory(gameState: GameState, choice: string, gemini
     playerStatUpdates: CharacterStatUpdate[];
     npcUpdates: NPCUpdate[];
     newlyAcquiredSkill?: Skill;
-    newPlotChronicle: string;
+    newChronicleEntry?: ChronicleEntry;
+    isSceneBreak: boolean;
     presentNpcIds: string[];
 }> {
-    const recentHistory = gameState.history.slice(-10).map(turn => 
+    const MEMORY_CHAR_BUDGET = 12000;
+    let charCount = 0;
+    const contextTurns: GameTurn[] = [];
+
+    // Build context with new token budget logic
+    for (let i = gameState.history.length - 1; i >= 0; i--) {
+        const turn = gameState.history[i];
+        const turnLength = (turn.playerAction?.length || 0) + (turn.storyText?.length || 0);
+
+        // Always include the last 3 turns or any major event, regardless of budget initially
+        if (contextTurns.length < 3 || turn.isMajorEvent) {
+            contextTurns.unshift(turn);
+            charCount += turnLength;
+            continue;
+        }
+
+        if (charCount + turnLength > MEMORY_CHAR_BUDGET) {
+            break; // Stop when budget is exceeded
+        }
+
+        contextTurns.unshift(turn);
+        charCount += turnLength;
+    }
+
+    const recentHistory = contextTurns.map(turn => 
         `${turn.playerAction ? `Người chơi đã chọn: "${turn.playerAction}"` : 'Bắt đầu câu chuyện.'}\nKết quả: ${turn.storyText}`
     ).join('\n\n---\n\n');
 
@@ -890,8 +946,8 @@ Khi chế độ Logic Nghiêm ngặt TẮT, người chơi không còn hành đ�
     // --- Request 1: Core Logic (JSON) ---
     const corePrompt = `${systemPromptWithModes}\n\n**--- TẦNG 1: NỀN TẢNG THẾ GIỚI (BẤT BIẾN) ---**
 ${worldFoundation}\n\n**--- TẦNG 2: BIÊN NIÊN SỬ CỐT TRUYỆN (SỰ KIỆN LỚN ĐÃ XẢY RA) ---**
-${gameState.plotChronicle || "Chưa có sự kiện quan trọng nào được ghi nhận."}\n\n**--- TẦNG 3: BỐI CẢNH GẦN NHẤT ---**
-- **Các sự kiện 10 lượt gần nhất:**
+${gameState.plotChronicle.map(c => `- (${c.eventType}): ${c.summary}`).join('\n') || "Chưa có sự kiện quan trọng nào được ghi nhận."}\n\n**--- TẦNG 3: BỐI CẢNH GẦN NHẤT ---**
+- **Các sự kiện gần nhất:**
 ${recentHistory}
 - **Dữ liệu nhân vật và kỹ năng (đã rút gọn):** ${JSON.stringify({ playerStats: simplifiedPlayerStats, npcs: simplifiedNpcs, playerSkills: gameState.playerSkills })}\n\n**Hành động mới nhất của người chơi là: "${choice}".**
 
@@ -906,6 +962,8 @@ Hành động của người chơi là **sự kiện hiện tại duy nhất**. 
     let npcUpdates: NPCUpdate[] = coreResponse.npcUpdates || [];
     let creativeTokens = 0;
     let chronicleTokens = 0;
+    let newChronicleEntry: ChronicleEntry | undefined = undefined;
+    const isSceneBreak = !!coreResponse.isSceneBreak;
 
     // --- Request 2: Creative Text (Plain Text) ---
     const npcsForCreativeUpdate: { id: string; name: string; currentSummary: string }[] = [];
@@ -914,21 +972,11 @@ Hành động của người chơi là **sự kiện hiện tại duy nhất**. 
     presentNpcIds.forEach(id => {
         const existingNpc = existingNpcMap.get(id);
         if (existingNpc) {
-            // It's an old NPC.
-            npcsForCreativeUpdate.push({
-                id: id,
-                name: existingNpc.name,
-                currentSummary: existingNpc.lastInteractionSummary || 'Chưa có tương tác.'
-            });
+            npcsForCreativeUpdate.push({ id, name: existingNpc.name, currentSummary: existingNpc.lastInteractionSummary || 'Chưa có tương tác.' });
         } else {
-            // It's a new NPC. We need to find its name from the CREATE action in npcUpdates.
             const newNpcInfo = (coreResponse.npcUpdates || []).find(u => u.id === id && u.action === 'CREATE');
             if (newNpcInfo && newNpcInfo.payload?.name) {
-                npcsForCreativeUpdate.push({
-                    id: id,
-                    name: newNpcInfo.payload.name,
-                    currentSummary: 'Vừa xuất hiện.' // Default summary for a new character
-                });
+                npcsForCreativeUpdate.push({ id, name: newNpcInfo.payload.name, currentSummary: 'Vừa xuất hiện.' });
             }
         }
     });
@@ -941,18 +989,10 @@ Hành động của người chơi là **sự kiện hiện tại duy nhất**. 
 
         const creativeData = parseNpcCreativeText(creativeResult.text);
 
-        // Merge creative text data into the original npcUpdates from the core AI.
         npcUpdates = npcUpdates.map(update => {
             const data = creativeData.get(update.id);
-            // Only apply to CREATE or UPDATE actions that have a payload
             if (data && update.payload && (update.action === 'CREATE' || update.action === 'UPDATE')) {
-                return { 
-                    ...update, 
-                    payload: { 
-                        ...update.payload, 
-                        ...data 
-                    } 
-                };
+                return { ...update, payload: { ...update.payload, ...data } };
             }
             return update;
         });
@@ -963,26 +1003,23 @@ Hành động của người chơi là **sự kiện hiện tại duy nhất**. 
         playerAction: choice,
         storyText: coreResponse.storyText, 
         choices: coreResponse.choices,
+        isMajorEvent: !!coreResponse.isMajorEvent,
         tokenCount: 0 // Will be updated later
     };
 
-    // --- Request 3: Chronicle Summarizer (Text) ---
-    let newPlotChronicle = gameState.plotChronicle;
-    const newHistory = [...gameState.history, newTurn];
-
-    if (newHistory.length > 0 && newHistory.length % 5 === 0) {
-        const turnsToSummarize = newHistory.slice(-5);
+    // --- Request 3: Chronicle Summarizer (JSON) ---
+    if (isSceneBreak) {
+        const turnsToSummarize = [...(gameState.turnsSinceLastChronicle || []), newTurn];
         const summarizerContent = turnsToSummarize.map(turn => 
             `${turn.playerAction ? `Hành động: "${turn.playerAction}"` : 'Bắt đầu.'}\nKết quả: ${turn.storyText}`
         ).join('\n\n---\n\n');
         
-        const summarizerPrompt = `${CHRONICLE_SUMMARIZER_PROMPT}\n\n**DIỄN BIẾN CẦN TÓM TẮT:**\n${summarizerContent}`;
+        const summarizerPrompt = `${CHRONICLE_SUMMARIZER_PROMPT}\n\n**DIỄN BIẾN PHÂN CẢNH CẦN TÓM TẮT:**\n${summarizerContent}`;
 
-        const summarizerResult = await callCreativeTextAI(summarizerPrompt, geminiService, gameState.worldContext.isNsfw);
+        const summarizerResult = await callJsonAI(summarizerPrompt, chronicleEntrySchema, geminiService, gameState.worldContext.isNsfw);
         chronicleTokens = summarizerResult.usageMetadata?.totalTokenCount || 0;
         
-        const summaryChunk = summarizerResult.text;
-        newPlotChronicle = (newPlotChronicle ? newPlotChronicle + "\n\n" : "") + summaryChunk;
+        newChronicleEntry = parseAndValidateJsonResponse(summarizerResult.text) as ChronicleEntry;
     }
     
     newTurn.tokenCount = coreTokens + creativeTokens + chronicleTokens;
@@ -992,7 +1029,8 @@ Hành động của người chơi là **sự kiện hiện tại duy nhất**. 
         playerStatUpdates: (coreResponse.playerStatUpdates || []) as CharacterStatUpdate[], 
         npcUpdates,
         newlyAcquiredSkill: coreResponse.newlyAcquiredSkill,
-        newPlotChronicle,
+        newChronicleEntry,
+        isSceneBreak,
         presentNpcIds
     };
 }

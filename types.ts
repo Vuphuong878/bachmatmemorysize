@@ -84,6 +84,15 @@ export interface GameTurn {
   storyText: string;
   choices: string[];
   tokenCount?: number; // How many tokens this turn cost
+  isMajorEvent?: boolean; // Flag for important plot points
+}
+
+// Represents an entry in the structured plot chronicle.
+export interface ChronicleEntry {
+    summary: string;
+    eventType: string;
+    involvedNpcIds: string[];
+    isUnforgettable: boolean;
 }
 
 // Represents a Non-Player Character
@@ -116,5 +125,6 @@ export interface GameState {
   worldContext: WorldCreationState;
   npcs: NPC[];
   playerSkills: Skill[]; // Structured skills
-  plotChronicle: string; // The summarized history of major plot points.
+  plotChronicle: ChronicleEntry[]; // The structured, summarized history of major plot points.
+  turnsSinceLastChronicle: GameTurn[]; // Track turns for the next summary
 }

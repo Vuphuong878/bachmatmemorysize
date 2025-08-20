@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSettings } from './useSettings';
-import { WorldCreationState, GameState, GameTurn, CharacterStats, NPC, NPCUpdate, CharacterStat, CharacterStatUpdate, Skill, LustModeFlavor, ApiKeySource, NpcMindset, Ability, DestinyCompassMode } from '../types';
+import { WorldCreationState, GameState, GameTurn, CharacterStats, NPC, NPCUpdate, CharacterStat, CharacterStatUpdate, Skill, LustModeFlavor, ApiKeySource, NpcMindset, Ability, DestinyCompassMode, ChronicleEntry } from '../types';
 import * as storytellerService from '../services/GeminiStorytellerService';
 import * as GameSaveService from '../services/GameSaveService';
 
@@ -242,43 +242,42 @@ export function useGameEngine(
         setRecentlyUpdatedNpcStats(new Map());
         
         if ('history' in initialData) {
-            if (!initialData.plotChronicle) initialData.plotChronicle = '';
+            // --- START MIGRATION LOGIC FOR OLD SAVES ---
+            if (typeof (initialData as any).plotChronicle === 'string') {
+                const oldChronicle = (initialData as any).plotChronicle as string;
+                (initialData as GameState).plotChronicle = oldChronicle ? [{
+                    summary: oldChronicle,
+                    eventType: 'Legacy Import',
+                    involvedNpcIds: [],
+                    isUnforgettable: true,
+                }] : [];
+            }
+            if (!Array.isArray(initialData.plotChronicle)) initialData.plotChronicle = [];
             if (!Array.isArray(initialData.playerSkills)) initialData.playerSkills = [];
-            
-             // Migration: ensure every NPC has a sortOrder.
+            if (!(initialData as GameState).turnsSinceLastChronicle) {
+                (initialData as GameState).turnsSinceLastChronicle = [];
+            }
+
             const isOldSave = initialData.npcs.some(npc => npc.sortOrder === undefined);
             if (isOldSave) {
-                // Establish a stable, predictable order for old saves.
                 initialData.npcs.sort((a, b) => {
                     const aProtected = a.isProtected ? 1 : 0;
                     const bProtected = b.isProtected ? 1 : 0;
-                    if (aProtected !== bProtected) {
-                        return bProtected - aProtected; // Protected first
-                    }
-                    return a.name.localeCompare(b.name); // Then alphabetical
+                    if (aProtected !== bProtected) return bProtected - aProtected;
+                    return a.name.localeCompare(b.name);
                 });
-                // Now, assign the sortOrder based on this stable order.
-                initialData.npcs = initialData.npcs.map((npc, index) => ({
-                     ...npc,
-                     isProtected: !!npc.isProtected,
-                     sortOrder: index,
-                }));
+                initialData.npcs = initialData.npcs.map((npc, index) => ({ ...npc, isProtected: !!npc.isProtected, sortOrder: index }));
             } else {
-                // For new saves, just ensure isProtected is a boolean and sort by order
-                initialData.npcs = initialData.npcs.map(npc => ({ ...npc, isProtected: !!npc.isProtected }))
-                                                  .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+                initialData.npcs = initialData.npcs.map(npc => ({ ...npc, isProtected: !!npc.isProtected })).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
             }
-            
-            // Migration: Add playerStatOrder for old saves
+
             if (!initialData.playerStatOrder || !Array.isArray(initialData.playerStatOrder)) {
                 const allStatKeys = Object.keys(initialData.playerStats);
                 const coreStatKeys = CORE_STATS.filter(coreStat => allStatKeys.includes(coreStat));
-                const otherStatKeys = allStatKeys
-                    .filter(key => !CORE_STATS.includes(key))
-                    .sort((a, b) => a.localeCompare(b)); // Sort alphabetically for predictability
+                const otherStatKeys = allStatKeys.filter(key => !CORE_STATS.includes(key)).sort((a, b) => a.localeCompare(b));
                 initialData.playerStatOrder = [...coreStatKeys, ...otherStatKeys];
             }
-
+            // --- END MIGRATION LOGIC ---
 
             setGameState(initialData);
             const totalTokens = initialData.history.reduce((sum, turn) => sum + (turn.tokenCount || 0), 0);
@@ -294,11 +293,10 @@ export function useGameEngine(
             return;
         }
         try {
-            const { initialTurn, initialPlayerStatUpdates, initialNpcUpdates, initialPlayerSkills, plotChronicle, presentNpcIds: initialPresentNpcs } = await storytellerService.initializeStory(worldState, geminiService);
+            const { initialTurn, initialPlayerStatUpdates, initialNpcUpdates, initialPlayerSkills, presentNpcIds: initialPresentNpcs } = await storytellerService.initializeStory(worldState, geminiService);
             const initialPlayerStats = convertStatUpdatesArrayToObject(initialPlayerStatUpdates);
             const initialNpcs = applyNpcUpdates([], initialNpcUpdates);
             
-            // Create initial player stat order
             const allInitialStatKeys = Object.keys(initialPlayerStats);
             const coreInitialStatKeys = CORE_STATS.filter(coreStat => allInitialStatKeys.includes(coreStat));
             const otherInitialStatKeys = allInitialStatKeys.filter(key => !CORE_STATS.includes(key)).sort();
@@ -311,7 +309,8 @@ export function useGameEngine(
                 worldContext: worldState,
                 npcs: initialNpcs,
                 playerSkills: initialPlayerSkills,
-                plotChronicle: plotChronicle,
+                plotChronicle: [],
+                turnsSinceLastChronicle: [initialTurn],
             };
             setGameState(newState);
             GameSaveService.saveAutoSave(newState); // Auto-save after initialization
@@ -347,9 +346,8 @@ export function useGameEngine(
 
             const stateForAI: GameState = { ...gameState, playerStats: processedPlayerStats, npcs: npcsForAI };
             
-            const { newTurn, playerStatUpdates, npcUpdates, newlyAcquiredSkill, newPlotChronicle, presentNpcIds: newPresentNpcIds } = await storytellerService.continueStory(stateForAI, choice, geminiService, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode);
+            const { newTurn, playerStatUpdates, npcUpdates, newlyAcquiredSkill, newChronicleEntry, presentNpcIds: newPresentNpcIds, isSceneBreak } = await storytellerService.continueStory(stateForAI, choice, geminiService, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode);
             
-            // Track recently updated stats for highlighting
             const playerChanges = new Set(playerStatUpdates.map(u => u.statName));
             setRecentlyUpdatedPlayerStats(playerChanges);
 
@@ -369,11 +367,15 @@ export function useGameEngine(
             const playerStatChanges = convertStatUpdatesArrayToObject(playerStatUpdates);
             const newPlayerStats = smartMergeStats(processedPlayerStats, playerStatChanges);
             
-            // Append newly created stats to the playerStatOrder
             const currentOrder = gameState.playerStatOrder || [];
             const newStatKeys = Object.keys(newPlayerStats);
             const newlyAddedKeys = newStatKeys.filter(key => !currentOrder.includes(key));
             const newPlayerStatOrder = [...currentOrder, ...newlyAddedKeys];
+
+            const newPlotChronicle = [...gameState.plotChronicle];
+            if (newChronicleEntry) {
+                newPlotChronicle.push(newChronicleEntry);
+            }
             
             const newState: GameState = {
                 ...gameState,
@@ -382,10 +384,12 @@ export function useGameEngine(
                 playerStatOrder: newPlayerStatOrder,
                 npcs: updatedNpcs,
                 plotChronicle: newPlotChronicle,
+                // If a scene break happened, reset the turns buffer. Otherwise, add the new turn.
+                turnsSinceLastChronicle: isSceneBreak ? [] : [...(gameState.turnsSinceLastChronicle || []), newTurn],
             };
 
             setGameState(newState);
-            GameSaveService.saveAutoSave(newState); // Auto-save after a successful turn
+            GameSaveService.saveAutoSave(newState);
             setPresentNpcIds(newPresentNpcIds);
             
             const tokenCount = newTurn.tokenCount || 0;
