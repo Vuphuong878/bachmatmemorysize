@@ -480,7 +480,7 @@ Nhiệm vụ cốt lõi của bạn là **tiếp nối** câu chuyện, mô tả
 **TẦNG KÝ ỨC (CỰC KỲ QUAN TRỌNG):**
 Bạn sẽ được cung cấp 3 tầng ký ức để duy trì sự nhất quán. Sự mâu thuẫn với NỀN TẢNG hoặc BIÊN NIÊN SỬ sẽ phá hỏng trò chơi.
 1.  **NỀN TẢNG THẾ GIỚI (World Foundation):** Đây là các quy tắc cốt lõi, bất biến của thế giới (thể loại, bối cảnh, tiểu sử nhân vật). Bạn PHẢI tuyệt đối tuân thủ, không được phép thay đổi hay mâu thuẫn.
-2.  **BIÊN NIÊN SỬ CỐT TRUYỆN (Plot Chronicle):** Đây là một danh sách được tuyển chọn gồm các sự kiện quan trọng nhất và gần đây nhất của toàn bộ cốt truyện. Dùng nó để đảm bảo sự nhất quán dài hạn.
+2.  **BIÊN NIÊN SỬ CỐT TRUYỆN (Plot Chronicle):** Đây là một danh sách được tuyển chọn gồm các sự kiện quan trọng nhất, gần đây nhất, và **một vài sự kiện ngẫu nhiên trong quá khứ** của toàn bộ cốt truyện. Hãy dùng các sự kiện ngẫu nhiên này làm nguồn cảm hứng để tạo ra những hành động hoặc lời thoại bất ngờ, sâu sắc từ NPC (ví dụ: đột nhiên nhớ lại một ân oán cũ).
 3.  **BỐI CẢNH GẦN NHẤT (Recent Context):** Đây là các diễn biến và trạng thái trong vài lượt gần đây. Dùng nó để viết tiếp một cách liền mạch.
 
 **QUY TẮC SỐNG CỦA NPC (NPC LIVELINESS RULE - CỰC KỲ QUAN TRỌNG):**
@@ -966,16 +966,31 @@ Khi chế độ Logic Nghiêm ngặt TẮT, người chơi không còn hành đ�
 
     // --- Intelligent Memory Filter ---
     const allChronicles = gameState.plotChronicle || [];
+
+    // Rule 1 & 2: Get essential chronicles (recent and significant)
     const recentChronicles = allChronicles.slice(-5);
     const significantChronicles = allChronicles.filter(c => c.plotSignificanceScore >= 8);
-    const chronicleMap = new Map<string, ChronicleEntry>();
+    
+    const essentialChronicleMap = new Map<string, ChronicleEntry>();
     [...significantChronicles, ...recentChronicles].forEach(c => { // Prioritize significant, then recent
-        chronicleMap.set(c.summary, c);
+        essentialChronicleMap.set(c.summary, c);
     });
-    const filteredChronicles = Array.from(chronicleMap.values());
+    const essentialChronicles = Array.from(essentialChronicleMap.values());
 
-    const plotChronicleText = filteredChronicles.length > 0
-        ? filteredChronicles.map(c => `- (${c.eventType}): ${c.summary}`).join('\n')
+    // Rule 3: Get random recalls from the remaining pool
+    const lessImportantChronicles = allChronicles.filter(c => !essentialChronicleMap.has(c.summary));
+    const randomRecalls: ChronicleEntry[] = [];
+    const NUM_RANDOM_RECALLS = 1; // Number of random past events to recall
+    if (lessImportantChronicles.length > 0) {
+        const shuffled = lessImportantChronicles.sort(() => 0.5 - Math.random());
+        randomRecalls.push(...shuffled.slice(0, NUM_RANDOM_RECALLS));
+    }
+    
+    // Combine all for the final list
+    const finalFilteredChronicles = [...essentialChronicles, ...randomRecalls];
+
+    const plotChronicleText = finalFilteredChronicles.length > 0
+        ? finalFilteredChronicles.map(c => `- (${c.eventType}): ${c.summary}`).join('\n')
         : "Chưa có sự kiện quan trọng nào được ghi nhận.";
 
 
