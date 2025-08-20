@@ -250,9 +250,19 @@ export function useGameEngine(
                     eventType: 'Legacy Import',
                     involvedNpcIds: [],
                     isUnforgettable: true,
+                    plotSignificanceScore: 10, // Default for legacy
                 }] : [];
             }
             if (!Array.isArray(initialData.plotChronicle)) initialData.plotChronicle = [];
+            
+            // Add plotSignificanceScore to old chronicle entries that don't have it
+            if (initialData.plotChronicle.length > 0) {
+                initialData.plotChronicle = initialData.plotChronicle.map(entry => ({
+                    ...entry,
+                    plotSignificanceScore: entry.plotSignificanceScore ?? (entry.isUnforgettable ? 10 : 5)
+                }));
+            }
+
             if (!Array.isArray(initialData.playerSkills)) initialData.playerSkills = [];
             if (!(initialData as GameState).turnsSinceLastChronicle) {
                 (initialData as GameState).turnsSinceLastChronicle = [];
@@ -783,21 +793,63 @@ export function useGameEngine(
             if (!prevState || !prevState.playerStatOrder) return prevState;
             if (CORE_STATS.includes(statName)) return prevState;
 
-            const currentOrder = [...prevState.playerStatOrder];
-            const coreStatsInOrder = currentOrder.filter(s => CORE_STATS.includes(s));
-            const sortableStats = currentOrder.filter(s => !CORE_STATS.includes(s));
-            
-            const statToMoveIndex = sortableStats.indexOf(statName);
-            if (statToMoveIndex === -1) return prevState;
-            sortableStats.splice(statToMoveIndex, 1);
-            sortableStats.unshift(statName);
+            const order = [...prevState.playerStatOrder];
+            const index = order.indexOf(statName);
 
-            const newOrder = [...coreStatsInOrder, ...sortableStats];
+            if (index === -1) return prevState;
+
+            const firstNonCoreIndex = order.findIndex(stat => !CORE_STATS.includes(stat));
+
+            if (firstNonCoreIndex === -1 || index === firstNonCoreIndex) {
+                return prevState;
+            }
+
+            order.splice(index, 1);
+            order.splice(firstNonCoreIndex, 0, statName);
             
-            return { ...prevState, playerStatOrder: newOrder };
+            return { ...prevState, playerStatOrder: order };
         });
     }, []);
 
-
-    return { gameState, isLoading, error, handlePlayerChoice, initializeGame, lastTurnTokenCount, totalTokenCount, triggerSaveToFile, skillToLearn, confirmLearnSkill, declineLearnSkill, manuallyAcquireSkill, createPowerFromDescription, toggleNpcProtection, reorderNpc, npcToDelete, requestNpcDeletion, confirmNpcDeletion, cancelNpcDeletion, editingStat, deletingStat, requestStatEdit, cancelStatEdit, confirmStatEdit, requestStatDelete, cancelStatDelete, confirmStatDelete, skillToDelete, requestSkillDeletion, confirmSkillDeletion, cancelSkillDeletion, editingAbility, requestAbilityEdit, confirmAbilityEdit, cancelAbilityEdit, reorderPlayerStat, movePlayerStatToTop, recentlyUpdatedPlayerStats, recentlyUpdatedNpcStats };
+    return {
+        gameState,
+        isLoading,
+        error,
+        handlePlayerChoice,
+        initializeGame,
+        lastTurnTokenCount,
+        totalTokenCount,
+        triggerSaveToFile,
+        skillToLearn,
+        confirmLearnSkill,
+        declineLearnSkill,
+        manuallyAcquireSkill,
+        createPowerFromDescription,
+        toggleNpcProtection,
+        reorderNpc,
+        npcToDelete,
+        requestNpcDeletion,
+        confirmNpcDeletion,
+        cancelNpcDeletion,
+        editingStat,
+        deletingStat,
+        requestStatEdit,
+        cancelStatEdit,
+        confirmStatEdit,
+        requestStatDelete,
+        cancelStatDelete,
+        confirmStatDelete,
+        skillToDelete,
+        requestSkillDeletion,
+        confirmSkillDeletion,
+        cancelSkillDeletion,
+        editingAbility,
+        requestAbilityEdit,
+        confirmAbilityEdit,
+        cancelAbilityEdit,
+        reorderPlayerStat,
+        movePlayerStatToTop,
+        recentlyUpdatedPlayerStats,
+        recentlyUpdatedNpcStats,
+    };
 }

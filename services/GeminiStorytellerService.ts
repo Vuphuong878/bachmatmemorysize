@@ -93,9 +93,23 @@ const chronicleEntrySchema = {
             description: "Một mảng các ID của những NPC QUAN TRỌNG tham gia vào phân cảnh này.",
             items: { type: Type.STRING }
         },
-        isUnforgettable: { type: Type.BOOLEAN, description: "Đặt thành true nếu đây là một sự kiện CỰC KỲ quan trọng, một cột mốc không thể quên của câu chuyện." }
+        isUnforgettable: { type: Type.BOOLEAN, description: "DEPRECATED: Dùng plotSignificanceScore thay thế. Đặt thành true nếu score là 10." },
+        plotSignificanceScore: { type: Type.INTEGER, description: "Một điểm số từ 1-10 đánh giá tầm quan trọng của sự kiện đối với cốt truyện chính." },
+        relationshipChanges: {
+            type: Type.ARRAY,
+            description: "TÙY CHỌN: Một mảng ghi lại những thay đổi quan trọng trong mối quan hệ. Chỉ điền vào nếu có sự thay đổi rõ rệt.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    npcId: { type: Type.STRING, description: "ID của NPC có mối quan hệ thay đổi." },
+                    change: { type: Type.STRING, description: "Mô tả sự thay đổi. VD: 'Cải thiện mạnh', 'Trở thành kẻ thù'." },
+                    reason: { type: Type.STRING, description: "Lý do ngắn gọn cho sự thay đổi." }
+                },
+                required: ['npcId', 'change', 'reason']
+            }
+        }
     },
-    required: ['summary', 'eventType', 'involvedNpcIds', 'isUnforgettable']
+    required: ['summary', 'eventType', 'involvedNpcIds', 'isUnforgettable', 'plotSignificanceScore']
 };
 
 // Unified schema for the Core Logic AI (Request 1)
@@ -182,7 +196,7 @@ NPC không phải là những hình nộm chờ bị tấn công. Chúng phải 
 Thế giới này luôn vận động. Trong mỗi lượt, có một xác suất AI sẽ **tự ý thêm một sự kiện ngẫu nhiên** vào đầu \`storyText\`, bất kể hành động của người chơi là gì, để làm cho thế giới trở nên khó lường.
 {RANDOM_EVENT_RULES}
 
-**4. QUY TẮC TĂNG TRƯỞNG SỨC MẠNH CỦA NGƯỜI CHƠI (CÂN BẰNG GAME):**
+**4. QUY TẮC TĂNG TRƯỞNG SỨC MẠNH CỦA NGƯƠI CHƠI (CÂN BẰNG GAME):**
 Đây là quy tắc để ngăn người chơi trở nên quá mạnh một cách phi lý, đảm bảo tính thử thách của trò chơi.
 {POWER_GROWTH_RULES}
 `;
@@ -466,7 +480,7 @@ Nhiệm vụ cốt lõi của bạn là **tiếp nối** câu chuyện, mô tả
 **TẦNG KÝ ỨC (CỰC KỲ QUAN TRỌNG):**
 Bạn sẽ được cung cấp 3 tầng ký ức để duy trì sự nhất quán. Sự mâu thuẫn với NỀN TẢNG hoặc BIÊN NIÊN SỬ sẽ phá hỏng trò chơi.
 1.  **NỀN TẢNG THẾ GIỚI (World Foundation):** Đây là các quy tắc cốt lõi, bất biến của thế giới (thể loại, bối cảnh, tiểu sử nhân vật). Bạn PHẢI tuyệt đối tuân thủ, không được phép thay đổi hay mâu thuẫn.
-2.  **BIÊN NIÊN SỬ CỐT TRUYỆN (Plot Chronicle):** Đây là tóm tắt các sự kiện lớn đã xảy ra. Câu chuyện mới của bạn PHẢI là sự tiếp nối hợp lý từ biên niên sử này, không được lặp lại hoặc mâu thuẫn.
+2.  **BIÊN NIÊN SỬ CỐT TRUYỆN (Plot Chronicle):** Đây là một danh sách được tuyển chọn gồm các sự kiện quan trọng nhất và gần đây nhất của toàn bộ cốt truyện. Dùng nó để đảm bảo sự nhất quán dài hạn.
 3.  **BỐI CẢNH GẦN NHẤT (Recent Context):** Đây là các diễn biến và trạng thái trong vài lượt gần đây. Dùng nó để viết tiếp một cách liền mạch.
 
 **QUY TẮC SỐNG CỦA NPC (NPC LIVELINESS RULE - CỰC KỲ QUAN TRỌNG):**
@@ -603,12 +617,19 @@ Mục tiêu chính của bạn là **bảo tồn trí nhớ** của NPC. Chỉ c
 (Lưu ý: 'summary' đã được cập nhật)`;
 
 const CHRONICLE_SUMMARIZER_PROMPT = `Bạn là một AI ghi chép biên niên sử. Nhiệm vụ của bạn là đọc các diễn biến của một phân cảnh truyện và tóm tắt chúng thành một đối tượng JSON duy nhất.
+
+**QUY TRÌNH LÀM VIỆC:**
 1.  **Đọc và Hiểu:** Phân tích các lượt chơi để nắm bắt được sự kiện cốt lõi, những nhân vật tham gia và bản chất của sự kiện.
 2.  **Tóm tắt (summary):** Viết một bản tóm tắt súc tích (1-2 câu) chỉ tập trung vào những tình tiết quan trọng nhất. Bỏ qua các chi tiết vụn vặt.
 3.  **Phân loại (eventType):** Chọn một loại sự kiện phù hợp nhất từ các ví dụ sau: 'Chiến thắng', 'Mất mát', 'Khám phá', 'Gặp gỡ NPC', 'Chuyển cảnh', 'Phát triển nhân vật', 'Xung đột xã hội'.
 4.  **Liệt kê NPC (involvedNpcIds):** Liệt kê ID của tất cả các NPC có vai trò quan trọng trong phân cảnh.
-5.  **Đánh giá tầm quan trọng (isUnforgettable):** Đặt thành \`true\` nếu đây là một cột mốc không thể quên, thay đổi vĩnh viễn câu chuyện. Ngược lại, đặt \`false\`.
-6.  **Trả về JSON:** Phản hồi của bạn BẮT BUỘC phải là một đối tượng JSON duy nhất tuân thủ schema được cung cấp.`;
+5.  **Phân tích Mối quan hệ (relationshipChanges):** Phân tích xem có sự thay đổi rõ rệt nào trong mối quan hệ giữa người chơi và NPC không. Nếu có, hãy điền vào mảng này. Nếu không, bỏ qua.
+6.  **Đánh giá Tầm quan trọng (plotSignificanceScore):** Cho một điểm số từ 1 (không quan trọng) đến 10 (cực kỳ quan trọng) để đánh giá tầm ảnh hưởng của sự kiện này đối với cốt truyện chính.
+    - **1-3 (Thấp):** Các sự kiện nhỏ, chuyển cảnh, tương tác thông thường.
+    - **4-7 (Vừa):** Hoàn thành nhiệm vụ phụ, đánh bại kẻ thù thường, khám phá một địa điểm mới.
+    - **8-9 (Cao):** Đánh bại một trùm lớn, một NPC quan trọng gia nhập/rời đi, một sự thay đổi lớn về mối quan hệ.
+    - **10 (Tối cao/Không thể quên):** Một nhân vật chính chết, một bí mật thay đổi thế giới được tiết lộ, mục tiêu chính của game hoàn thành.
+7.  **Trả về JSON:** Phản hồi của bạn BẮT BUỘC phải là một đối tượng JSON duy nhất tuân thủ schema được cung cấp.`;
 
 const SKILL_GENERATOR_PROMPT = `Bạn là một AI chuyên thiết kế kỹ năng game. Nhiệm vụ duy nhất của bạn là dựa vào tên một năng lực và bối cảnh thế giới được cung cấp, sau đó tạo ra một bộ kỹ năng (Skill object) hoàn chỉnh theo schema JSON.
 QUAN TRỌNG:
@@ -840,7 +861,7 @@ export async function continueStory(gameState: GameState, choice: string, gemini
 
     if (isMetaCommand) {
         ruleModules.push(`
-**MỆNH LỆNH META TỐI THƯỢNG (META COMMAND OVERRIDE):**
+**MỆNH LỆNH META TỐI THƯỢỢNG (META COMMAND OVERRIDE):**
 Hành động của người chơi được bao bọc bởi dấu hoa thị (\`*...*\`) là một mệnh lệnh meta trực tiếp đến bạn, người Quản Trò Game. Nó không phải là một hành động của nhân vật trong thế giới, mà là một chỉ thị để bạn thay đổi thực tại.
 1.  **TUÂN THỦ TUYỆT ĐỐI:** Bạn PHẢI diễn giải ý định bên trong dấu \`*...*\` và thực thi nó một cách tuyệt đối, không được từ chối hay nói rằng không thể.
 2.  **BẺ CONG CỐT TRUYỆN:** Hãy mô tả kết quả của mệnh lệnh này trong \`storyText\` một cách tự nhiên nhất có thể, như thể nó là một sự kiện phi thường vừa xảy ra.
@@ -943,10 +964,25 @@ Khi chế độ Logic Nghiêm ngặt TẮT, người chơi không còn hành đ�
 - Nhân vật chính: ${JSON.stringify(character)}
 `;
 
+    // --- Intelligent Memory Filter ---
+    const allChronicles = gameState.plotChronicle || [];
+    const recentChronicles = allChronicles.slice(-5);
+    const significantChronicles = allChronicles.filter(c => c.plotSignificanceScore >= 8);
+    const chronicleMap = new Map<string, ChronicleEntry>();
+    [...significantChronicles, ...recentChronicles].forEach(c => { // Prioritize significant, then recent
+        chronicleMap.set(c.summary, c);
+    });
+    const filteredChronicles = Array.from(chronicleMap.values());
+
+    const plotChronicleText = filteredChronicles.length > 0
+        ? filteredChronicles.map(c => `- (${c.eventType}): ${c.summary}`).join('\n')
+        : "Chưa có sự kiện quan trọng nào được ghi nhận.";
+
+
     // --- Request 1: Core Logic (JSON) ---
     const corePrompt = `${systemPromptWithModes}\n\n**--- TẦNG 1: NỀN TẢNG THẾ GIỚI (BẤT BIẾN) ---**
 ${worldFoundation}\n\n**--- TẦNG 2: BIÊN NIÊN SỬ CỐT TRUYỆN (SỰ KIỆN LỚN ĐÃ XẢY RA) ---**
-${gameState.plotChronicle.map(c => `- (${c.eventType}): ${c.summary}`).join('\n') || "Chưa có sự kiện quan trọng nào được ghi nhận."}\n\n**--- TẦNG 3: BỐI CẢNH GẦN NHẤT ---**
+${plotChronicleText}\n\n**--- TẦNG 3: BỐI CẢNH GẦN NHẤT ---**
 - **Các sự kiện gần nhất:**
 ${recentHistory}
 - **Dữ liệu nhân vật và kỹ năng (đã rút gọn):** ${JSON.stringify({ playerStats: simplifiedPlayerStats, npcs: simplifiedNpcs, playerSkills: gameState.playerSkills })}\n\n**Hành động mới nhất của người chơi là: "${choice}".**

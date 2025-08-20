@@ -93,6 +93,12 @@ export interface ChronicleEntry {
     eventType: string;
     involvedNpcIds: string[];
     isUnforgettable: boolean;
+    plotSignificanceScore: number;
+    relationshipChanges?: {
+        npcId: string;
+        change: string;
+        reason: string;
+    }[];
 }
 
 // Represents a Non-Player Character
