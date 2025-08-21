@@ -72,7 +72,8 @@ const npcUpdatePayloadCoreSchema = {
     properties: {
         name: { type: Type.STRING, description: "Tên riêng của nhân vật. Tên phải phù hợp với bối cảnh và lai lịch nhân vật. AI sẽ tự quyết định phong cách tên (ví dụ: Anh, Nhật, Hán Việt...)." },
         gender: { type: Type.STRING },
-        personality: { type: Type.STRING, description: "Tính cách của NPC." },
+    personality: { type: Type.STRING, description: "Tính cách của NPC." },
+    identity: { type: Type.STRING, description: "Thân phận, vai trò, xuất thân, nghề nghiệp hoặc vị trí xã hội của NPC." },
         appearance: { type: Type.STRING, description: "Mô tả ngoại hình, dáng vẻ, hoặc điểm nổi bật về hình thể của NPC." },
         relationship: { type: Type.STRING, description: "Mối quan hệ với người chơi." },
         isProtected: { type: Type.BOOLEAN, description: "Trạng thái bảo vệ NPC khỏi bị xóa bởi AI. Bạn không được thay đổi giá trị này trừ khi được yêu cầu." },
@@ -566,8 +567,8 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
         -   Nếu bối cảnh là Viễn Tây, hãy dùng tên **Anh-Mỹ** (ví dụ: John, Sarah).
         -   Nếu bối cảnh là Tiên hiệp, hãy dùng tên **Hán Việt** (ví dụ: Mộ Dung Tuyết).
     3.  Tên phải nghe tự nhiên trong thế giới đó.
-    4.  **Mô tả ngoại hình:** Khi tạo mới hoặc cập nhật NPC, luôn mô tả ngoại hình, dáng vẻ, hoặc điểm nổi bật về hình thể của NPC trong trường \`genre\` và \`description\`. Ngoại hình nên phù hợp với bối cảnh, giới tính, và vai trò của nhân vật và phải kết hợp với ngoại hình ban đầu của họ.
-
+    4.  **Mô tả ngoại hình:** Khi tạo mới hoặc cập nhật NPC, luôn mô tả ngoại hình, dáng vẻ, hoặc điểm nổi bật về hình thể của NPC trong trường \`history\`, \`genre\` và \`description\` nhưng phải ngắn gọn. Ngoại hình nên phù hợp với bối cảnh, giới tính, và vai trò của nhân vật và phải kết hợp với ngoại hình ban đầu của họ.
+    5.  **Mô tả thân phận:** Khi tạo mới hoặc cập nhật NPC, luôn mô tả thân phận, vai trò, xuất thân, nghề nghiệp hoặc vị trí xã hội của NPC trong trường \`history\`, \`genre\` và \`description\` nhưng phải ngắn gọn và tuyệt đối không cập nhật các trạng thái (ví dụ: đang nằm bất động, bị thương,...). Thân phận nên phù hợp với bối cảnh, giới tính, và vai trò của nhân vật và phải kết hợp với thân phận ban đầu của họ.
 - **QUẢN LÝ NPC (PHƯƠNG ÁN NHẬN DẠNG THỰC THỂ NHẤT QUÁN - TUYỆT ĐỐI NGHIÊM NGẶT):**
     Bạn BẮT BUỘC phải tuân thủ thuật toán sau để đảm bảo tính nhất quán của các nhân vật.
     

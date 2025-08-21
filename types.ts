@@ -108,6 +108,7 @@ export interface NPC {
   gender: string;
   personality: string;
   relationship: string; // Relationship to the player (e.g., 'Nô lệ', 'Kẻ thù')
+  identity?: string; // Thân phận (vai trò, xuất thân, nghề nghiệp...)
   appearance: string; // Physical appearance/description of the NPC
   status: string; // Current state (e.g., 'Bị giam giữ', 'Tự do')
   lastInteractionSummary: string; // A one-sentence summary of the last key interaction
@@ -121,7 +122,7 @@ export interface NPCUpdate {
   action: 'CREATE' | 'UPDATE' | 'DELETE';
   id: string; // ID of the NPC to update or delete
   payload?: Partial<Omit<NPC, 'stats'>> & { stats?: CharacterStatUpdate[] };
-  // appearance is included via Partial<Omit<NPC, 'stats'>>
+  // identity, appearance are included via Partial<Omit<NPC, 'stats'>>
 }
 
 

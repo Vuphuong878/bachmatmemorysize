@@ -167,6 +167,7 @@ const NpcEntry: React.FC<{
                     <DetailItem label="Giới tính" value={npc.gender} />
                     <DetailItem label="Tính cách" value={npc.personality} />
                     <DetailItem label="Mối quan hệ" value={npc.relationship} />
+                    <DetailItem label="Thân phận" value={npc.identity} />
                     <DetailItem label="Ngoại hình" value={npc.appearance} />
                     <DetailItem label="Trạng thái" value={npc.status} />
                     <DetailItem label="Tương tác cuối" value={npc.lastInteractionSummary} />
