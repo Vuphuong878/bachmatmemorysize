@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CharacterStats, CharacterStat, Skill } from '../../types';
 import Button from '../ui/Button';
@@ -73,9 +74,10 @@ const StatItem: React.FC<{
     const baseClass = 'odd:bg-white/5 border-l-4 border-transparent';
     
     return (
-        <div className={`grid grid-cols-12 gap-x-2 items-baseline py-2 px-3 min-h-[44px] group transition-all duration-500 rounded-md ${isHighlighted ? highlightClass : baseClass}`}>
-            <span className="col-span-4 text-sm font-semibold text-[#c5b5dd]" title={label}>{label}</span>
-            <div className="col-span-8 flex items-center justify-end text-right gap-x-2">
+        <div className={`py-2 px-3 group transition-all duration-500 rounded-md ${isHighlighted ? highlightClass : baseClass}`}>
+            {/* Top row: Label and hover buttons */}
+            <div className="flex justify-between items-center">
+                <span className="text-sm font-semibold text-[#c5b5dd]" title={label}>{label}</span>
                 <div className="flex items-center gap-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                      {!isCoreStat && (
                         <>
@@ -87,6 +89,10 @@ const StatItem: React.FC<{
                     <button onClick={onEdit} className="p-1 rounded-full text-cyan-400 hover:bg-cyan-400/20" aria-label={`Chỉnh sửa ${label}`}><PencilIcon /></button>
                     <button onClick={onDelete} className="p-1 rounded-full text-red-500 hover:bg-red-500/20" aria-label={`Xóa ${label}`}><TrashIcon /></button>
                 </div>
+            </div>
+            
+            {/* Bottom row: Value, duration, acquire button */}
+            <div className="flex items-baseline justify-end text-right gap-x-2 mt-1">
                 {stat.history && stat.history.length > 0 && (
                     <span
                         className="text-blue-400 cursor-help"
@@ -95,7 +101,7 @@ const StatItem: React.FC<{
                         <HistoryIcon />
                     </span>
                 )}
-                <span className="text-base font-bold text-white break-words">{String(stat.value)}</span>
+                <span className="text-sm font-bold text-white break-words">{String(stat.value)}</span>
                 {stat.duration && (
                     <span className="text-xs font-mono text-cyan-400 whitespace-nowrap">({stat.duration} lượt)</span>
                 )}

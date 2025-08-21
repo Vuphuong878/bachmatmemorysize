@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { NPC, CharacterStat } from '../../types';
 
@@ -31,14 +32,22 @@ const HistoryIcon = () => (
 );
 
 
-const DetailItem: React.FC<{ label: string; value: string | undefined }> = ({ label, value }) => (
-    value ? (
-        <div className="py-1.5">
-            <p className="text-xs font-semibold text-[#a08cb6]">{label}</p>
-            <p className="text-sm text-white">{value}</p>
+const DetailItem: React.FC<{ label: string; value: string | undefined }> = ({ label, value }) => {
+    if (!value) return null;
+
+    const baseClass = 'odd:bg-white/5 border-l-4 border-transparent';
+    
+    return (
+        <div className={`py-2 px-3 group transition-all duration-500 rounded-md ${baseClass}`}>
+            <div>
+                <span className="text-sm font-semibold text-[#c5b5dd]" title={label}>{label}</span>
+            </div>
+            <div className="mt-1 text-left">
+                <span className="text-sm font-bold text-white break-words">{value}</span>
+            </div>
         </div>
-    ) : null
-);
+    );
+};
 
 const NpcStatItem: React.FC<{ 
     label: string; 
@@ -48,17 +57,19 @@ const NpcStatItem: React.FC<{
     isHighlighted: boolean;
 }> = ({ label, stat, onEdit, onDelete, isHighlighted }) => {
     
-    const highlightClass = 'bg-amber-500/20 border-l-2 border-amber-400';
-    const baseClass = 'odd:bg-black/10 border-l-2 border-transparent';
+    const highlightClass = 'bg-gradient-to-r from-amber-500/20 to-transparent border-l-4 border-amber-400 scale-[1.01] shadow-lg';
+    const baseClass = 'odd:bg-white/5 border-l-4 border-transparent';
     
     return (
-        <div className={`grid grid-cols-12 gap-x-2 items-baseline py-1 px-2 text-xs rounded group transition-all duration-500 ${isHighlighted ? highlightClass : baseClass}`}>
-            <span className="col-span-5 font-medium text-[#c5b5dd]" title={label}>{label}</span>
-            <div className="col-span-7 flex items-baseline justify-end text-right gap-x-2">
+        <div className={`py-2 px-3 group transition-all duration-500 rounded-md ${isHighlighted ? highlightClass : baseClass}`}>
+            <div className="flex justify-between items-center">
+                <span className="text-sm font-semibold text-[#c5b5dd]" title={label}>{label}</span>
                 <div className="flex items-center gap-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={onEdit} className="p-1 rounded-full text-cyan-400 hover:bg-cyan-400/20" aria-label={`Chỉnh sửa ${label}`}><PencilIcon /></button>
                     <button onClick={onDelete} className="p-1 rounded-full text-red-500 hover:bg-red-500/20" aria-label={`Xóa ${label}`}><TrashIcon /></button>
                 </div>
+            </div>
+            <div className="mt-1 text-left flex items-baseline gap-x-2">
                 {stat.history && stat.history.length > 0 && (
                     <span
                         className="text-blue-400 cursor-help"
@@ -67,9 +78,9 @@ const NpcStatItem: React.FC<{
                         <HistoryIcon />
                     </span>
                 )}
-                <span className="font-semibold text-white break-words">{String(stat.value)}</span>
+                <span className="text-sm font-bold text-white break-words">{String(stat.value)}</span>
                 {stat.duration && (
-                    <span className="font-mono text-cyan-400/80 whitespace-nowrap">({stat.duration})</span>
+                    <span className="text-xs font-mono text-cyan-400 whitespace-nowrap">({stat.duration})</span>
                 )}
             </div>
         </div>
@@ -89,6 +100,12 @@ const NpcEntry: React.FC<{
     recentlyUpdatedStats: Set<string>;
 }> = ({ npc, onToggle, onDelete, onReorder, isFirst, isLast, onRequestNpcStatEdit, onRequestNpcStatDelete, recentlyUpdatedStats }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    
+    const staticFields = useMemo(() => new Set(['name', 'gender', 'personality', 'relationship', 'status', 'lastinteractionsummary']), []);
+    const dynamicStats = useMemo(() => 
+        Object.entries(npc.stats || {}).filter(([key]) => !staticFields.has(key.toLowerCase().replace(/\s/g, '')))
+    , [npc.stats, staticFields]);
+
 
     return (
         <div className="bg-black/20 rounded-lg border border-[#3a2d47]/50 overflow-hidden">
@@ -146,18 +163,18 @@ const NpcEntry: React.FC<{
                 </div>
             </div>
             {isExpanded && (
-                <div className="px-3 pb-3 border-t border-[#3a2d47] animate-fade-in-fast">
+                <div className="px-3 pb-3 border-t border-[#3a2d47] animate-fade-in-fast space-y-1">
                     <DetailItem label="Giới tính" value={npc.gender} />
                     <DetailItem label="Tính cách" value={npc.personality} />
                     <DetailItem label="Mối quan hệ" value={npc.relationship} />
                     <DetailItem label="Trạng thái" value={npc.status} />
                     <DetailItem label="Tương tác cuối" value={npc.lastInteractionSummary} />
                     
-                    {npc.stats && Object.keys(npc.stats).length > 0 && (
+                    {npc.stats && dynamicStats.length > 0 && (
                         <div className="mt-2 pt-2 border-t border-[#3a2d47]/50">
                              <h4 className="text-sm font-bold text-[#e02585] mb-1">Chỉ số NPC</h4>
                              <div className="space-y-1">
-                                {Object.entries(npc.stats).map(([key, stat]) => (
+                                {dynamicStats.map(([key, stat]) => (
                                     <NpcStatItem 
                                         key={key} 
                                         label={key} 
@@ -179,8 +196,6 @@ const NpcEntry: React.FC<{
 
 const NpcCodex: React.FC<NpcCodexProps> = ({ npcs, onToggleProtection, onDeleteRequest, onReorderNpc, onRequestNpcStatEdit, onRequestNpcStatDelete, recentlyUpdatedStats }) => {
     const sortedNpcs = useMemo(() => {
-        // The `sortOrder` is managed by the game engine. We just sort by it.
-        // Fallback to index 0 if sortOrder is somehow missing.
         return [...npcs].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
     }, [npcs]);
 
