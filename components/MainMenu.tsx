@@ -18,6 +18,17 @@ interface MainMenuProps {
 
 const changelogs = [
   {
+    version: '1.2.0',
+    date: '2025-08-22',
+    content: [
+      '- Thêm nút "Wiki" nhỏ bên phải nút Thông Tin, mở tài liệu hướng dẫn ở tab mới.',
+      '- Sửa giao diện nút Thông Tin/Wiki cho đồng bộ, nhỏ gọn.',
+      '- Tùy chỉnh/ẩn/thay đổi màu sắc thanh cuộn trong changelog modal.',
+      '- Sửa lỗi và đồng bộ lại các thay đổi giao diện chính.',
+      '- Cập nhật lại changelog cho các thay đổi mới nhất.'
+    ].join('\n'),
+  },
+  {
     version: '1.1.0',
     date: '2025-08-21',
     content: [
@@ -32,7 +43,10 @@ const changelogs = [
   {
     version: '1.0.0',
     date: '2025-08-20',
-    content: '- Ra mắt phiên bản đầu tiên với các tính năng cơ bản phụ thuộc vào phiên bản "Bách Mật 2.6"'
+    content: [
+      '- Ra mắt phiên bản đầu tiên với các tính năng cơ bản phụ thuộc vào phiên bản "Bách Mật 2.6"',
+      '- Thay đổi cách hệ thống kiểm tra và phân loại ký ức (memory) cho NPC và người chơi, hỗ trợ phân loại ký ức quan trọng, ký ức tạm thời, và ký ức cốt truyện.'
+    ].join('\n'),
   },
 ];
 
