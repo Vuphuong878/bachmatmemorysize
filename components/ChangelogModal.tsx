@@ -19,7 +19,7 @@ const ChangelogModal: React.FC<ChangelogModalProps> = ({ open, onClose, changelo
           ×
         </button>
         <h2 className="text-2xl font-bold mb-4 text-white text-center">Thông Tin Cập Nhật</h2>
-        <div className="space-y-6 overflow-y-auto pr-2" style={{ maxHeight: '60vh' }}>
+        <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: '60vh' }}>
           {changelogs.map((log, idx) => (
             <div key={idx} className="bg-[#251336] rounded-md p-4 shadow-inner border border-[#e02585]/20">
               <div className="flex items-center justify-between mb-2">
@@ -30,6 +30,29 @@ const ChangelogModal: React.FC<ChangelogModalProps> = ({ open, onClose, changelo
             </div>
           ))}
         </div>
+        <style>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            background: transparent;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #a08cb6;
+            border-radius: 6px;
+          }
+          .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #a08cb6 #251336;
+          }
+          /* Ẩn hoàn toàn nếu muốn */
+          /*
+          .custom-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .custom-scrollbar {
+            scrollbar-width: none;
+          }
+          */
+        `}</style>
       </div>
     </div>
   );
