@@ -88,6 +88,13 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStart, onContinueManualSave, onCo
             <Button onClick={() => setChangelogOpen(true)} variant="secondary" style={{ minWidth: 120, fontSize: 16, padding: '10px 0' }}>
               Thông Tin
             </Button>
+            <Button
+              variant="secondary"
+              style={{ minWidth: 90, fontSize: 15, padding: '10px 0' }}
+              onClick={() => window.open('https://docs.google.com/document/d/1xqN7Qmy7XV3X7P0wNjHsZcN-6kxHnPXi-c-FXT5cfuM/edit?usp=sharing', '_blank', 'noopener,noreferrer')}
+            >
+              Wiki
+            </Button>
           </div>
   <ChangelogModal open={changelogOpen} onClose={() => setChangelogOpen(false)} changelogs={changelogs} />
         </div>
