@@ -335,7 +335,7 @@ const nsfwSafetySettings = [
 async function callJsonAI(prompt: string, schema: object, geminiService: GoogleGenAI, isNsfw: boolean): Promise<GenerateContentResponse> {
     // Set a very large, safe output limit to prevent JSON truncation.
     const maxOutputTokens = 131072; // 128k tokens for output
-    // Set thinking budget to the maximum allowed by the API to prevent invalid argument errors.
+    // Đặt lại thinking budget về tối đa hợp lệ của API
     const thinkingBudget = 24576;
 
     const response = await geminiService.models.generateContent({
@@ -844,7 +844,8 @@ export async function continueStory(gameState: GameState, choice: string, gemini
     isSceneBreak: boolean;
     presentNpcIds: string[];
 }> {
-    const MEMORY_CHAR_BUDGET = 12000;
+    // Đồng bộ với thinkingBudget để tránh lỗi API
+    const MEMORY_CHAR_BUDGET = 24576;
     let charCount = 0;
     const contextTurns: GameTurn[] = [];
 
@@ -853,8 +854,8 @@ export async function continueStory(gameState: GameState, choice: string, gemini
         const turn = gameState.history[i];
         const turnLength = (turn.playerAction?.length || 0) + (turn.storyText?.length || 0);
 
-        // Always include the last 3 turns or any major event, regardless of budget initially
-        if (contextTurns.length < 3 || turn.isMajorEvent) {
+    // Always include the last 3 turns or any major event, regardless of budget initially
+    if (contextTurns.length < 3 || turn.isMajorEvent) {
             contextTurns.unshift(turn);
             charCount += turnLength;
             continue;
