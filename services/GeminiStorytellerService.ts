@@ -335,7 +335,7 @@ const nsfwSafetySettings = [
 async function callJsonAI(prompt: string, schema: object, geminiService: GoogleGenAI, isNsfw: boolean): Promise<GenerateContentResponse> {
     // Set a very large, safe output limit to prevent JSON truncation.
     const maxOutputTokens = 131072; // 128k tokens for output
-    // Đặt lại thinking budget về tối đa hợp lệ của API
+    // Set thinking budget to the maximum allowed by the API to prevent invalid argument errors.
     const thinkingBudget = 24576;
 
     const response = await geminiService.models.generateContent({
@@ -844,8 +844,7 @@ export async function continueStory(gameState: GameState, choice: string, gemini
     isSceneBreak: boolean;
     presentNpcIds: string[];
 }> {
-    // Đồng bộ với thinkingBudget để tránh lỗi API
-    const MEMORY_CHAR_BUDGET = 24576;
+    const MEMORY_CHAR_BUDGET = 12000;
     let charCount = 0;
     const contextTurns: GameTurn[] = [];
 
@@ -854,8 +853,8 @@ export async function continueStory(gameState: GameState, choice: string, gemini
         const turn = gameState.history[i];
         const turnLength = (turn.playerAction?.length || 0) + (turn.storyText?.length || 0);
 
-    // Always include the last 3 turns or any major event, regardless of budget initially
-    if (contextTurns.length < 3 || turn.isMajorEvent) {
+        // Always include the last 3 turns or any major event, regardless of budget initially
+        if (contextTurns.length < 3 || turn.isMajorEvent) {
             contextTurns.unshift(turn);
             charCount += turnLength;
             continue;
@@ -876,27 +875,6 @@ export async function continueStory(gameState: GameState, choice: string, gemini
     const simplifiedPlayerStats = simplifyStatsForStoryteller(gameState.playerStats);
     const simplifiedNpcs = gameState.npcs.map(npc => ({ ...npc, stats: npc.stats ? simplifyStatsForStoryteller(npc.stats) : undefined }));
     const { character, description, genre, narrativePerspective } = gameState.worldContext;
-
-    // --- Chọn lọc sự kiện điểm thấp ngẫu nhiên từ plotChronicle và tạo plotChronicleContext ---
-    function getRandomLowScoreEvents(chronicle: ChronicleEntry[], count = 2) {
-        const lowScoreEvents = chronicle.filter(e => e.plotSignificanceScore <= 3);
-        if (lowScoreEvents.length === 0) return [];
-        const shuffled = lowScoreEvents.sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, Math.min(count, shuffled.length));
-    }
-    const randomLowEvents = getRandomLowScoreEvents(gameState.plotChronicle);
-    const importantEvents = gameState.plotChronicle.filter(e => e.plotSignificanceScore >= 7);
-    const recentEvents = gameState.plotChronicle.slice(-3);
-    const allChronicleEvents = [...importantEvents, ...recentEvents, ...randomLowEvents];
-    const uniqueChronicleEvents: ChronicleEntry[] = [];
-    const seenSummaries = new Set();
-    for (const e of allChronicleEvents) {
-        if (!seenSummaries.has(e.summary)) {
-            uniqueChronicleEvents.push(e);
-            seenSummaries.add(e.summary);
-        }
-    }
-    const plotChronicleContext = uniqueChronicleEvents.map(e => `- (${e.eventType}) ${e.summary}`).join('\n');
 
     const perspectiveRules = getPerspectiveRules(narrativePerspective);
     const destinyCompassRules = getDestinyCompassRules(destinyCompassMode);
