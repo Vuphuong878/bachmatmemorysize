@@ -190,10 +190,26 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
           from { opacity: 0; } to { opacity: 1; }
         }
         .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }
-        #actions-panel::-webkit-scrollbar { width: 6px; }
-        #actions-panel::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
-        #actions-panel::-webkit-scrollbar-thumb { background-color: #633aab; border-radius: 10px; }
-        #actions-panel::-webkit-scrollbar-thumb:hover { background-color: #e02585; }
+        /* Scrollbar style toàn cục giống nút thông tin */
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #120c18;
+        }
+        ::-webkit-scrollbar-thumb {
+          background-color: #e02585;
+          border-radius: 10px;
+          border: 2px solid #120c18;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background-color: #633aab;
+        }
+        /* Firefox */
+        html {
+          scrollbar-width: thin;
+          scrollbar-color: #e02585 #120c18;
+        }
        `}</style>
       
       <header className={`relative w-full flex-shrink-0 z-20 transition-all duration-500 ease-in-out overflow-hidden ${
