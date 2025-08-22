@@ -384,7 +384,12 @@ export function useGameEngine(
 
             const newPlotChronicle = [...gameState.plotChronicle];
             if (newChronicleEntry) {
-                newPlotChronicle.push(newChronicleEntry);
+                // Double-check for duplicates at the game engine level as well
+                if (!storytellerService.isDuplicateChronicleEntry(newChronicleEntry, gameState.plotChronicle)) {
+                    newPlotChronicle.push(newChronicleEntry);
+                } else {
+                    console.log('Game engine: Duplicate chronicle entry blocked at final check');
+                }
             }
             
             const newState: GameState = {

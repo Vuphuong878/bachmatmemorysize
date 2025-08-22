@@ -68,7 +68,7 @@ const statUpdateItemSchema = {
 // A sub-schema for the payload of an NPC update, excluding creative text.
 const npcUpdatePayloadCoreSchema = {
     type: Type.OBJECT,
-    description: "Dữ liệu của NPC. Khi action là 'CREATE', payload phải chứa đầy đủ. Khi là 'UPDATE', chỉ chứa các trường thay đổi (bao gồm cả 'stats').",
+    description: "Dữ liệu của NPC. Khi action là 'CREATE', payload phải chứa đầy đủ. Khi là 'UPDATE', chỉ chứa các trường thay đổi (bao gồm cả 'stats'). QUAN TRỌNG: Nếu có sự kiện NPC sinh con (ví dụ: NPC mang thai và sinh nở), BẮT BUỘC phải tạo một NPC mới đại diện cho đứa trẻ với action: 'CREATE' và payload đầy đủ thông tin (tên, giới tính, cha mẹ, v.v.).",
     properties: {
         name: { type: Type.STRING, description: "Tên riêng của nhân vật. Tên phải phù hợp với bối cảnh và lai lịch nhân vật. AI sẽ tự quyết định phong cách tên (ví dụ: Anh, Nhật, Hán Việt...)." },
         gender: { type: Type.STRING },
@@ -333,11 +333,7 @@ const nsfwSafetySettings = [
 ];
 
 async function callJsonAI(prompt: string, schema: object, geminiService: GoogleGenAI, isNsfw: boolean): Promise<GenerateContentResponse> {
-    // Set a very large, safe output limit to prevent JSON truncation.
-    const maxOutputTokens = 131072; // 128k tokens for output
-    // Set thinking budget to the maximum allowed by the API to prevent invalid argument errors.
-    const thinkingBudget = 24576;
-
+    // Use API defaults for token limits to allow maximum flexibility
     const response = await geminiService.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
@@ -345,8 +341,7 @@ async function callJsonAI(prompt: string, schema: object, geminiService: GoogleG
             responseMimeType: "application/json",
             responseSchema: schema,
             safetySettings: isNsfw ? nsfwSafetySettings : undefined,
-            maxOutputTokens: maxOutputTokens,
-            thinkingConfig: { thinkingBudget: thinkingBudget },
+            // Removed maxOutputTokens and thinkingBudget to use API defaults
         },
     });
     if (!response.text) {
@@ -363,8 +358,7 @@ async function callCreativeTextAI(prompt: string, geminiService: GoogleGenAI, is
         contents: prompt,
         config: {
             safetySettings: isNsfw ? nsfwSafetySettings : undefined,
-            maxOutputTokens: 1024, 
-            thinkingConfig: { thinkingBudget: 256 }, 
+            // Removed maxOutputTokens and thinkingBudget to use API defaults
         },
     });
      if (!response.text) {
@@ -392,6 +386,421 @@ function sanitizeObjectRecursively(obj: any): any {
         return newObj;
     }
     return obj;
+}
+
+// Enhanced validation functions for AI responses
+function validateCoreResponse(response: any): any {
+    const validated = { ...response };
+    
+    // Validate required fields with defaults
+    if (!validated.storyText || typeof validated.storyText !== 'string') {
+        console.warn('Warning: storyText missing or invalid, using default');
+        validated.storyText = 'Câu chuyện tiếp tục...';
+    }
+    
+    if (!Array.isArray(validated.choices)) {
+        console.warn('Warning: choices missing or invalid, using default');
+        validated.choices = ['Tiếp tục...'];
+    }
+    
+    if (!Array.isArray(validated.playerStatUpdates)) {
+        console.warn('Warning: playerStatUpdates missing, using empty array');
+        validated.playerStatUpdates = [];
+    }
+    
+    if (!Array.isArray(validated.npcUpdates)) {
+        console.warn('Warning: npcUpdates missing, using empty array');
+        validated.npcUpdates = [];
+    }
+    
+    if (!Array.isArray(validated.presentNpcIds)) {
+        console.warn('Warning: presentNpcIds missing, using empty array');
+        validated.presentNpcIds = [];
+    }
+    
+    // Validate playerSkills if present (for game initialization)
+    if (validated.playerSkills !== undefined && !Array.isArray(validated.playerSkills)) {
+        console.warn('Warning: playerSkills present but not array, using empty array');
+        validated.playerSkills = [];
+    }
+    
+    // Validate boolean fields
+    validated.isMajorEvent = !!validated.isMajorEvent;
+    validated.isSceneBreak = !!validated.isSceneBreak;
+    
+    // Validate NPC updates structure
+    validated.npcUpdates = validated.npcUpdates.map((update: any) => {
+        if (!update.id || !update.action) {
+            console.warn('Warning: Invalid NPC update structure, skipping:', update);
+            return null;
+        }
+        
+        if (update.action === 'CREATE' && (!update.payload || !update.payload.name)) {
+            console.warn('Warning: CREATE action missing required payload.name, skipping:', update);
+            return null;
+        }
+        
+        return update;
+    }).filter(Boolean);
+    
+    // Validate player stat updates
+    validated.playerStatUpdates = validated.playerStatUpdates.map((stat: any) => {
+        if (!stat.statName || stat.value === undefined) {
+            console.warn('Warning: Invalid stat update missing statName or value, skipping:', stat);
+            return null;
+        }
+        return stat;
+    }).filter(Boolean);
+    
+    return validated;
+}
+
+function validateChronicleEntry(entry: any): ChronicleEntry {
+    const validated = { ...entry };
+    
+    // Required fields with defaults
+    if (!validated.summary || typeof validated.summary !== 'string') {
+        console.warn('Warning: ChronicleEntry summary missing, using default');
+        validated.summary = 'Sự kiện chưa được mô tả';
+    }
+    
+    if (!validated.eventType || typeof validated.eventType !== 'string') {
+        console.warn('Warning: ChronicleEntry eventType missing, using default');
+        validated.eventType = 'Khác';
+    }
+    
+    if (!Array.isArray(validated.involvedNpcIds)) {
+        console.warn('Warning: ChronicleEntry involvedNpcIds missing, using empty array');
+        validated.involvedNpcIds = [];
+    }
+    
+    // Validate score range (plotSignificanceScore chỉ hợp lệ từ 1-10, không liên quan đến các điểm nội bộ như contextScore)
+    if (typeof validated.plotSignificanceScore !== 'number' || 
+        validated.plotSignificanceScore < 1 || 
+        validated.plotSignificanceScore > 10) {
+        console.warn('Warning: Invalid plotSignificanceScore (must be 1-10), defaulting to 5');
+        validated.plotSignificanceScore = 5;
+    }
+    
+    // Sync deprecated field
+    validated.isUnforgettable = validated.plotSignificanceScore >= 10;
+    
+    return validated as ChronicleEntry;
+}
+
+// Check for duplicate chronicle entries to prevent repetitive plot summaries
+export function isDuplicateChronicleEntry(newEntry: ChronicleEntry, existingChronicles: ChronicleEntry[]): boolean {
+    if (existingChronicles.length === 0) return false;
+    
+    // Get the last 3 chronicles to check for duplicates
+    const recentChronicles = existingChronicles.slice(-3);
+    
+    for (const existing of recentChronicles) {
+        // Check for exact or very similar summaries
+        const similarity = calculateStringSimilarity(newEntry.summary, existing.summary);
+        
+        // If similarity is > 80% and same event type, consider it duplicate
+        if (similarity > 0.8 && newEntry.eventType === existing.eventType) {
+            console.warn('Warning: Duplicate chronicle entry detected:', {
+                new: newEntry.summary,
+                existing: existing.summary,
+                similarity: Math.round(similarity * 100) + '%'
+            });
+            return true;
+        }
+        
+        // Also check for common phrases that indicate repetition
+        const summaryLower = newEntry.summary.toLowerCase();
+        const existingLower = existing.summary.toLowerCase();
+        
+        // Check if they share many common words (simple word overlap check)
+        const newWords = summaryLower.split(' ').filter(w => w.length > 3);
+        const existingWords = existingLower.split(' ').filter(w => w.length > 3);
+        const commonWords = newWords.filter(word => existingWords.includes(word));
+        
+        if (commonWords.length >= Math.min(newWords.length, existingWords.length) * 0.6) {
+            console.warn('Warning: Chronicle entry with high word overlap detected:', {
+                new: newEntry.summary,
+                existing: existing.summary,
+                commonWords: commonWords.length,
+                threshold: Math.min(newWords.length, existingWords.length) * 0.6
+            });
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// Simple string similarity calculation using character comparison
+function calculateStringSimilarity(str1: string, str2: string): number {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    
+    if (longer.length === 0) return 1.0;
+    
+    const editDistance = levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+}
+
+// Intelligent contextual recall system for retrieving relevant past events
+export function findContextualRecalls(
+    lessImportantChronicles: ChronicleEntry[], 
+    currentAction: string,
+    presentNpcIds: string[],
+    gameState: GameState,
+    maxRecalls: number = 2
+): ChronicleEntry[] {
+    if (lessImportantChronicles.length === 0) return [];
+    
+    const recalls: Array<{ entry: ChronicleEntry, score: number }> = [];
+    const actionLower = currentAction.toLowerCase();
+    
+    // Get current player stats for context matching
+    const currentStats = Object.keys(gameState.playerStats);
+    
+    for (const chronicle of lessImportantChronicles) {
+        let contextScore = 0; // contextScore là điểm nội bộ để xếp hạng mức độ liên quan, KHÔNG liên quan đến plotSignificanceScore (1-10)
+        
+        // 1. NPC-based relevance (highest priority)
+        const involvedNpcs = chronicle.involvedNpcIds || [];
+        const npcOverlap = involvedNpcs.filter(id => presentNpcIds.includes(id));
+        if (npcOverlap.length > 0) {
+            contextScore += npcOverlap.length * 15; // 15 điểm cho mỗi NPC trùng lặp (điểm nội bộ, không phải plotSignificanceScore)
+        }
+        
+        // 2. Event type relevance based on current action
+        const eventType = chronicle.eventType.toLowerCase();
+        if (actionLower.includes('chiến đấu') || actionLower.includes('tấn công') || actionLower.includes('đánh')) {
+            if (eventType.includes('chiến thắng') || eventType.includes('chiến đấu') || eventType.includes('tấn công')) {
+                contextScore += 10;
+            }
+        }
+        
+        if (actionLower.includes('nói chuyện') || actionLower.includes('hỏi') || actionLower.includes('gặp')) {
+            if (eventType.includes('gặp gỡ') || eventType.includes('đối thoại') || eventType.includes('npc')) {
+                contextScore += 10;
+            }
+        }
+        
+        if (actionLower.includes('khám phá') || actionLower.includes('tìm') || actionLower.includes('đi')) {
+            if (eventType.includes('khám phá') || eventType.includes('chuyển cảnh') || eventType.includes('di chuyển')) {
+                contextScore += 10;
+            }
+        }
+        
+        // 3. Summary content relevance
+        const summaryLower = chronicle.summary.toLowerCase();
+        const actionWords = actionLower.split(' ').filter(w => w.length > 3);
+        const summaryWords = summaryLower.split(' ').filter(w => w.length > 3);
+        const commonWords = actionWords.filter(word => summaryWords.includes(word));
+        contextScore += commonWords.length * 3; // 3 points per common word
+        
+        // 4. Stat-based relevance (if action mentions stats)
+        currentStats.forEach(statName => {
+            const statLower = statName.toLowerCase();
+            if (actionLower.includes(statLower) && summaryLower.includes(statLower)) {
+                contextScore += 5;
+            }
+        });
+        
+        // 5. Emotional continuity - events involving emotions or relationships
+        const emotionalKeywords = ['tình cảm', 'yêu', 'ghét', 'tức giận', 'buồn', 'vui', 'lo lắng', 'sợ hãi', 'bối rối'];
+        const hasEmotionalAction = emotionalKeywords.some(keyword => actionLower.includes(keyword));
+        const hasEmotionalSummary = emotionalKeywords.some(keyword => summaryLower.includes(keyword));
+        if (hasEmotionalAction && hasEmotionalSummary) {
+            contextScore += 8;
+        }
+        
+        // 6. Location/setting continuity
+        const locationKeywords = ['phòng', 'nhà', 'rừng', 'núi', 'thành', 'làng', 'cung điện', 'đền', 'chùa'];
+        locationKeywords.forEach(location => {
+            if (actionLower.includes(location) && summaryLower.includes(location)) {
+                contextScore += 4;
+            }
+        });
+        
+        // 7. Recent interaction bonus (events from recent turns get slight bonus)
+        const recentTurns = gameState.history.slice(-10); // Last 10 turns
+        const hasRecentMention = recentTurns.some(turn => {
+            const turnText = (turn.storyText + ' ' + (turn.playerAction || '')).toLowerCase();
+            return involvedNpcs.some(npcId => {
+                const npc = gameState.npcs.find(n => n.id === npcId);
+                return npc && turnText.includes(npc.name.toLowerCase());
+            });
+        });
+        if (hasRecentMention) {
+            contextScore += 6;
+        }
+        
+        // 8. Player state continuity - if player has specific conditions/stats
+        const playerStatTexts = Object.values(gameState.playerStats).map(stat => 
+            typeof stat.value === 'string' ? stat.value.toLowerCase() : ''
+        ).join(' ');
+        
+        const stateWords = playerStatTexts.split(' ').filter(w => w.length > 3);
+        const stateSummaryWords = stateWords.filter(word => summaryLower.includes(word));
+        contextScore += stateSummaryWords.length * 2; // 2 points per matching state word
+        
+        // Only consider chronicles with some relevance
+        if (contextScore > 0) {
+            recalls.push({ entry: chronicle, score: contextScore });
+        }
+    }
+    
+    // Sort by score descending and return top entries
+    recalls.sort((a, b) => b.score - a.score);
+    
+    const selectedRecalls = recalls.slice(0, maxRecalls).map(r => r.entry);
+    
+    // Log the contextual selections for debugging
+    if (selectedRecalls.length > 0) {
+        console.log('Contextual recalls selected:', selectedRecalls.map(r => ({
+            summary: r.summary,
+            eventType: r.eventType,
+            score: recalls.find(rec => rec.entry === r)?.score
+        })));
+    }
+    
+    return selectedRecalls;
+}
+
+// Enhanced function to find emotional/relationship continuity recalls
+export function findEmotionalContinuityRecalls(
+    chronicles: ChronicleEntry[],
+    gameState: GameState,
+    maxRecalls: number = 1
+): ChronicleEntry[] {
+    if (chronicles.length === 0) return [];
+    
+    const emotionalRecalls: Array<{ entry: ChronicleEntry, score: number }> = [];
+    
+    // Analyze current player emotional/relationship state
+    const currentPlayerStats = gameState.playerStats;
+    const emotionalStats = Object.entries(currentPlayerStats).filter(([key, stat]) => {
+        const keyLower = key.toLowerCase();
+        return keyLower.includes('tình cảm') || keyLower.includes('mối quan hệ') || 
+               keyLower.includes('dục vọng') || keyLower.includes('tâm trạng');
+    });
+    
+    for (const chronicle of chronicles) {
+        let emotionalScore = 0;
+        const summaryLower = chronicle.summary.toLowerCase();
+        
+        // Check for emotional keywords in summary
+        const emotionalKeywords = [
+            'yêu', 'thương', 'ghét', 'tức giận', 'buồn', 'vui', 'hạnh phúc',
+            'lo lắng', 'sợ hãi', 'bối rối', 'xấu hổ', 'tự hào', 'ghen tị',
+            'tin tưởng', 'nghi ngờ', 'thất vọng', 'hy vọng'
+        ];
+        
+        emotionalKeywords.forEach(keyword => {
+            if (summaryLower.includes(keyword)) {
+                emotionalScore += 5;
+            }
+        });
+        
+        // Check for relationship-related content
+        const relationshipKeywords = [
+            'bạn bè', 'người yêu', 'vợ chồng', 'gia đình', 'thầy trò',
+            'kết hôn', 'chia tay', 'gặp gỡ', 'tỏ tình', 'hẹn hò'
+        ];
+        
+        relationshipKeywords.forEach(keyword => {
+            if (summaryLower.includes(keyword)) {
+                emotionalScore += 4;
+            }
+        });
+        
+        // Check for continuity with current emotional stats
+        emotionalStats.forEach(([statName, stat]) => {
+            const statValue = typeof stat.value === 'string' ? stat.value.toLowerCase() : '';
+            if (statValue && summaryLower.includes(statValue)) {
+                emotionalScore += 3;
+            }
+        });
+        
+        if (emotionalScore > 0) {
+            emotionalRecalls.push({ entry: chronicle, score: emotionalScore });
+        }
+    }
+    
+    emotionalRecalls.sort((a, b) => b.score - a.score);
+    return emotionalRecalls.slice(0, maxRecalls).map(r => r.entry);
+}
+
+// Group and summarize similar minor events to save context space
+export function groupAndSummarizeMinorEvents(chronicles: ChronicleEntry[]): ChronicleEntry[] {
+    if (chronicles.length <= 5) return chronicles; // Don't group if we have few chronicles
+    
+    const grouped: { [key: string]: ChronicleEntry[] } = {};
+    const standalone: ChronicleEntry[] = [];
+    
+    // Group chronicles by event type
+    for (const chronicle of chronicles) {
+        if (chronicle.plotSignificanceScore < 6) { // Only group minor events
+            if (!grouped[chronicle.eventType]) {
+                grouped[chronicle.eventType] = [];
+            }
+            grouped[chronicle.eventType].push(chronicle);
+        } else {
+            standalone.push(chronicle); // Keep significant events separate
+        }
+    }
+    
+    const result: ChronicleEntry[] = [...standalone];
+    
+    // For each group with multiple events, create a summary entry
+    for (const [eventType, events] of Object.entries(grouped)) {
+        if (events.length > 2) { // Only group if we have 3+ similar events
+            const summaryText = `Nhiều sự kiện ${eventType.toLowerCase()}: ${events.map(e => e.summary).join('; ')}`;
+            const allInvolvedNpcs = [...new Set(events.flatMap(e => e.involvedNpcIds))];
+            const avgScore = Math.round(events.reduce((sum, e) => sum + e.plotSignificanceScore, 0) / events.length);
+            
+            const groupedEntry: ChronicleEntry = {
+                summary: summaryText.length > 200 ? summaryText.substring(0, 197) + '...' : summaryText,
+                eventType: `Tổng hợp ${eventType}`,
+                involvedNpcIds: allInvolvedNpcs,
+                plotSignificanceScore: Math.min(avgScore, 7), // Cap grouped events at 7
+                isUnforgettable: false
+            };
+            
+            result.push(groupedEntry);
+        } else {
+            result.push(...events); // Keep individual events if too few to group
+        }
+    }
+    
+    return result;
+}
+
+// Levenshtein distance algorithm for string similarity
+function levenshteinDistance(str1: string, str2: string): number {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+        matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+        matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+        for (let j = 1; j <= str1.length; j++) {
+            if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+    
+    return matrix[str2.length][str1.length];
 }
 
 function parseAndValidateJsonResponse(text: string): any {
@@ -780,7 +1189,8 @@ Dựa trên bối cảnh thế giới và tiểu sử nhân vật được cung 
     };
     
     const coreResult = await callJsonAI(corePrompt, initSchema, geminiService, isNsfw);
-    const coreResponse = parseAndValidateJsonResponse(coreResult.text);
+    const rawCoreResponse = parseAndValidateJsonResponse(coreResult.text);
+    const coreResponse = validateCoreResponse(rawCoreResponse);
     const presentNpcIds = coreResponse.presentNpcIds || [];
     const coreTokens = coreResult.usageMetadata?.totalTokenCount || 0;
     
@@ -835,6 +1245,110 @@ Dựa trên bối cảnh thế giới và tiểu sử nhân vật được cung 
     };
 }
 
+// Smart context optimization when memory is full
+function optimizeContextWhenFull(
+    allTurns: GameTurn[], 
+    budget: number
+): { contextTurns: GameTurn[], charCount: number, optimizationApplied: string[] } {
+    let charCount = 0;
+    const contextTurns: GameTurn[] = [];
+    const optimizationApplied: string[] = [];
+
+    // Phase 1: Always include the most recent turns (essential for continuity)
+    const recentTurns = allTurns.slice(-5); // Last 5 turns
+    for (const turn of recentTurns) {
+        const turnLength = (turn.playerAction?.length || 0) + (turn.storyText?.length || 0);
+        contextTurns.unshift(turn);
+        charCount += turnLength;
+    }
+    
+    // Phase 2: Add major events regardless of chronological order
+    const majorEvents = allTurns.filter(turn => 
+        turn.isMajorEvent && !recentTurns.includes(turn)
+    );
+    
+    for (const majorEvent of majorEvents) {
+        const turnLength = (majorEvent.playerAction?.length || 0) + (majorEvent.storyText?.length || 0);
+        if (charCount + turnLength <= budget) {
+            contextTurns.unshift(majorEvent);
+            charCount += turnLength;
+        } else {
+            // If major event is too long, summarize it
+            const summarized = summarizeTurn(majorEvent);
+            const summarizedLength = summarized.playerAction.length + summarized.storyText.length;
+            if (charCount + summarizedLength <= budget) {
+                contextTurns.unshift(summarized);
+                charCount += summarizedLength;
+                optimizationApplied.push(`Summarized major event: ${majorEvent.playerAction || 'Game start'}`);
+            }
+        }
+    }
+    
+    // Phase 3: Fill remaining space with other important turns
+    const remainingTurns = allTurns.filter(turn => 
+        !recentTurns.includes(turn) && !majorEvents.includes(turn)
+    ).reverse(); // Start from most recent
+    
+    for (const turn of remainingTurns) {
+        const turnLength = (turn.playerAction?.length || 0) + (turn.storyText?.length || 0);
+        
+        if (charCount + turnLength <= budget) {
+            contextTurns.unshift(turn);
+            charCount += turnLength;
+        } else if (budget - charCount > 200) { // If we have some space left, try to summarize
+            const summarized = summarizeTurn(turn);
+            const summarizedLength = summarized.playerAction.length + summarized.storyText.length;
+            if (charCount + summarizedLength <= budget) {
+                contextTurns.unshift(summarized);
+                charCount += summarizedLength;
+                optimizationApplied.push(`Summarized turn: ${turn.playerAction || 'Action'}`);
+            } else {
+                break; // Stop if even summarized version doesn't fit
+            }
+        } else {
+            break; // No more space
+        }
+    }
+    
+    return { contextTurns, charCount, optimizationApplied };
+}
+
+// Summarize a turn to save space while preserving key information
+function summarizeTurn(turn: GameTurn): GameTurn {
+    const maxActionLength = 50;
+    const maxStoryLength = 150;
+    
+    let summarizedAction = turn.playerAction || '';
+    let summarizedStory = turn.storyText;
+    
+    // Summarize player action if too long
+    if (summarizedAction.length > maxActionLength) {
+        summarizedAction = summarizedAction.substring(0, maxActionLength - 3) + '...';
+    }
+    
+    // Summarize story text if too long, but preserve key elements
+    if (summarizedStory.length > maxStoryLength) {
+        // Try to preserve the first and last sentences
+        const sentences = summarizedStory.split(/[.!?]+/).filter(s => s.trim().length > 0);
+        if (sentences.length > 2) {
+            const firstSentence = sentences[0] + '.';
+            const lastSentence = sentences[sentences.length - 1] + '.';
+            summarizedStory = firstSentence + ' [...] ' + lastSentence;
+        }
+        
+        // If still too long, truncate
+        if (summarizedStory.length > maxStoryLength) {
+            summarizedStory = summarizedStory.substring(0, maxStoryLength - 3) + '...';
+        }
+    }
+    
+    return {
+        ...turn,
+        playerAction: summarizedAction,
+        storyText: summarizedStory
+    };
+}
+
 export async function continueStory(gameState: GameState, choice: string, geminiService: GoogleGenAI, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode): Promise<{
     newTurn: GameTurn;
     playerStatUpdates: CharacterStatUpdate[];
@@ -844,28 +1358,19 @@ export async function continueStory(gameState: GameState, choice: string, gemini
     isSceneBreak: boolean;
     presentNpcIds: string[];
 }> {
-    const MEMORY_CHAR_BUDGET = 12000;
-    let charCount = 0;
-    const contextTurns: GameTurn[] = [];
-
-    // Build context with new token budget logic
-    for (let i = gameState.history.length - 1; i >= 0; i--) {
-        const turn = gameState.history[i];
-        const turnLength = (turn.playerAction?.length || 0) + (turn.storyText?.length || 0);
-
-        // Always include the last 3 turns or any major event, regardless of budget initially
-        if (contextTurns.length < 3 || turn.isMajorEvent) {
-            contextTurns.unshift(turn);
-            charCount += turnLength;
-            continue;
-        }
-
-        if (charCount + turnLength > MEMORY_CHAR_BUDGET) {
-            break; // Stop when budget is exceeded
-        }
-
-        contextTurns.unshift(turn);
-        charCount += turnLength;
+    // Dynamic budget based on API capabilities - increased significantly
+    // since we removed manual token limits
+    const MEMORY_CHAR_BUDGET = 25000; // Further increased from 20000 to 25000
+    
+    // Use smart context optimization
+    const optimization = optimizeContextWhenFull(gameState.history, MEMORY_CHAR_BUDGET);
+    const contextTurns = optimization.contextTurns;
+    const charCount = optimization.charCount;
+    
+    // Log optimization if applied
+    if (optimization.optimizationApplied.length > 0) {
+        console.log('Context optimization applied:', optimization.optimizationApplied);
+        console.log(`Final context: ${contextTurns.length} turns, ${charCount} characters of ${MEMORY_CHAR_BUDGET} budget (${Math.round(charCount/MEMORY_CHAR_BUDGET*100)}% used)`);
     }
 
     const recentHistory = contextTurns.map(turn => 
@@ -987,8 +1492,14 @@ Khi chế độ Logic Nghiêm ngặt TẮT, người chơi không còn hành đ�
 - Nhân vật chính: ${JSON.stringify(character)}
 `;
 
-    // --- Intelligent Memory Filter ---
-    const allChronicles = gameState.plotChronicle || [];
+    // --- Intelligent Memory Filter with Optimization ---
+    let allChronicles = gameState.plotChronicle || [];
+    
+    // Apply grouping optimization if we have too many chronicles
+    if (allChronicles.length > 15) {
+        allChronicles = groupAndSummarizeMinorEvents(allChronicles);
+        console.log(`Chronicle optimization: Reduced from ${gameState.plotChronicle?.length || 0} to ${allChronicles.length} entries`);
+    }
 
     // Rule 1 & 2: Get essential chronicles (recent and significant)
     const recentChronicles = allChronicles.slice(-5);
@@ -1000,17 +1511,31 @@ Khi chế độ Logic Nghiêm ngặt TẮT, người chơi không còn hành đ�
     });
     const essentialChronicles = Array.from(essentialChronicleMap.values());
 
-    // Rule 3: Get random recalls from the remaining pool
+    // Rule 3: Get contextual recalls based on current situation
     const lessImportantChronicles = allChronicles.filter(c => !essentialChronicleMap.has(c.summary));
-    const randomRecalls: ChronicleEntry[] = [];
-    const NUM_RANDOM_RECALLS = 1; // Number of random past events to recall
-    if (lessImportantChronicles.length > 0) {
-        const shuffled = lessImportantChronicles.sort(() => 0.5 - Math.random());
-        randomRecalls.push(...shuffled.slice(0, NUM_RANDOM_RECALLS));
-    }
+    
+    // For contextual recalls, we'll need to analyze after getting the core response
+    // For now, include some contextual recalls based on player action and recent NPCs
+    const recentNpcIds = gameState.npcs
+        .filter(npc => {
+            // Check if NPC was mentioned in recent turns
+            const recentTurns = gameState.history.slice(-5);
+            return recentTurns.some(turn => 
+                turn.storyText.toLowerCase().includes(npc.name.toLowerCase())
+            );
+        })
+        .map(npc => npc.id);
+    
+    const contextualRecalls = findContextualRecalls(
+        lessImportantChronicles, 
+        choice, 
+        recentNpcIds, 
+        gameState, 
+        2 // Maximum number of contextual recalls
+    );
     
     // Combine all for the final list
-    const finalFilteredChronicles = [...essentialChronicles, ...randomRecalls];
+    const finalFilteredChronicles = [...essentialChronicles, ...contextualRecalls];
 
     const plotChronicleText = finalFilteredChronicles.length > 0
         ? finalFilteredChronicles.map(c => `- (${c.eventType}): ${c.summary}`).join('\n')
@@ -1029,9 +1554,25 @@ ${recentHistory}
 Hành động của người chơi là **sự kiện hiện tại duy nhất**. Dựa vào đó và 3 tầng ký ức, hãy viết một **đoạn truyện hoàn toàn mới** mô tả **kết quả trực tiếp** của hành động này. Tuân thủ **QUY TẮC VÀNG**: KHÔNG tóm tắt, KHÔNG lặp lại, KHÔNG viết lại bất kỳ sự kiện nào từ lượt trước. Sau đó, tạo 8 lựa chọn mới và cập nhật dữ liệu logic (chỉ số, NPC) của game. KHÔNG trả về trường 'playerSkills' trong lượt này.`;
 
     const coreResult = await callJsonAI(corePrompt, continueSchema, geminiService, gameState.worldContext.isNsfw);
-    const coreResponse = parseAndValidateJsonResponse(coreResult.text);
+    const rawCoreResponse = parseAndValidateJsonResponse(coreResult.text);
+    const coreResponse = validateCoreResponse(rawCoreResponse);
     const presentNpcIds = coreResponse.presentNpcIds || [];
     const coreTokens = coreResult.usageMetadata?.totalTokenCount || 0;
+    
+    // Post-processing: Find additional contextual recalls based on AI's identified NPCs
+    const additionalContextualRecalls = findContextualRecalls(
+        lessImportantChronicles.filter(c => !finalFilteredChronicles.includes(c)), 
+        choice, 
+        presentNpcIds, 
+        gameState, 
+        1 // Just 1 additional recall based on AI's NPC selection
+    );
+    
+    // Update the final chronicle list if we found additional relevant context
+    if (additionalContextualRecalls.length > 0) {
+        finalFilteredChronicles.push(...additionalContextualRecalls);
+        console.log('Added post-AI contextual recalls:', additionalContextualRecalls.map(r => r.summary));
+    }
     
     let npcUpdates: NPCUpdate[] = coreResponse.npcUpdates || [];
     let creativeTokens = 0;
@@ -1093,7 +1634,16 @@ Hành động của người chơi là **sự kiện hiện tại duy nhất**. 
         const summarizerResult = await callJsonAI(summarizerPrompt, chronicleEntrySchema, geminiService, gameState.worldContext.isNsfw);
         chronicleTokens = summarizerResult.usageMetadata?.totalTokenCount || 0;
         
-        newChronicleEntry = parseAndValidateJsonResponse(summarizerResult.text) as ChronicleEntry;
+        const rawChronicleEntry = parseAndValidateJsonResponse(summarizerResult.text);
+        const validatedChronicleEntry = validateChronicleEntry(rawChronicleEntry);
+        
+        // Check for duplicates before adding to chronicle
+        if (!isDuplicateChronicleEntry(validatedChronicleEntry, gameState.plotChronicle)) {
+            newChronicleEntry = validatedChronicleEntry;
+        } else {
+            console.log('Duplicate chronicle entry detected and skipped:', validatedChronicleEntry.summary);
+            newChronicleEntry = undefined; // Don't add duplicate entry
+        }
     }
     
     newTurn.tokenCount = coreTokens + creativeTokens + chronicleTokens;
