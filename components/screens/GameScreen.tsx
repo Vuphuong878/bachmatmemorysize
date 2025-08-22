@@ -51,6 +51,21 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
       reorderPlayerStat, movePlayerStatToTop,
       recentlyUpdatedPlayerStats, recentlyUpdatedNpcStats
   } = useGameEngine(initialData, settingsHook);
+
+  // --- UI/gameplay settings state ---
+  // ...existing useState hooks...
+
+  // Restore UI settings from save (if any)
+  useEffect(() => {
+    if (gameState && gameState.uiSettings) {
+      setDestinyCompassMode(gameState.uiSettings.destinyCompassMode);
+      setLustModeFlavor(gameState.uiSettings.lustModeFlavor);
+      setNpcMindset(gameState.uiSettings.npcMindset);
+      setIsLogicModeOn(gameState.uiSettings.isLogicModeOn);
+      setIsConscienceModeOn(gameState.uiSettings.isConscienceModeOn);
+      setIsStrictInterpretationOn(gameState.uiSettings.isStrictInterpretationOn);
+    }
+  }, [gameState]);
   
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>('bms-view-mode', 'desktop');
   const [autoHideActionPanel, setAutoHideActionPanel] = useLocalStorage<boolean>('bms-auto-hide-panel', false);
@@ -105,7 +120,18 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   
   const handleSaveAndExit = () => {
     if (gameState) {
-      GameSaveService.saveManualSave(gameState);
+      const gameStateWithSettings = {
+        ...gameState,
+        uiSettings: {
+          destinyCompassMode,
+          lustModeFlavor,
+          npcMindset,
+          isLogicModeOn,
+          isConscienceModeOn,
+          isStrictInterpretationOn,
+        }
+      };
+      GameSaveService.saveManualSave(gameStateWithSettings);
     }
     onBackToMenu();
   };

@@ -137,4 +137,13 @@ export interface GameState {
   playerSkills: Skill[]; // Structured skills
   plotChronicle: ChronicleEntry[]; // The structured, summarized history of major plot points.
   turnsSinceLastChronicle: GameTurn[]; // Track turns for the next summary
+  // UI/gameplay settings (optional)
+  uiSettings?: {
+    destinyCompassMode: DestinyCompassMode;
+    lustModeFlavor: LustModeFlavor | null;
+    npcMindset: NpcMindset;
+    isLogicModeOn: boolean;
+    isConscienceModeOn: boolean;
+    isStrictInterpretationOn: boolean;
+  };
 }
