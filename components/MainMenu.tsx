@@ -18,6 +18,17 @@ interface MainMenuProps {
 
 const changelogs = [
   {
+    version: '1.3.0',
+    date: '2025-08-23',
+    content: [
+      '- Kiểm tra và xác nhận logic lưu ký ức dài hạn (plotChronicle) đã đúng, đảm bảo sự kiện lớn (scene break) sẽ được ghi nhận vào file save.',
+      '- Hướng dẫn debug: thêm gợi ý log ra console khi có chronicle mới để dễ kiểm tra.',
+      '- Tối ưu lại quy trình kiểm tra duplicate chronicle ở cả service và game engine.',
+      '- Đã xác nhận hệ thống memory ngắn hạn/dài hạn hoạt động đúng, chỉ cần tạo sự kiện lớn để ký ức dài hạn xuất hiện trong file save.',
+      '- Cập nhật changelog cho các thay đổi về memory và hướng dẫn kiểm tra.'
+    ].join('\n'),
+  },
+  {
     version: '1.2.0',
     date: '2025-08-22',
     content: [
