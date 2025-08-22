@@ -876,6 +876,27 @@ export async function continueStory(gameState: GameState, choice: string, gemini
     const simplifiedNpcs = gameState.npcs.map(npc => ({ ...npc, stats: npc.stats ? simplifyStatsForStoryteller(npc.stats) : undefined }));
     const { character, description, genre, narrativePerspective } = gameState.worldContext;
 
+    // --- Chọn lọc sự kiện điểm thấp ngẫu nhiên từ plotChronicle và tạo plotChronicleContext ---
+    function getRandomLowScoreEvents(chronicle: ChronicleEntry[], count = 2) {
+        const lowScoreEvents = chronicle.filter(e => e.plotSignificanceScore <= 3);
+        if (lowScoreEvents.length === 0) return [];
+        const shuffled = lowScoreEvents.sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, Math.min(count, shuffled.length));
+    }
+    const randomLowEvents = getRandomLowScoreEvents(gameState.plotChronicle);
+    const importantEvents = gameState.plotChronicle.filter(e => e.plotSignificanceScore >= 7);
+    const recentEvents = gameState.plotChronicle.slice(-3);
+    const allChronicleEvents = [...importantEvents, ...recentEvents, ...randomLowEvents];
+    const uniqueChronicleEvents: ChronicleEntry[] = [];
+    const seenSummaries = new Set();
+    for (const e of allChronicleEvents) {
+        if (!seenSummaries.has(e.summary)) {
+            uniqueChronicleEvents.push(e);
+            seenSummaries.add(e.summary);
+        }
+    }
+    const plotChronicleContext = uniqueChronicleEvents.map(e => `- (${e.eventType}) ${e.summary}`).join('\n');
+
     const perspectiveRules = getPerspectiveRules(narrativePerspective);
     const destinyCompassRules = getDestinyCompassRules(destinyCompassMode);
 
