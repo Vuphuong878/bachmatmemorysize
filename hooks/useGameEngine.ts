@@ -8,7 +8,8 @@ const CORE_STATS = ['Sinh Lực', 'Thể Lực', 'Lý trí', 'Dục vọng', 'C�
 
 function classifyStatType(statName: string, statData: any): 'stat' | 'item' {
     if (CORE_STATS.includes(statName)) return 'stat';
-    if (statName.startsWith('Vật phẩm') || statData?.quantity !== undefined) return 'item';
+    // Nếu tên bắt đầu bằng "Vật phẩm" hoặc đã từng là item (type: 'item'), luôn giữ là item
+    if (statName.startsWith('Vật phẩm') || statData?.quantity !== undefined || statData?.type === 'item') return 'item';
     // Có thể mở rộng thêm logic nhận diện item ở đây
     return 'stat';
 }
@@ -27,7 +28,9 @@ function convertStatUpdatesArrayToObject(updates: CharacterStatUpdate[]): Charac
         // The statName is the key, the rest of the object is the value
         const { statName, ...restOfStat } = update;
         if (statName) {
-            const type = classifyStatType(statName, restOfStat);
+            let type = classifyStatType(statName, restOfStat);
+            // Nếu AI đã gửi type: 'item' thì luôn giữ là item
+            if (restOfStat.type === 'item') type = 'item';
             statsObject[statName] = { ...restOfStat, type };
         }
     }
@@ -169,6 +172,7 @@ function processSingleStatSet(currentStats: CharacterStats): CharacterStats {
     // Now, process durations for the remaining stats
     for (const key in newStats) {
         const stat = newStats[key];
+        // Chỉ xử lý tự động giảm duration và xóa stat nếu duration là số
         if (typeof stat.duration === 'number') {
             // Nếu là item thì KHÔNG tự động xóa khi hết duration, chỉ xóa stat thường
             if (stat.duration <= 1 && !CORE_STATS.includes(key) && stat.type !== 'item') {
@@ -177,6 +181,7 @@ function processSingleStatSet(currentStats: CharacterStats): CharacterStats {
                 newStats[key] = { ...stat, duration: stat.duration - 1 };
             }
         }
+        // Nếu không có duration (undefined), stat tồn tại vĩnh viễn, không bị xóa
     }
     
     // Finally, add the newly evolved stats
@@ -636,11 +641,13 @@ export function useGameEngine(
             const newState = { ...prevState };
             const durationValue = newStat.duration.trim() === '' ? undefined : parseInt(newStat.duration, 10);
 
+            // Nếu stat cũ là item thì luôn giữ type: 'item' khi edit
             const updatedStatData: CharacterStat = {
                 value: newStat.value,
                 duration: isNaN(durationValue as any) ? undefined : durationValue,
                 history: editingStat.stat.history, // Preserve history on manual edit
-                evolution: editingStat.stat.evolution // Preserve evolution
+                evolution: editingStat.stat.evolution, // Preserve evolution
+                type: editingStat.stat.type === 'item' ? 'item' : undefined
             };
 
             if (editingStat.target === 'player') {
