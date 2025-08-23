@@ -12,6 +12,10 @@ interface StoryLogProps {
 }
 
 
+const defaultPlaceNames = [
+    'Nhân Giới', 'Ma Viêm Sơn Mạch', 'Thiên Nam', 'Ma Đạo', 'Hoàng Phong Cốc'
+];
+
 function highlightStory(
     text: string,
     mainCharacterName?: string,
@@ -19,15 +23,31 @@ function highlightStory(
     placeNames?: string[]
 ) {
     let result = text;
-    // 0. Highlight marker ẩn nếu có (ví dụ: [NAME]...[/NAME], [PLACE]...[/PLACE])
-    // Không hiện marker, chỉ highlight phần text bên trong
-    result = result.replace(/\[NA\](.+?)\[\/NA\]/g, '<span class="highlight-main">$1</span>');
-    result = result.replace(/\[NP\](.+?)\[\/NP\]/g, '<span class="highlight-npc">$1</span>');
-    result = result.replace(/\[PL\](.+?)\[\/PL\]/g, '<span class="highlight-place">$1</span>');
-    result = result.replace(/\[QU\](.+?)\[\/QU\]/g, '<span class="highlight-quote">$1</span>');
-    result = result.replace(/\[STAT\](.+?)\[\/STAT\]/g, '<span class="highlight-quote">$1</span>');
-    result = result.replace(/\[ITEM\](.+?)\[\/ITEM\]/g, '<span class="highlight-quote">$1</span>');
-    result = result.replace(/\[IT\](.+?)\[\/IT\]/g, '<span class="highlight-quote">$1</span>');
+    // 1. Highlight đoạn hội thoại (câu trong "..." hoặc “...”)
+    result = result.replace(/([“"'])(.+?)([”"'])/g, '<span class="highlight-quote">$1$2$3</span>');
+
+    // 2. Highlight tên nhân vật chính
+    if (mainCharacterName) {
+        const re = new RegExp(`\\b${mainCharacterName.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}(?![\w-])`, 'g');
+        result = result.replace(re, '<span class="highlight-main">$&</span>');
+    }
+    // 3. Highlight tên NPC
+    if (npcNames && npcNames.length > 0) {
+        npcNames.forEach(name => {
+            if (name && name !== mainCharacterName) {
+                const re = new RegExp(`\\b${name.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}(?![\w-])`, 'g');
+                result = result.replace(re, '<span class="highlight-npc">$&</span>');
+            }
+        });
+    }
+    // 4. Highlight địa danh
+    const allPlaces = [...defaultPlaceNames, ...(placeNames || [])];
+    allPlaces.forEach(place => {
+        if (place) {
+            const re = new RegExp(`\\b${place.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}(?![\w-])`, 'g');
+            result = result.replace(re, '<span class="highlight-place">$&</span>');
+        }
+    });
     return result;
 }
 
@@ -80,19 +100,19 @@ const StoryLog: React.FC<StoryLogProps> = ({ history, mainCharacterName, npcName
                     animation: fade-in 0.5s ease-out forwards;
                 }
                 .highlight-main {
-                    color: #2366f5ff;
+                    color: #ffd600;
                     font-weight: bold;
                 }
                 .highlight-npc {
-                    color: #0f81ebff;
+                    color: #ffb300;
                     font-weight: bold;
                 }
                 .highlight-place {
-                    color: #eebb24ff;
+                    color: #ffe082;
                     font-weight: bold;
                 }
                 .highlight-quote {
-                    color: #afe7ebff;
+                    color: #4dd0e1;
                     font-style: italic;
                 }
             `}</style>
