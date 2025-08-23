@@ -168,16 +168,15 @@ function processSingleStatSet(currentStats: CharacterStats): CharacterStats {
 
     // Now, process durations for the remaining stats
     for (const key in newStats) {
-         const stat = newStats[key];
-         if (typeof stat.duration === 'number') {
-            // If a stat's duration runs out, delete it, UNLESS it's a core stat.
-            if (stat.duration <= 1 && !CORE_STATS.includes(key)) {
+        const stat = newStats[key];
+        if (typeof stat.duration === 'number') {
+            // Nếu là item thì KHÔNG tự động xóa khi hết duration, chỉ xóa stat thường
+            if (stat.duration <= 1 && !CORE_STATS.includes(key) && stat.type !== 'item') {
                 delete newStats[key];
             } else {
-                // Otherwise, just decrement the duration. Core stats with a duration will just have it tick down but never be removed by this logic.
                 newStats[key] = { ...stat, duration: stat.duration - 1 };
             }
-         }
+        }
     }
     
     // Finally, add the newly evolved stats
