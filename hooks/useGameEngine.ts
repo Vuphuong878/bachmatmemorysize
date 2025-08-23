@@ -816,6 +816,34 @@ export function useGameEngine(
         });
     }, []);
 
+    /**
+     * Cập nhật một entry trong plotChronicle (ký ức dài hạn) theo index và nội dung mới.
+     */
+    function updatePlotChronicleEntry(index: number, newSummary: string) {
+        setGameState(prevState => {
+            if (!prevState) return null;
+            if (!prevState.plotChronicle || index < 0 || index >= prevState.plotChronicle.length) return prevState;
+            const updatedChronicle = prevState.plotChronicle.map((entry, i) =>
+                i === index ? { ...entry, summary: newSummary } : entry
+            );
+            return { ...prevState, plotChronicle: updatedChronicle };
+        });
+    }
+
+    /**
+     * Cập nhật storyText của một turn trong turnsSinceLastChronicle (ký ức ngắn hạn) theo index và nội dung mới.
+     */
+    function updateShortTermMemoryTurn(index: number, newStoryText: string) {
+        setGameState(prevState => {
+            if (!prevState) return null;
+            if (!prevState.turnsSinceLastChronicle || index < 0 || index >= prevState.turnsSinceLastChronicle.length) return prevState;
+            const updatedTurns = prevState.turnsSinceLastChronicle.map((turn, i) =>
+                i === index ? { ...turn, storyText: newStoryText } : turn
+            );
+            return { ...prevState, turnsSinceLastChronicle: updatedTurns };
+        });
+    }
+
     return {
         gameState,
         isLoading,
@@ -856,5 +884,7 @@ export function useGameEngine(
         movePlayerStatToTop,
         recentlyUpdatedPlayerStats,
         recentlyUpdatedNpcStats,
+        updatePlotChronicleEntry,
+        updateShortTermMemoryTurn,
     };
 }

@@ -8,6 +8,7 @@ import CharacterSheet from '../game/CharacterSheet';
 import StoryLog from '../game/StoryLog';
 import ChoiceBox from '../game/ChoiceBox';
 import Button from '../ui/Button';
+import MemoryEditModal from '../game/MemoryEditModal';
 import TokenCounter from '../game/TokenCounter';
 import ExitConfirmationModal from '../game/ExitConfirmationModal';
 import * as GameSaveService from '../../services/GameSaveService';
@@ -36,7 +37,7 @@ interface GameScreenProps {
   settingsHook: ReturnType<typeof useSettings>;
 }
 
-type LeftPanelTab = 'info' | 'skills';
+type LeftPanelTab = 'info' | 'skills' | 'inventory' | 'memory';
 
 const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, settingsHook }) => {
   const { 
@@ -49,8 +50,14 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
       skillToDelete, requestSkillDeletion, confirmSkillDeletion, cancelSkillDeletion,
       editingAbility, requestAbilityEdit, confirmAbilityEdit, cancelAbilityEdit,
       reorderPlayerStat, movePlayerStatToTop,
-      recentlyUpdatedPlayerStats, recentlyUpdatedNpcStats
+      recentlyUpdatedPlayerStats, recentlyUpdatedNpcStats,
+      updatePlotChronicleEntry, updateShortTermMemoryTurn
   } = useGameEngine(initialData, settingsHook);
+
+  const [editingChronicleIdx, setEditingChronicleIdx] = useState<number | string | null>(null);
+  const [editingChronicleValue, setEditingChronicleValue] = useState('');
+  const [editingMemoryType, setEditingMemoryType] = useState<'long' | 'short' | null>(null);
+  const [detailModal, setDetailModal] = useState<{ type: 'long' | 'short'; idx: number; content: string } | null>(null);
 
   // --- UI/gameplay settings state ---
   // ...existing useState hooks...
@@ -253,35 +260,142 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
             : `fixed z-40 inset-y-0 left-0 w-4/5 max-w-sm h-full transform transition-transform duration-300 ease-in-out ${isLeftPanelOpen ? 'translate-x-0' : '-translate-x-full'}`
         }`}>
             <div className="bg-[#1d1526]/95 backdrop-blur-sm rounded-2xl border border-solid border-[#633aab]/70 shadow-[0_0_20px_rgba(99,58,171,0.4)] h-full flex flex-col">
-                <div className="flex-shrink-0 flex overflow-hidden rounded-t-xl">
-                    <TabButton tabId="info" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Nhân Vật</TabButton>
-                    <TabButton tabId="skills" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Kỹ Năng</TabButton>
-                </div>
+        <div className="flex-shrink-0 flex overflow-hidden rounded-t-xl">
+          <TabButton tabId="info" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Nhân Vật</TabButton>
+          <TabButton tabId="skills" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Kỹ Năng</TabButton>
+          <TabButton tabId="inventory" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Hành Trang</TabButton>
+          <TabButton tabId="memory" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Ký Ức</TabButton>
+        </div>
                 <div className="flex-grow min-h-0 overflow-y-auto">
                     {gameState && isGameInitialized && (
                         <>
-                            <div style={{ display: activeLeftTab === 'info' ? 'block' : 'none' }}>
-                                <CharacterSheet 
-                                    stats={gameState.playerStats}
-                                    playerStatOrder={gameState.playerStatOrder || []}
-                                    playerSkills={gameState.playerSkills}
-                                    isLoading={isLoading}
-                                    onAcquireSkill={manuallyAcquireSkill}
-                                    onRequestStatEdit={(statName, stat) => requestStatEdit('player', statName, stat)}
-                                    onRequestStatDelete={(statName) => requestStatDelete('player', statName)}
-                                    onReorderStat={reorderPlayerStat}
-                                    onMoveStatToTop={movePlayerStatToTop}
-                                    recentlyUpdatedStats={recentlyUpdatedPlayerStats}
-                                />
-                            </div>
-                            <div style={{ display: activeLeftTab === 'skills' ? 'block' : 'none' }}>
-                                <SkillCodex
-                                    skills={gameState.playerSkills}
-                                    onUseSkill={handleUseSkill}
-                                    onRequestDelete={requestSkillDeletion}
-                                    onRequestEdit={requestAbilityEdit}
-                                />
-                            </div>
+              <div style={{ display: activeLeftTab === 'info' ? 'block' : 'none' }}>
+                <CharacterSheet 
+                  stats={gameState.playerStats}
+                  playerStatOrder={gameState.playerStatOrder || []}
+                  playerSkills={gameState.playerSkills}
+                  isLoading={isLoading}
+                  onAcquireSkill={manuallyAcquireSkill}
+                  onRequestStatEdit={(statName, stat) => requestStatEdit('player', statName, stat)}
+                  onRequestStatDelete={(statName) => requestStatDelete('player', statName)}
+                  onReorderStat={reorderPlayerStat}
+                  onMoveStatToTop={movePlayerStatToTop}
+                  recentlyUpdatedStats={recentlyUpdatedPlayerStats}
+                />
+              </div>
+              <div style={{ display: activeLeftTab === 'skills' ? 'block' : 'none' }}>
+                <SkillCodex
+                  skills={gameState.playerSkills}
+                  onUseSkill={handleUseSkill}
+                  onRequestDelete={requestSkillDeletion}
+                  onRequestEdit={requestAbilityEdit}
+                />
+              </div>
+              <div style={{ display: activeLeftTab === 'inventory' ? 'block' : 'none' }}>
+                <div className="p-4 text-center text-[#a08cb6]">
+                  <span className="text-lg font-semibold">Hành Trang</span>
+                  <div className="mt-4 text-sm">(Chức năng đang phát triển)</div>
+                </div>
+              </div>
+              <div style={{ display: activeLeftTab === 'memory' ? 'block' : 'none' }}>
+                <div className="p-4 text-[#a08cb6]">
+                  <span className="text-lg font-semibold block text-center mb-2">Ký Ức Dài Hạn</span>
+                  {gameState.plotChronicle && gameState.plotChronicle.length > 0 ? (
+                    <ul className="mb-6 space-y-2 max-h-48 overflow-y-auto pr-2">
+                      {gameState.plotChronicle.map((entry, idx) => (
+                        <li key={idx} className="bg-[#201a2a]/80 rounded p-2 text-left border-l-4 border-[#6d4e8e]/40 flex flex-col gap-1 shadow-none">
+                          <>
+                            <>
+                              <div className="font-bold text-[#cfc6e0] truncate" title={entry.summary}>{entry.summary}</div>
+                              <div className="text-xs text-[#a08cb6] mt-1 truncate">Loại: {entry.eventType}</div>
+                              <div className="text-xs text-[#cfc6e0] mt-1">Điểm quan trọng: <span className="font-bold">{entry.plotSignificanceScore}</span></div>
+                              <div className="flex gap-2 mt-1">
+                                <button
+                                  className="px-2 py-1 rounded bg-[#6d4e8e] text-[#e8dff5] text-xs font-bold hover:bg-[#32284a] hover:text-white"
+                                  onClick={() => {
+                                    setEditingChronicleIdx(idx);
+                                    setEditingChronicleValue(entry.summary);
+                                    setEditingMemoryType('long');
+                                  }}
+                                >Chỉnh sửa</button>
+                                <button
+                                  className="px-2 py-1 rounded bg-[#32284a] text-[#cfc6e0] text-xs font-bold hover:bg-[#6d4e8e] hover:text-white"
+                                  onClick={() => setDetailModal({ type: 'long', idx, content: entry.summary })}
+                                >Chi tiết</button>
+                              </div>
+                            </>
+                          </>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-center text-sm text-[#a08cb6]/70 mb-6">Chưa có ký ức dài hạn nào.</div>
+                  )}
+                  <span className="text-lg font-semibold block text-center mb-2">Ký Ức Ngắn Hạn</span>
+                  {gameState.turnsSinceLastChronicle && gameState.turnsSinceLastChronicle.length > 0 ? (
+                    <ul className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                      {gameState.turnsSinceLastChronicle.map((turn, idx) => (
+                        <li key={idx} className="bg-[#201a2a]/60 rounded p-2 text-left border-l-4 border-[#6d4e8e]/20 flex flex-col gap-1 shadow-none">
+                          <>
+                            <>
+                              <div className="text-sm text-[#cfc6e0] truncate" title={turn.storyText}>{turn.storyText}</div>
+                              <div className="flex gap-2 mt-1">
+                                <button
+                                  className="px-2 py-1 rounded bg-[#6d4e8e] text-[#e8dff5] text-xs font-bold hover:bg-[#32284a] hover:text-white"
+                                  onClick={() => {
+                                    setEditingChronicleIdx(`short-${idx}`);
+                                    setEditingChronicleValue(turn.storyText);
+                                    setEditingMemoryType('short');
+                                  }}
+                                >Chỉnh sửa</button>
+                                <button
+                                  className="px-2 py-1 rounded bg-[#32284a] text-[#cfc6e0] text-xs font-bold hover:bg-[#6d4e8e] hover:text-white"
+                                  onClick={() => setDetailModal({ type: 'short', idx, content: turn.storyText })}
+                                >Chi tiết</button>
+                              </div>
+                            </>
+                          </>
+      {/* Modal chỉnh sửa ký ức */}
+      <MemoryEditModal
+        isOpen={editingChronicleIdx !== null}
+        onClose={() => { setEditingChronicleIdx(null); setEditingMemoryType(null); }}
+        onSave={(value) => {
+          if (editingChronicleIdx !== null && editingMemoryType) {
+            if (editingMemoryType === 'long') {
+              updatePlotChronicleEntry(Number(editingChronicleIdx), value);
+            } else {
+              updateShortTermMemoryTurn(Number((editingChronicleIdx as string).replace('short-', '')), value);
+            }
+          }
+          setEditingChronicleIdx(null);
+          setEditingMemoryType(null);
+        }}
+        initialValue={editingChronicleValue}
+        title={editingMemoryType === 'long' ? 'Chỉnh Sửa Ký Ức Dài Hạn' : editingMemoryType === 'short' ? 'Chỉnh Sửa Ký Ức Ngắn Hạn' : 'Chỉnh Sửa Ký Ức'}
+      />
+                        </li>
+                      ))}
+      {/* Modal hiển thị chi tiết ký ức */}
+      {detailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-[#1d1526] rounded-xl p-6 max-w-lg w-full border-2 border-[#e02585] shadow-2xl relative animate-fade-in-fast">
+            <button
+              className="absolute top-2 right-2 px-2 py-1 rounded bg-[#e02585] text-white text-xs font-bold hover:bg-[#ffd600] hover:text-[#2a2135]"
+              onClick={() => setDetailModal(null)}
+            >Đóng</button>
+            <div className="text-lg font-bold text-[#ffd600] mb-2">Chi tiết ký ức {detailModal.type === 'long' ? 'dài hạn' : 'ngắn hạn'}</div>
+            <div className="whitespace-pre-line text-[#e8dff5] text-base max-h-96 overflow-y-auto">
+              {detailModal.content}
+            </div>
+          </div>
+        </div>
+      )}
+                    </ul>
+                  ) : (
+                    <div className="text-center text-sm text-[#a08cb6]/70">Chưa có ký ức ngắn hạn nào.</div>
+                  )}
+                </div>
+              </div>
                         </>
                     )}
                 </div>
