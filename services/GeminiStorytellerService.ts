@@ -39,7 +39,7 @@ const statUpdateItemSchema = {
         },
         value: {
             type: Type.STRING,
-            description: "Giá trị mới của chỉ số. PHẢI là một chuỗi văn bản mô tả trạng thái. Ví dụ, với chỉ số 'Sinh Lực', giá trị có thể là 'Khỏe mạnh', 'Bị thương nhẹ', 'Thoi thóp'. Với chỉ số 'Dục vọng', có thể là 'Bình thường', 'Tăng cao', 'Bùng cháy'. CHỈ dùng số cho các vật phẩm có thể đếm được (ví dụ: '15' cho 'Linh thạch')."
+            description: "Giá trị mới của chỉ số. PHẢI là một chuỗi văn bản mô tả trạng thái. Ví dụ, với chỉ số 'Sinh Lực', giá trị có thể là 'Khỏe mạnh', 'Bị thương nhẹ', 'Thoi thóp'. Với chỉ số 'Dục vọng', có thể là 'Bình thường', 'Hứng Thú', 'Mong Muốn'. CHỈ dùng số cho các vật phẩm có thể đếm được (ví dụ: '15' cho 'Linh thạch')."
         },
         duration: {
             type: Type.INTEGER,
@@ -961,8 +961,8 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
     5.  Nếu không có NPC nào hiện diện, trả về một mảng rỗng \`[]\`.
 - **QUY TẮC SUY LUẬN CHỦ ĐỘNG:** Bạn BẮT BUỘC phải chủ động suy luận ra các thay đổi về chỉ số từ hành động và diễn biến. Đừng chờ đợi câu chuyện mô tả rõ ràng. Ví dụ: một cuộc rượt đuổi dài -> giảm 'Thể Lực'; một cảnh kinh hoàng -> giảm 'Lý trí'.
 - **HỆ THỐNG TRẠNG THÁI ĐỘNG:**
-    1.  **CHỈ SỐ DẠNG VĂN BẢN:** Các chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Dục vọng) PHẢI ở dạng văn bản mô tả (ví dụ: Sinh Lực: 'Khỏe mạnh', 'Bị thương nhẹ').
-    2.  **BẮT BUỘC HÓA DURATION:** MỌI chỉ số không phải cốt lõi (ví dụ: 'Choáng váng', 'Gãy xương') BẮT BUỘC phải có thuộc tính 'duration' (số lượt tồn tại). TUYỆT ĐỐI CẤM gán 'duration' cho 4 chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Dục vọng).
+    1.  **CHỈ SỐ DẠNG VĂN BẢN:** Các chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Dục vọng, Cảnh Giới) PHẢI ở dạng văn bản mô tả (ví dụ: Sinh Lực: 'Khỏe mạnh', 'Bị thương nhẹ').
+    2.  **BẮT BUỘC HÓA DURATION:** MỌI chỉ số không phải cốt lõi (ví dụ: 'Choáng váng', 'Gãy xương') BẮT BUỘC phải có thuộc tính 'duration' (số lượt tồn tại). TUYỆT ĐỐI CẤM gán 'duration' cho 5 chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Dục vọng, Cảnh Giới).
     3.  **SỰ DIỄN BIẾN (EVOLUTION):** Với các trạng thái có thể trở nặng (ví dụ: 'Vết thương nhỏ' -> 'Nhiễm trùng'), hãy NÊN thêm thuộc tính 'evolution'.
     4.  **CÔ ĐỌNG THUỘC TÍNH (ATTRIBUTE CONDENSATION):** Để giữ giao diện gọn gàng, bạn BẮT BUỘC phải tuân thủ quy tắc cô đọng. Khi bạn cập nhật một chỉ số và thấy rằng giá trị (\`value\`) mới của nó quá dài (ví dụ: hơn 50 ký tự):
         a. **Sáng tạo danh hiệu:** Dựa vào nội dung của giá trị dài đó, hãy tự sáng tạo ra một danh hiệu ngắn gọn, súc tích và mạnh mẽ hơn (dưới 35 ký tự) để làm giá trị \`value\` mới.
