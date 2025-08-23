@@ -270,34 +270,52 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
                 <div className="flex-grow min-h-0 overflow-y-auto">
                     {gameState && isGameInitialized && (
                         <>
-              <div style={{ display: activeLeftTab === 'info' ? 'block' : 'none' }}>
-                <CharacterSheet 
-                  stats={gameState.playerStats}
-                  playerStatOrder={gameState.playerStatOrder || []}
-                  playerSkills={gameState.playerSkills}
-                  isLoading={isLoading}
-                  onAcquireSkill={manuallyAcquireSkill}
-                  onRequestStatEdit={(statName, stat) => requestStatEdit('player', statName, stat)}
-                  onRequestStatDelete={(statName) => requestStatDelete('player', statName)}
-                  onReorderStat={reorderPlayerStat}
-                  onMoveStatToTop={movePlayerStatToTop}
-                  recentlyUpdatedStats={recentlyUpdatedPlayerStats}
-                />
-              </div>
-              <div style={{ display: activeLeftTab === 'skills' ? 'block' : 'none' }}>
-                <SkillCodex
-                  skills={gameState.playerSkills}
-                  onUseSkill={handleUseSkill}
-                  onRequestDelete={requestSkillDeletion}
-                  onRequestEdit={requestAbilityEdit}
-                />
-              </div>
-              <div style={{ display: activeLeftTab === 'inventory' ? 'block' : 'none' }}>
-                <div className="p-4 text-center text-[#a08cb6]">
-                  <span className="text-lg font-semibold">Hành Trang</span>
-                  <div className="mt-4 text-sm">(Chức năng đang phát triển)</div>
-                </div>
-              </div>
+              {/* Phân loại stat và item */}
+              {(() => {
+                const playerStats = gameState.playerStats || {};
+                const statStats = Object.fromEntries(Object.entries(playerStats).filter(([_, v]) => !(v as any).type || (v as any).type === 'stat'));
+                const itemStats = Object.fromEntries(Object.entries(playerStats).filter(([_, v]) => (v as any).type === 'item'));
+                return (
+                  <>
+                    <div style={{ display: activeLeftTab === 'info' ? 'block' : 'none' }}>
+                      <CharacterSheet 
+                        stats={statStats}
+                        playerStatOrder={gameState.playerStatOrder ? gameState.playerStatOrder.filter(k => !playerStats[k] || !playerStats[k].type || playerStats[k].type === 'stat') : []}
+                        playerSkills={gameState.playerSkills}
+                        isLoading={isLoading}
+                        onAcquireSkill={manuallyAcquireSkill}
+                        onRequestStatEdit={(statName, stat) => requestStatEdit('player', statName, stat)}
+                        onRequestStatDelete={(statName) => requestStatDelete('player', statName)}
+                        onReorderStat={reorderPlayerStat}
+                        onMoveStatToTop={movePlayerStatToTop}
+                        recentlyUpdatedStats={recentlyUpdatedPlayerStats}
+                      />
+                    </div>
+                    <div style={{ display: activeLeftTab === 'skills' ? 'block' : 'none' }}>
+                      <SkillCodex
+                        skills={gameState.playerSkills}
+                        onUseSkill={handleUseSkill}
+                        onRequestDelete={requestSkillDeletion}
+                        onRequestEdit={requestAbilityEdit}
+                      />
+                    </div>
+                    <div style={{ display: activeLeftTab === 'inventory' ? 'block' : 'none' }}>
+                      <CharacterSheet
+                        stats={itemStats}
+                        playerStatOrder={Object.keys(itemStats)}
+                        playerSkills={[]}
+                        isLoading={isLoading}
+                        onAcquireSkill={() => {}}
+                        onRequestStatEdit={(statName, stat) => requestStatEdit('player', statName, stat)}
+                        onRequestStatDelete={(statName) => requestStatDelete('player', statName)}
+                        onReorderStat={reorderPlayerStat}
+                        onMoveStatToTop={movePlayerStatToTop}
+                        recentlyUpdatedStats={recentlyUpdatedPlayerStats}
+                      />
+                    </div>
+                  </>
+                );
+              })()}
               <div style={{ display: activeLeftTab === 'memory' ? 'block' : 'none' }}>
                 <div className="p-4 text-[#a08cb6]">
                   <span className="text-lg font-semibold block text-center mb-2">Ký Ức Dài Hạn</span>

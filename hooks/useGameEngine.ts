@@ -6,6 +6,13 @@ import * as GameSaveService from '../services/GameSaveService';
 
 const CORE_STATS = ['Sinh Lực', 'Thể Lực', 'Lý trí', 'Dục vọng', 'Cảnh Giới'];
 
+function classifyStatType(statName: string, statData: any): 'stat' | 'item' {
+    if (CORE_STATS.includes(statName)) return 'stat';
+    if (statName.startsWith('Vật phẩm') || statData?.quantity !== undefined) return 'item';
+    // Có thể mở rộng thêm logic nhận diện item ở đây
+    return 'stat';
+}
+
 /**
  * Converts an array of stat updates from the AI into the CharacterStats object format used by the game state.
  * @param updates - The array of stat update objects from the AI.
@@ -20,7 +27,8 @@ function convertStatUpdatesArrayToObject(updates: CharacterStatUpdate[]): Charac
         // The statName is the key, the rest of the object is the value
         const { statName, ...restOfStat } = update;
         if (statName) {
-            statsObject[statName] = restOfStat;
+            const type = classifyStatType(statName, restOfStat);
+            statsObject[statName] = { ...restOfStat, type };
         }
     }
     return statsObject;

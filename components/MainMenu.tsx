@@ -18,6 +18,16 @@ interface MainMenuProps {
 
 const changelogs = [
   {
+    version: '1.4.0',
+    date: '2025-08-24',
+    content: [
+      '- Bổ sung hướng dẫn phân biệt stat và item vào prompt hệ thống, yêu cầu AI gán type cho từng chỉ số.',
+      '- Tự động phân loại stat (chỉ số) vào tab Nhân Vật, item (vật phẩm) vào tab Hành Trang.',
+      '- Kiểm tra và xác nhận logic prompt không cho phép AI tự động xóa stat của nhân vật.',
+      '- Tối ưu code phân loại stat/item, đồng bộ UI và backend.',
+    ].join('\n'),
+  },
+  {
     version: '1.3.0',
     date: '2025-08-23',
     content: [
