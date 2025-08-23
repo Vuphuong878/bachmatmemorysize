@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useSettings } from '../../hooks/useSettings';
 import { WorldCreationState, GameState, Skill, LustModeFlavor, ViewMode, NpcMindset, Ability, DestinyCompassMode } from '../../types';
 import { useGameEngine } from '../../hooks/useGameEngine';
@@ -359,10 +360,12 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
       <MemoryEditModal
         isOpen={editingChronicleIdx !== null}
         onClose={() => { setEditingChronicleIdx(null); setEditingMemoryType(null); }}
-        onSave={(value) => {
+        onSave={(value, score) => {
           if (editingChronicleIdx !== null && editingMemoryType) {
             if (editingMemoryType === 'long') {
-              updatePlotChronicleEntry(Number(editingChronicleIdx), value);
+              // Lấy điểm quan trọng hiện tại nếu không chỉnh sửa
+              const currentScore = typeof editingChronicleIdx === 'number' && gameState?.plotChronicle?.[editingChronicleIdx]?.plotSignificanceScore;
+              updatePlotChronicleEntry(Number(editingChronicleIdx), value, score !== undefined ? score : currentScore);
             } else {
               updateShortTermMemoryTurn(Number((editingChronicleIdx as string).replace('short-', '')), value);
             }
@@ -371,24 +374,30 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
           setEditingMemoryType(null);
         }}
         initialValue={editingChronicleValue}
+        initialScore={editingMemoryType === 'long' && typeof editingChronicleIdx === 'number' && gameState?.plotChronicle?.[editingChronicleIdx]?.plotSignificanceScore !== undefined ? gameState.plotChronicle[editingChronicleIdx].plotSignificanceScore : undefined}
+        showScoreField={editingMemoryType === 'long'}
         title={editingMemoryType === 'long' ? 'Chỉnh Sửa Ký Ức Dài Hạn' : editingMemoryType === 'short' ? 'Chỉnh Sửa Ký Ức Ngắn Hạn' : 'Chỉnh Sửa Ký Ức'}
       />
                         </li>
                       ))}
       {/* Modal hiển thị chi tiết ký ức */}
-      {detailModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-[#1d1526] rounded-xl p-6 max-w-lg w-full border-2 border-[#e02585] shadow-2xl relative animate-fade-in-fast">
+      {detailModal && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60">
+          <div
+            className="bg-[#1d1526] rounded-xl p-6 max-w-lg w-full border-2 border-[#e02585] shadow-2xl animate-fade-in-fast relative flex flex-col items-center justify-center"
+            style={{ minWidth: 320 }}
+          >
             <button
               className="absolute top-2 right-2 px-2 py-1 rounded bg-[#e02585] text-white text-xs font-bold hover:bg-[#ffd600] hover:text-[#2a2135]"
               onClick={() => setDetailModal(null)}
             >Đóng</button>
-            <div className="text-lg font-bold text-[#ffd600] mb-2">Chi tiết ký ức {detailModal.type === 'long' ? 'dài hạn' : 'ngắn hạn'}</div>
-            <div className="whitespace-pre-line text-[#e8dff5] text-base max-h-96 overflow-y-auto">
+            <div className="text-lg font-bold text-[#ffd600] mb-2 text-center">Chi tiết ký ức {detailModal.type === 'long' ? 'dài hạn' : 'ngắn hạn'}</div>
+            <div className="whitespace-pre-line text-[#e8dff5] text-base max-h-96 overflow-y-auto text-center">
               {detailModal.content}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
                     </ul>
                   ) : (

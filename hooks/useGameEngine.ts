@@ -819,12 +819,14 @@ export function useGameEngine(
     /**
      * Cập nhật một entry trong plotChronicle (ký ức dài hạn) theo index và nội dung mới.
      */
-    function updatePlotChronicleEntry(index: number, newSummary: string) {
+    function updatePlotChronicleEntry(index: number, newSummary: string, newScore?: number) {
         setGameState(prevState => {
             if (!prevState) return null;
             if (!prevState.plotChronicle || index < 0 || index >= prevState.plotChronicle.length) return prevState;
             const updatedChronicle = prevState.plotChronicle.map((entry, i) =>
-                i === index ? { ...entry, summary: newSummary } : entry
+                i === index
+                    ? { ...entry, summary: newSummary, plotSignificanceScore: newScore !== undefined ? newScore : entry.plotSignificanceScore }
+                    : entry
             );
             return { ...prevState, plotChronicle: updatedChronicle };
         });
