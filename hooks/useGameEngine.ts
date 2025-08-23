@@ -4,7 +4,7 @@ import { WorldCreationState, GameState, GameTurn, CharacterStats, NPC, NPCUpdate
 import * as storytellerService from '../services/GeminiStorytellerService';
 import * as GameSaveService from '../services/GameSaveService';
 
-const CORE_STATS = ['Sinh Lực', 'Thể Lực', 'Lý trí', 'Dục vọng'];
+const CORE_STATS = ['Sinh Lực', 'Thể Lực', 'Lý trí', 'Dục vọng', 'Cảnh Giới'];
 
 /**
  * Converts an array of stat updates from the AI into the CharacterStats object format used by the game state.

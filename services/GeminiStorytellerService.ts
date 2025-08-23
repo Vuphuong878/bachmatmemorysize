@@ -43,7 +43,7 @@ const statUpdateItemSchema = {
         },
         duration: {
             type: Type.INTEGER,
-            description: "BẮT BUỘC cho MỌI chỉ số không phải là chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Dục vọng). Gán thời gian tồn tại dựa trên mức độ nghiêm trọng (ngắn, dài, hoặc gần như vĩnh viễn với số lượt lớn)."
+            description: "BẮT BUỘC cho MỌI chỉ số không phải là chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Dục vọng, Cảnh Giới). Gán thời gian tồn tại dựa trên mức độ nghiêm trọng (ngắn, dài, hoặc gần như vĩnh viễn với số lượt lớn)."
         },
         history: {
             type: Type.ARRAY,
