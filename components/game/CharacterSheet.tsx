@@ -120,7 +120,7 @@ const StatItem: React.FC<{
     );
 };
 
-const CORE_STATS = ['Sinh Lực', 'Thể Lực', 'Lý trí', 'Dục vọng'];
+const CORE_STATS = ['Sinh Lực', 'Thể Lực', 'Lý trí', 'Dục vọng', 'Cảnh Giới'];
 
 const CharacterSheet: React.FC<CharacterSheetProps> = ({ stats, playerStatOrder, playerSkills, onAcquireSkill, isLoading, onRequestStatEdit, onRequestStatDelete, onReorderStat, onMoveStatToTop, recentlyUpdatedStats }) => {
     
