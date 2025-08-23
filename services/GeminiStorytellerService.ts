@@ -39,7 +39,7 @@ const statUpdateItemSchema = {
         },
         value: {
             type: Type.STRING,
-            description: "Giá trị mới của chỉ số. PHẢI là một chuỗi văn bản mô tả trạng thái. Ví dụ, với chỉ số 'Sinh Lực', giá trị có thể là 'Khỏe mạnh', 'Bị thương nhẹ', 'Thoi thóp'. Với chỉ số 'Dục vọng', có thể là 'Bình thường', 'Tăng cao', 'Bùng cháy'. CHỈ dùng số cho các vật phẩm có thể đếm được (ví dụ: '15' cho 'Linh thạch')."
+            description: "Giá trị mới của chỉ số. PHẢI là một chuỗi văn bản mô tả trạng thái. Ví dụ, với chỉ số 'Sinh Lực', giá trị có thể là 'Khỏe mạnh', 'Bị thương nhẹ', 'Thoi thóp'. Với chỉ số 'Dục vọng', có thể là 'Bình thường', 'Tăng nhẹ', 'Hứng thú'. CHỈ dùng số cho các vật phẩm có thể đếm được (ví dụ: '15' cho 'Linh thạch')."
         },
         duration: {
             type: Type.INTEGER,
@@ -912,6 +912,17 @@ Bạn sẽ được cung cấp 3 tầng ký ức để duy trì sự nhất quá
 2.  **BIÊN NIÊN SỬ CỐT TRUYỆN (Plot Chronicle):** Đây là một danh sách được tuyển chọn gồm các sự kiện quan trọng nhất, gần đây nhất, và **một vài sự kiện ngẫu nhiên trong quá khứ** của toàn bộ cốt truyện. Hãy dùng các sự kiện ngẫu nhiên này làm nguồn cảm hứng để tạo ra những hành động hoặc lời thoại bất ngờ, sâu sắc từ NPC (ví dụ: đột nhiên nhớ lại một ân oán cũ).
 3.  **BỐI CẢNH GẦN NHẤT (Recent Context):** Đây là các diễn biến và trạng thái trong vài lượt gần đây. Dùng nó để viết tiếp một cách liền mạch.
 
+**QUY TẮC ĐÁNH DẤU TÊN RIÊNG (HIGHLIGHT MARKER):**
+Khi viết storyText, bạn PHẢI tự động đánh dấu các tên riêng, NPC bằng marker như sau:
+- Tên riêng nhân vật: [NA]Tên[/NA]
+- Tên NPC: [NP]Tên NPC[/NP]
+
+Ví dụ: "Bình minh ló rạng trên. [NA]Trần Phàm[/NA]
+Viết đúng: [NA]Trần Phàm[/NA], [NP]Tên NPC[/NP]
+Viết sai: [NA]Trần Phàm[/ME, [NP]Tên NPC[NP
+**CẤM TẠO THÊM CÁC THẺ MARKER MỚI** và không hiển thị các ký tự marker này ra ngoài văn bản cho người dùng.
+**CẤM TUYỆT ĐỐI TẠO THẺ MARKER TRONG trường choices**
+
 **QUY TẮC SỐNG CỦA NPC (NPC LIVELINESS RULE - CỰC KỲ QUAN TRỌNG):**
 NPC không phải là những con rối bị động. Chúng có suy nghĩ, mục tiêu và hành động riêng.
 1.  **CHỦ ĐỘNG, KHÔNG BỊ ĐỘNG:** Trong mọi tình huống, đặc biệt là chiến đấu, NPC PHẢI hành động một cách chủ động. Chúng sẽ tự ra quyết định tấn công, phòng thủ, sử dụng kỹ năng, hoặc tương tác dựa trên tình hình và tính cách của chúng, không cần chờ người chơi ra lệnh hay hành động trước.
@@ -961,7 +972,7 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
     5.  Nếu không có NPC nào hiện diện, trả về một mảng rỗng \`[]\`.
 - **QUY TẮC SUY LUẬN CHỦ ĐỘNG:** Bạn BẮT BUỘC phải chủ động suy luận ra các thay đổi về chỉ số từ hành động và diễn biến. Đừng chờ đợi câu chuyện mô tả rõ ràng. Ví dụ: một cuộc rượt đuổi dài -> giảm 'Thể Lực'; một cảnh kinh hoàng -> giảm 'Lý trí'.
 - **HỆ THỐNG TRẠNG THÁI ĐỘNG:**
-    1.  **CHỈ SỐ DẠNG VĂN BẢN:** Các chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Dục vọng) PHẢI ở dạng văn bản mô tả (ví dụ: Sinh Lực: 'Khỏe mạnh', 'Bị thương nhẹ').
+    1.  **CHỈ SỐ DẠNG VĂN BẢN:** Các chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Dục vọng, Cảnh Giới) PHẢI ở dạng văn bản mô tả (ví dụ: Sinh Lực: 'Khỏe mạnh', 'Bị thương nhẹ').
     2.  **BẮT BUỘC HÓA DURATION:** MỌI chỉ số không phải cốt lõi (ví dụ: 'Choáng váng', 'Gãy xương') BẮT BUỘC phải có thuộc tính 'duration' (số lượt tồn tại). TUYỆT ĐỐI CẤM gán 'duration' cho 4 chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Dục vọng).
     3.  **SỰ DIỄN BIẾN (EVOLUTION):** Với các trạng thái có thể trở nặng (ví dụ: 'Vết thương nhỏ' -> 'Nhiễm trùng'), hãy NÊN thêm thuộc tính 'evolution'.
     4.  **CÔ ĐỌNG THUỘC TÍNH (ATTRIBUTE CONDENSATION):** Để giữ giao diện gọn gàng, bạn BẮT BUỘC phải tuân thủ quy tắc cô đọng. Khi bạn cập nhật một chỉ số và thấy rằng giá trị (\`value\`) mới của nó quá dài (ví dụ: hơn 50 ký tự):
@@ -1011,7 +1022,8 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
     2.  **KẾT THÚC PHÂN CẢNH (\`isSceneBreak\`):** Đánh giá dòng chảy của câu chuyện. Nếu bạn cảm thấy một phân cảnh (một chuỗi sự kiện tại một địa điểm hoặc trong một khoảng thời gian) đã kết thúc một cách tự nhiên, hãy đặt trường \`isSceneBreak\` thành \`true\`. Các dấu hiệu bao gồm: nhân vật rời khỏi một địa điểm quan trọng, một trận chiến lớn kết thúc, một khoảng thời gian dài trôi qua, hoặc nhóm nhân vật chính thay đổi đáng kể.
 - **TUYỆT ĐỐI CẤM:** Bạn không được phép tạo ra các trường \`status\` và \`lastInteractionSummary\` trong payload của NPC. Đồng thời, bạn cũng tuyệt đối không được tạo ra một chỉ số động (stat) có \`statName\` là "status". Các thông tin này sẽ được xử lý bởi một AI khác chuyên trách.
 
-**ĐỊNH DẠNG ĐẦU RA:** Câu trả lời của bạn BẮT BUỘC phải là một đối tượng JSON hợp lệ duy nhất, tuân thủ schema được cung cấp, không có bất kỳ văn bản nào khác bên ngoài.`;
+**ĐỊNH DẠNG ĐẦU RA:** Câu trả lời của bạn BẮT BUỘC phải là một đối tượng JSON hợp lệ duy nhất, tuân thủ schema được cung cấp, không có bất kỳ văn bản nào khác bên ngoài.
+`;
 
 const CREATIVE_TEXT_SYSTEM_PROMPT = `Bạn là một AI chuyên ghi chép lịch sử tương tác ngắn hạn. Nhiệm vụ của bạn là đọc một đoạn truyện mới và quyết định xem có cần cập nhật tóm tắt tương tác (summary) của một NPC hay không.
 
