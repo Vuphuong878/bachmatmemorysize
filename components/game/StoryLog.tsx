@@ -12,9 +12,6 @@ interface StoryLogProps {
 }
 
 
-const defaultPlaceNames = [
-    'Nhân Giới', 'Ma Viêm Sơn Mạch', 'Thiên Nam', 'Ma Đạo', 'Hoàng Phong Cốc'
-];
 
 function highlightStory(
     text: string,
@@ -41,13 +38,14 @@ function highlightStory(
         });
     }
     // 4. Highlight địa danh
-    const allPlaces = [...defaultPlaceNames, ...(placeNames || [])];
-    allPlaces.forEach(place => {
-        if (place) {
-            const re = new RegExp(`\\b${place.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}(?![\w-])`, 'g');
-            result = result.replace(re, '<span class="highlight-place">$&</span>');
-        }
-    });
+    if (placeNames && placeNames.length > 0) {
+        placeNames.forEach(place => {
+            if (place) {
+                const re = new RegExp(`\\b${place.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}(?![\\w-])`, 'g');
+                result = result.replace(re, '<span class="highlight-place">$&</span>');
+            }
+        });
+    }
     return result;
 }
 
