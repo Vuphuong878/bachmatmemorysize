@@ -9,7 +9,7 @@ import { CharacterStat } from '../../types';
 interface StatEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (oldStatName: string, newStat: { name: string, value: string, duration: string }) => void;
+  onSave: (oldStatName: string, newStat: { name: string, value: string, duration: string, isItem: boolean }) => void;
   statData: { statName: string, stat: CharacterStat } | null;
   isLoading: boolean;
 }
@@ -18,23 +18,26 @@ const StatEditModal: React.FC<StatEditModalProps> = ({ isOpen, onClose, onSave, 
   const [name, setName] = useState('');
   const [value, setValue] = useState('');
   const [duration, setDuration] = useState('');
+  const [isItem, setIsItem] = useState(false);
 
   useEffect(() => {
     if (isOpen && statData) {
       setName(statData.statName);
       setValue(String(statData.stat.value));
       setDuration(statData.stat.duration !== undefined ? String(statData.stat.duration) : '');
+      setIsItem(!!statData.stat.isItem);
     } else {
       // Reset form when modal closes or data is null
       setName('');
       setValue('');
       setDuration('');
+      setIsItem(false);
     }
   }, [isOpen, statData]);
 
   const handleSave = () => {
     if (name.trim() && statData) {
-      onSave(statData.statName, { name: name.trim(), value: value, duration: duration });
+      onSave(statData.statName, { name: name.trim(), value: value, duration: duration, isItem: isItem });
     }
   };
 
@@ -66,6 +69,19 @@ const StatEditModal: React.FC<StatEditModalProps> = ({ isOpen, onClose, onSave, 
           onChange={(e) => setDuration(e.target.value)}
           disabled={isLoading}
         />
+        <div className="flex items-center">
+            <input
+                id="is-item-checkbox"
+                type="checkbox"
+                checked={isItem}
+                onChange={(e) => setIsItem(e.target.checked)}
+                disabled={isLoading}
+                className="h-4 w-4 rounded border-gray-500 bg-[#120c18] text-[#e02585] focus:ring-[#e02585] focus:ring-offset-[#1d1526]"
+            />
+            <label htmlFor="is-item-checkbox" className="ml-2 block text-sm text-[#e8dff5]">
+                Đây là một vật phẩm (sẽ hiển thị trong Hành Trang)
+            </label>
+        </div>
         <div className="flex flex-col sm:flex-row-reverse gap-4 pt-2">
            <Button onClick={handleSave} disabled={isLoading || !name.trim()}>
             {isLoading ? 'Đang Lưu...' : 'Lưu Thay Đổi'}

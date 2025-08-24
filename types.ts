@@ -49,6 +49,7 @@ export interface CharacterStat {
   value: string | number;
   duration?: number; // Optional number of turns this stat will last.
   history?: string[]; // Optional array of previous values for this stat.
+  isItem?: boolean; // If true, this stat represents a physical item in the inventory.
   evolution?: {
     after: number; // The turn count at which this evolution triggers
     becomes: string; // The name of the new stat
@@ -63,6 +64,7 @@ export interface CharacterStatUpdate {
   value: string | number;
   duration?: number;
   history?: string[];
+  isItem?: boolean;
   evolution?: {
     after: number;
     becomes: string;

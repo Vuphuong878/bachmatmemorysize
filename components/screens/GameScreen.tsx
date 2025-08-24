@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSettings } from '../../hooks/useSettings';
-import { WorldCreationState, GameState, Skill, LustModeFlavor, ViewMode, NpcMindset, Ability, DestinyCompassMode } from '../../types';
+import { WorldCreationState, GameState, Skill, LustModeFlavor, ViewMode, NpcMindset, Ability, DestinyCompassMode, CharacterStats } from '../../types';
 import { useGameEngine } from '../../hooks/useGameEngine';
 import CharacterSheet from '../game/CharacterSheet';
 import StoryLog from '../game/StoryLog';
@@ -30,6 +30,7 @@ import { UsersIcon } from '../icons/UsersIcon';
 import AbilityEditModal from '../game/AbilityEditModal';
 import { CogIcon } from '../icons/CogIcon';
 import GameSettingsModal from '../game/GameSettingsModal';
+import InventorySheet from '../game/InventorySheet';
 
 
 interface GameScreenProps {
@@ -96,6 +97,46 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   const [activeMemoryTab, setActiveMemoryTab] = useState<'long' | 'short'>('long');
   
   const isNewGame = useMemo(() => initialData && !('history' in initialData), [initialData]);
+
+  // Filter player stats into character stats and inventory items
+  const { characterStats, inventoryItems } = useMemo(() => {
+    if (!gameState) return { characterStats: {}, inventoryItems: {} };
+    
+    const charStats: CharacterStats = {};
+    const invItems: CharacterStats = {};
+
+    for (const key in gameState.playerStats) {
+        if (Object.prototype.hasOwnProperty.call(gameState.playerStats, key)) {
+            const stat = gameState.playerStats[key];
+            if (stat.isItem) {
+                invItems[key] = stat;
+            } else {
+                charStats[key] = stat;
+            }
+        }
+    }
+    return { characterStats: charStats, inventoryItems: invItems };
+  }, [gameState?.playerStats]);
+
+  // Filter the stat order array accordingly
+  const { characterStatOrder, inventoryItemOrder } = useMemo(() => {
+    if (!gameState || !gameState.playerStatOrder) return { characterStatOrder: [], inventoryItemOrder: [] };
+    
+    const charOrder: string[] = [];
+    const invOrder: string[] = [];
+
+    gameState.playerStatOrder.forEach(key => {
+        const stat = gameState.playerStats[key];
+        if (stat) {
+            if (stat.isItem) {
+                invOrder.push(key);
+            } else {
+                charOrder.push(key);
+            }
+        }
+    });
+    return { characterStatOrder: charOrder, inventoryItemOrder: invOrder };
+  }, [gameState?.playerStats, gameState?.playerStatOrder]);
 
   useEffect(() => {
     if (isNewGame) {
@@ -273,8 +314,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
                         <>
               <div style={{ display: activeLeftTab === 'info' ? 'block' : 'none' }}>
                 <CharacterSheet 
-                  stats={gameState.playerStats}
-                  playerStatOrder={gameState.playerStatOrder || []}
+                  stats={characterStats}
+                  playerStatOrder={characterStatOrder}
                   playerSkills={gameState.playerSkills}
                   isLoading={isLoading}
                   onAcquireSkill={manuallyAcquireSkill}
@@ -294,10 +335,16 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
                 />
               </div>
               <div style={{ display: activeLeftTab === 'inventory' ? 'block' : 'none' }}>
-                <div className="p-4 text-center text-[#a08cb6]">
-                  <span className="text-lg font-semibold">Hành Trang</span>
-                  <div className="mt-4 text-sm">(Chức năng đang phát triển)</div>
-                </div>
+                <InventorySheet
+                  items={inventoryItems}
+                  itemOrder={inventoryItemOrder}
+                  isLoading={isLoading}
+                  onRequestStatEdit={(statName, stat) => requestStatEdit('player', statName, stat)}
+                  onRequestStatDelete={(statName) => requestStatDelete('player', statName)}
+                  onReorderStat={reorderPlayerStat}
+                  onMoveStatToTop={movePlayerStatToTop}
+                  recentlyUpdatedStats={recentlyUpdatedPlayerStats}
+                />
               </div>
               <div style={{ display: activeLeftTab === 'memory' ? 'block' : 'none' }}>
                 <div className="p-4 pt-2 text-[#a08cb6] flex flex-col h-full">

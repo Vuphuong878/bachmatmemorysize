@@ -50,6 +50,10 @@ const statUpdateItemSchema = {
             description: "TÙY CHỌN: Nếu bạn đang cô đọng một giá trị dài, hãy đặt giá trị dài cũ vào đây. Mảng này lưu trữ các mô tả cũ của chỉ số.",
             items: { type: Type.STRING }
         },
+        isItem: {
+            type: Type.BOOLEAN,
+            description: "QUAN TRỌNG: Đặt thành 'true' NẾU chỉ số này đại diện cho một vật phẩm hữu hình mà nhân vật có thể sở hữu, mang theo hoặc sử dụng (ví dụ: 'Thanh kiếm', 'Bình máu', 'Chìa khóa'). Nếu không, hãy bỏ qua trường này."
+        },
         evolution: {
             type: Type.OBJECT,
             description: "TÙY CHỌN: Mô tả cách trạng thái này diễn biến nếu không được xử lý. Chỉ áp dụng cho các trạng thái có thể trở nặng hơn (ví dụ: một vết thương nhỏ có thể bị 'Nhiễm trùng').",
@@ -969,6 +973,7 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
         b. **Lưu trữ lịch sử:** Lấy giá trị dài ban đầu và thêm nó vào đầu mảng \`history\` của chỉ số đó (nếu mảng history đã tồn tại, hãy thêm vào đầu).
         c. **Ví dụ:** Nếu giá trị cũ là \`'Đã thấu triệt bản chất của nội công và hòa hợp thân tâm một cách hoàn hảo'\`, bạn có thể cập nhật chỉ số thành: \`value: 'Tâm Pháp Hợp Nhất'\`, \`history: ['Đã thấu triệt bản chất của nội công và hòa hợp thân tâm một cách hoàn hảo', ...các giá trị cũ hơn]\`.
         d. Quy tắc này áp dụng cho mọi chỉ số, kể cả các chỉ số cốt lõi.
+    5.  **PHÂN LOẠI VẬT PHẨM (\`isItem\`):** Khi tạo hoặc cập nhật một chỉ số, nếu nó đại diện cho một vật phẩm hữu hình mà nhân vật có thể sở hữu (kiếm, bình thuốc, chìa khóa, v.v.), bạn BẮT BUỘC phải đặt thuộc tính \`isItem\` thành \`true\` trong đối tượng chỉ số đó.
 - **QUY TẮC ĐẶT TÊN NPC ĐỘNG (DYNAMIC NAMING):**
     Bạn BẮT BUỘC phải đặt tên cho NPC mới một cách thông minh và phù hợp với thế giới.
     1.  **Phân tích bối cảnh:** Dựa vào \`genre\` và \`description\` của thế giới để xác định phong cách văn hóa chủ đạo.

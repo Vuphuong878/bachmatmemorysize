@@ -620,7 +620,7 @@ export function useGameEngine(
         setEditingStat(null);
     };
 
-    const confirmStatEdit = (oldStatName: string, newStat: { name: string, value: string, duration: string }) => {
+    const confirmStatEdit = (oldStatName: string, newStat: { name: string, value: string, duration: string, isItem: boolean }) => {
         if (!gameState || !editingStat) return;
 
         setGameState(prevState => {
@@ -632,6 +632,7 @@ export function useGameEngine(
             const updatedStatData: CharacterStat = {
                 value: newStat.value,
                 duration: isNaN(durationValue as any) ? undefined : durationValue,
+                isItem: newStat.isItem,
                 history: editingStat.stat.history, // Preserve history on manual edit
                 evolution: editingStat.stat.evolution // Preserve evolution
             };
