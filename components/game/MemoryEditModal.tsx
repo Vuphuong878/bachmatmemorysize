@@ -36,11 +36,31 @@ const MemoryEditModal: React.FC<MemoryEditModalProps> = ({ isOpen, onClose, onSa
         <div className="text-lg font-bold text-white mb-4">{title || 'Chỉnh Sửa Ký Ức'}</div>
         <label className="block text-sm text-[#a08cb6] mb-2">Nội dung ký ức</label>
         <textarea
-          className="w-full bg-[#18141f] text-[#cfc6e0] rounded p-2 mb-4 border border-[#6d4e8e]/30 min-h-[253px] max-h-[460px] resize-vertical"
+          className="w-full bg-[#18141f] text-[#cfc6e0] rounded p-2 mb-4 border border-[#6d4e8e]/30 min-h-[253px] max-h-[460px] resize-vertical custom-scrollbar"
           value={value}
           onChange={e => setValue(e.target.value)}
           rows={12}
         />
+      <style>{`
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #e02585 #120c18;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #120c18;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #e02585;
+          border-radius: 10px;
+          border: 2px solid #120c18;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background-color: #633aab;
+        }
+      `}</style>
         {showScoreField && (
           <div className="mb-4">
             <label className="block text-sm text-[#a08cb6] mb-2">Điểm quan trọng (1-10)</label>

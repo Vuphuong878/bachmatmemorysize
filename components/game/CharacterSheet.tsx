@@ -127,14 +127,12 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ stats, playerStatOrder,
     const orderedStats = playerStatOrder && playerStatOrder.length > 0 ? playerStatOrder : Object.keys(stats);
     
     // Nếu là inventory thì không hiển thị tiêu đề
-    const isInventory = Object.keys(stats).some(k => (stats[k] as any)?.type === 'item');
+        const isInventory = Object.keys(stats).length > 0 && Object.values(stats).every((v: any) => v?.type === 'item');
     return (
         <div>
-            {!isInventory && (
                 <h2 className="text-xl font-bold text-center text-white p-4 border-b-2 border-[#3a2d47] flex-shrink-0" style={{textShadow: '0 0 5px rgba(224, 37, 133, 0.7)'}}>
-                    Thông Tin Nhân Vật
+                    {isInventory ? 'Hành Trang Nhân Vật' : 'Thông Tin Nhân Vật'}
                 </h2>
-            )}
             <div className="p-2">
                 <div className="space-y-1">
                     {orderedStats.map((key) => {
