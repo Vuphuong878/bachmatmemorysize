@@ -93,6 +93,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   const [customAction, setCustomAction] = useState('');
   const [isActionsPanelCollapsed, setIsActionsPanelCollapsed] = useState(false);
   const [destinyCompassMode, setDestinyCompassMode] = useState<DestinyCompassMode>('NORMAL');
+  const [activeMemoryTab, setActiveMemoryTab] = useState<'long' | 'short'>('long');
   
   const isNewGame = useMemo(() => initialData && !('history' in initialData), [initialData]);
 
@@ -264,7 +265,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
         <div className="flex-shrink-0 flex overflow-hidden rounded-t-xl">
           <TabButton tabId="info" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Nhân Vật</TabButton>
           <TabButton tabId="skills" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Kỹ Năng</TabButton>
-    {/* <TabButton tabId="inventory" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Hành Trang</TabButton> */}
+          <TabButton tabId="inventory" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Hành Trang</TabButton>
           <TabButton tabId="memory" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Ký Ức</TabButton>
         </div>
                 <div className="flex-grow min-h-0 overflow-y-auto">
@@ -299,111 +300,127 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
                 </div>
               </div>
               <div style={{ display: activeLeftTab === 'memory' ? 'block' : 'none' }}>
-                <div className="p-4 text-[#a08cb6]">
-                  <span className="text-lg font-semibold block text-center mb-2">Ký Ức Dài Hạn</span>
-                  {gameState.plotChronicle && gameState.plotChronicle.length > 0 ? (
-                    <ul className="mb-6 space-y-2 max-h-48 overflow-y-auto pr-2">
-                      {gameState.plotChronicle.map((entry, idx) => (
-                        <li key={idx} className="bg-[#201a2a]/80 rounded p-2 text-left border-l-4 border-[#6d4e8e]/40 flex flex-col gap-1 shadow-none">
-                          <>
-                            <>
-                              <div className="font-bold text-[#cfc6e0] truncate" title={entry.summary}>{entry.summary}</div>
-                              <div className="text-xs text-[#a08cb6] mt-1 truncate">Loại: {entry.eventType}</div>
-                              <div className="text-xs text-[#cfc6e0] mt-1">Điểm quan trọng: <span className="font-bold">{entry.plotSignificanceScore}</span></div>
-                              <div className="flex gap-2 mt-1">
-                                <button
-                                  className="px-2 py-1 rounded bg-[#6d4e8e] text-[#e8dff5] text-xs font-bold hover:bg-[#32284a] hover:text-white"
-                                  onClick={() => {
-                                    setEditingChronicleIdx(idx);
-                                    setEditingChronicleValue(entry.summary);
-                                    setEditingMemoryType('long');
-                                  }}
-                                >Chỉnh sửa</button>
-                                <button
-                                  className="px-2 py-1 rounded bg-[#32284a] text-[#cfc6e0] text-xs font-bold hover:bg-[#6d4e8e] hover:text-white"
-                                  onClick={() => setDetailModal({ type: 'long', idx, content: entry.summary })}
-                                >Chi tiết</button>
-                              </div>
-                            </>
-                          </>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-center text-sm text-[#a08cb6]/70 mb-6">Chưa có ký ức dài hạn nào.</div>
-                  )}
-                  <span className="text-lg font-semibold block text-center mb-2">Ký Ức Ngắn Hạn</span>
-                  {gameState.turnsSinceLastChronicle && gameState.turnsSinceLastChronicle.length > 0 ? (
-                    <ul className="space-y-2 max-h-48 overflow-y-auto pr-2">
-                      {gameState.turnsSinceLastChronicle.map((turn, idx) => (
-                        <li key={idx} className="bg-[#201a2a]/60 rounded p-2 text-left border-l-4 border-[#6d4e8e]/20 flex flex-col gap-1 shadow-none">
-                          <>
-                            <>
-                              <div className="text-sm text-[#cfc6e0] truncate" title={turn.storyText}>{turn.storyText}</div>
-                              <div className="flex gap-2 mt-1">
-                                <button
-                                  className="px-2 py-1 rounded bg-[#6d4e8e] text-[#e8dff5] text-xs font-bold hover:bg-[#32284a] hover:text-white"
-                                  onClick={() => {
-                                    setEditingChronicleIdx(`short-${idx}`);
-                                    setEditingChronicleValue(turn.storyText);
-                                    setEditingMemoryType('short');
-                                  }}
-                                >Chỉnh sửa</button>
-                                <button
-                                  className="px-2 py-1 rounded bg-[#32284a] text-[#cfc6e0] text-xs font-bold hover:bg-[#6d4e8e] hover:text-white"
-                                  onClick={() => setDetailModal({ type: 'short', idx, content: turn.storyText })}
-                                >Chi tiết</button>
-                              </div>
-                            </>
-                          </>
-      {/* Modal chỉnh sửa ký ức */}
-      <MemoryEditModal
-        isOpen={editingChronicleIdx !== null}
-        onClose={() => { setEditingChronicleIdx(null); setEditingMemoryType(null); }}
-        onSave={(value, score) => {
-          if (editingChronicleIdx !== null && editingMemoryType) {
-            if (editingMemoryType === 'long') {
-              // Lấy điểm quan trọng hiện tại nếu không chỉnh sửa
-              const currentScore = typeof editingChronicleIdx === 'number' && gameState?.plotChronicle?.[editingChronicleIdx]?.plotSignificanceScore;
-              updatePlotChronicleEntry(Number(editingChronicleIdx), value, score !== undefined ? score : currentScore);
-            } else {
-              updateShortTermMemoryTurn(Number((editingChronicleIdx as string).replace('short-', '')), value);
-            }
-          }
-          setEditingChronicleIdx(null);
-          setEditingMemoryType(null);
-        }}
-        initialValue={editingChronicleValue}
-        initialScore={editingMemoryType === 'long' && typeof editingChronicleIdx === 'number' && gameState?.plotChronicle?.[editingChronicleIdx]?.plotSignificanceScore !== undefined ? gameState.plotChronicle[editingChronicleIdx].plotSignificanceScore : undefined}
-        showScoreField={editingMemoryType === 'long'}
-        title={editingMemoryType === 'long' ? 'Chỉnh Sửa Ký Ức Dài Hạn' : editingMemoryType === 'short' ? 'Chỉnh Sửa Ký Ức Ngắn Hạn' : 'Chỉnh Sửa Ký Ức'}
-      />
-                        </li>
-                      ))}
-      {/* Modal hiển thị chi tiết ký ức */}
-      {detailModal && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60">
-          <div
-            className="bg-[#1d1526] rounded-xl p-6 max-w-lg w-full border-2 border-[#e02585] shadow-2xl animate-fade-in-fast relative flex flex-col items-center justify-center"
-            style={{ minWidth: 320 }}
-          >
-            <button
-              className="absolute top-2 right-2 px-2 py-1 rounded bg-[#e02585] text-white text-xs font-bold hover:bg-[#ffd600] hover:text-[#2a2135]"
-              onClick={() => setDetailModal(null)}
-            >Đóng</button>
-            <div className="text-lg font-bold text-[#ffd600] mb-2 text-center">Chi tiết ký ức {detailModal.type === 'long' ? 'dài hạn' : 'ngắn hạn'}</div>
-            <div className="whitespace-pre-line text-[#e8dff5] text-base max-h-96 overflow-y-auto text-center">
-              {detailModal.content}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-                    </ul>
-                  ) : (
-                    <div className="text-center text-sm text-[#a08cb6]/70">Chưa có ký ức ngắn hạn nào.</div>
-                  )}
+                <div className="p-4 pt-2 text-[#a08cb6] flex flex-col h-full">
+                  {/* Sub-tabs */}
+                  <div className="flex-shrink-0 flex justify-center border-b border-[#3a2d47] mb-4">
+                    <button
+                        onClick={() => setActiveMemoryTab('long')}
+                        className={`px-6 py-2 text-sm font-rajdhani uppercase tracking-wider font-bold transition-all duration-300 ${activeMemoryTab === 'long' ? 'text-white border-b-2 border-[#e02585] bg-[#e02585]/10' : 'text-[#a08cb6] border-b-2 border-transparent hover:text-white'}`}
+                    >
+                        Ký Ức Dài Hạn
+                    </button>
+                    <button
+                        onClick={() => setActiveMemoryTab('short')}
+                        className={`px-6 py-2 text-sm font-rajdhani uppercase tracking-wider font-bold transition-all duration-300 ${activeMemoryTab === 'short' ? 'text-white border-b-2 border-[#e02585] bg-[#e02585]/10' : 'text-[#a08cb6] border-b-2 border-transparent hover:text-white'}`}
+                    >
+                        Ký Ức Ngắn Hạn
+                    </button>
+                  </div>
+                  
+                  {/* Conditional content */}
+                  <div className="flex-grow min-h-0 overflow-y-auto pr-2">
+                    {activeMemoryTab === 'long' && (
+                      <>
+                        {gameState.plotChronicle && gameState.plotChronicle.length > 0 ? (
+                          <ul className="space-y-2">
+                            {gameState.plotChronicle.map((entry, idx) => (
+                              <li key={idx} className="bg-[#201a2a]/80 rounded p-2 text-left border-l-4 border-[#6d4e8e]/40 flex flex-col gap-1 shadow-none">
+                                <div className="font-bold text-[#cfc6e0] truncate" title={entry.summary}>{entry.summary}</div>
+                                <div className="text-xs text-[#a08cb6] mt-1 truncate">Loại: {entry.eventType}</div>
+                                <div className="text-xs text-[#cfc6e0] mt-1">Điểm quan trọng: <span className="font-bold">{entry.plotSignificanceScore}</span></div>
+                                <div className="flex gap-2 mt-1">
+                                  <button
+                                    className="px-2 py-1 rounded bg-[#6d4e8e] text-[#e8dff5] text-xs font-bold hover:bg-[#32284a] hover:text-white"
+                                    onClick={() => {
+                                      setEditingChronicleIdx(idx);
+                                      setEditingChronicleValue(entry.summary);
+                                      setEditingMemoryType('long');
+                                    }}
+                                  >Chỉnh sửa</button>
+                                  <button
+                                    className="px-2 py-1 rounded bg-[#32284a] text-[#cfc6e0] text-xs font-bold hover:bg-[#6d4e8e] hover:text-white"
+                                    onClick={() => setDetailModal({ type: 'long', idx, content: entry.summary })}
+                                  >Chi tiết</button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="text-center text-sm text-[#a08cb6]/70 mt-8">Chưa có ký ức dài hạn nào.</div>
+                        )}
+                      </>
+                    )}
+
+                    {activeMemoryTab === 'short' && (
+                      <>
+                        {gameState.turnsSinceLastChronicle && gameState.turnsSinceLastChronicle.length > 0 ? (
+                          <ul className="space-y-2">
+                            {gameState.turnsSinceLastChronicle.map((turn, idx) => (
+                              <li key={idx} className="bg-[#201a2a]/60 rounded p-2 text-left border-l-4 border-[#6d4e8e]/20 flex flex-col gap-1 shadow-none">
+                                <div className="text-sm text-[#cfc6e0] truncate" title={turn.storyText}>{turn.storyText}</div>
+                                <div className="flex gap-2 mt-1">
+                                  <button
+                                    className="px-2 py-1 rounded bg-[#6d4e8e] text-[#e8dff5] text-xs font-bold hover:bg-[#32284a] hover:text-white"
+                                    onClick={() => {
+                                      setEditingChronicleIdx(`short-${idx}`);
+                                      setEditingChronicleValue(turn.storyText);
+                                      setEditingMemoryType('short');
+                                    }}
+                                  >Chỉnh sửa</button>
+                                  <button
+                                    className="px-2 py-1 rounded bg-[#32284a] text-[#cfc6e0] text-xs font-bold hover:bg-[#6d4e8e] hover:text-white"
+                                    onClick={() => setDetailModal({ type: 'short', idx, content: turn.storyText })}
+                                  >Chi tiết</button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="text-center text-sm text-[#a08cb6]/70 mt-8">Chưa có ký ức ngắn hạn nào.</div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
+                {/* Modals are placed here, outside of loops and conditional rendering, but within the main tab container */}
+                <MemoryEditModal
+                  isOpen={editingChronicleIdx !== null}
+                  onClose={() => { setEditingChronicleIdx(null); setEditingMemoryType(null); }}
+                  onSave={(value, score) => {
+                    if (editingChronicleIdx !== null && editingMemoryType) {
+                      if (editingMemoryType === 'long') {
+                        const currentScore = typeof editingChronicleIdx === 'number' && gameState?.plotChronicle?.[editingChronicleIdx]?.plotSignificanceScore;
+                        updatePlotChronicleEntry(Number(editingChronicleIdx), value, score !== undefined ? score : currentScore);
+                      } else {
+                        updateShortTermMemoryTurn(Number((editingChronicleIdx as string).replace('short-', '')), value);
+                      }
+                    }
+                    setEditingChronicleIdx(null);
+                    setEditingMemoryType(null);
+                  }}
+                  initialValue={editingChronicleValue}
+                  initialScore={editingMemoryType === 'long' && typeof editingChronicleIdx === 'number' && gameState?.plotChronicle?.[editingChronicleIdx]?.plotSignificanceScore !== undefined ? gameState.plotChronicle[editingChronicleIdx].plotSignificanceScore : undefined}
+                  showScoreField={editingMemoryType === 'long'}
+                  title={editingMemoryType === 'long' ? 'Chỉnh Sửa Ký Ức Dài Hạn' : editingMemoryType === 'short' ? 'Chỉnh Sửa Ký Ức Ngắn Hạn' : 'Chỉnh Sửa Ký Ức'}
+                />
+                {detailModal && createPortal(
+                  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60">
+                    <div
+                      className="bg-[#1d1526] rounded-xl p-6 max-w-lg w-full border-2 border-[#e02585] shadow-2xl animate-fade-in-fast relative flex flex-col items-center justify-center"
+                      style={{ minWidth: 320 }}
+                    >
+                      <button
+                        className="absolute top-2 right-2 px-2 py-1 rounded bg-[#e02585] text-white text-xs font-bold hover:bg-[#ffd600] hover:text-[#2a2135]"
+                        onClick={() => setDetailModal(null)}
+                      >Đóng</button>
+                      <div className="text-lg font-bold text-[#ffd600] mb-2 text-center">Chi tiết ký ức {detailModal.type === 'long' ? 'dài hạn' : 'ngắn hạn'}</div>
+                      <div className="whitespace-pre-line text-[#e8dff5] text-base max-h-96 overflow-y-auto text-center">
+                        {detailModal.content}
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
+                )}
               </div>
                         </>
                     )}
