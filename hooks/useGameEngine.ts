@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSettings } from './useSettings';
 import { WorldCreationState, GameState, GameTurn, CharacterStats, NPC, NPCUpdate, CharacterStat, CharacterStatUpdate, Skill, LustModeFlavor, ApiKeySource, NpcMindset, Ability, DestinyCompassMode, ChronicleEntry } from '../types';
@@ -242,53 +243,7 @@ export function useGameEngine(
         setRecentlyUpdatedNpcStats(new Map());
         
         if ('history' in initialData) {
-            // --- START MIGRATION LOGIC FOR OLD SAVES ---
-            if (typeof (initialData as any).plotChronicle === 'string') {
-                const oldChronicle = (initialData as any).plotChronicle as string;
-                (initialData as GameState).plotChronicle = oldChronicle ? [{
-                    summary: oldChronicle,
-                    eventType: 'Legacy Import',
-                    involvedNpcIds: [],
-                    isUnforgettable: true,
-                    plotSignificanceScore: 10, // Default for legacy
-                }] : [];
-            }
-            if (!Array.isArray(initialData.plotChronicle)) initialData.plotChronicle = [];
-            
-            // Add plotSignificanceScore to old chronicle entries that don't have it
-            if (initialData.plotChronicle.length > 0) {
-                initialData.plotChronicle = initialData.plotChronicle.map(entry => ({
-                    ...entry,
-                    plotSignificanceScore: entry.plotSignificanceScore ?? (entry.isUnforgettable ? 10 : 5)
-                }));
-            }
-
-            if (!Array.isArray(initialData.playerSkills)) initialData.playerSkills = [];
-            if (!(initialData as GameState).turnsSinceLastChronicle) {
-                (initialData as GameState).turnsSinceLastChronicle = [];
-            }
-
-            const isOldSave = initialData.npcs.some(npc => npc.sortOrder === undefined);
-            if (isOldSave) {
-                initialData.npcs.sort((a, b) => {
-                    const aProtected = a.isProtected ? 1 : 0;
-                    const bProtected = b.isProtected ? 1 : 0;
-                    if (aProtected !== bProtected) return bProtected - aProtected;
-                    return a.name.localeCompare(b.name);
-                });
-                initialData.npcs = initialData.npcs.map((npc, index) => ({ ...npc, isProtected: !!npc.isProtected, sortOrder: index }));
-            } else {
-                initialData.npcs = initialData.npcs.map(npc => ({ ...npc, isProtected: !!npc.isProtected })).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-            }
-
-            if (!initialData.playerStatOrder || !Array.isArray(initialData.playerStatOrder)) {
-                const allStatKeys = Object.keys(initialData.playerStats);
-                const coreStatKeys = CORE_STATS.filter(coreStat => allStatKeys.includes(coreStat));
-                const otherStatKeys = allStatKeys.filter(key => !CORE_STATS.includes(key)).sort((a, b) => a.localeCompare(b));
-                initialData.playerStatOrder = [...coreStatKeys, ...otherStatKeys];
-            }
-            // --- END MIGRATION LOGIC ---
-
+            // Migration logic is now handled in GameSaveService.ts, so initialData is pre-hydrated.
             setGameState(initialData);
             const totalTokens = initialData.history.reduce((sum, turn) => sum + (turn.tokenCount || 0), 0);
             setTotalTokenCount(totalTokens);

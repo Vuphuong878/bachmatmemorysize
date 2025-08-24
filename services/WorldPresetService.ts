@@ -1,3 +1,4 @@
+
 import { WorldCreationState } from '../types';
 
 /**
@@ -38,7 +39,7 @@ export function loadPresetFromFile(file: File): Promise<WorldCreationState> {
     reader.onload = (event) => {
       try {
         const text = event.target?.result as string;
-        const parsedState = JSON.parse(text) as WorldCreationState;
+        const parsedState = JSON.parse(text);
         // Basic validation to ensure it's a world creation state and not a game save state.
         if (
           parsedState && 
@@ -49,7 +50,12 @@ export function loadPresetFromFile(file: File): Promise<WorldCreationState> {
           typeof parsedState.character.name === 'string' &&
           !('history' in parsedState) // Make sure it's not a game save
         ) {
-          resolve(parsedState);
+          // Hydrate with storyName for backward compatibility
+          const hydratedState: WorldCreationState = {
+            storyName: '', // Default value
+            ...parsedState,
+          };
+          resolve(hydratedState);
         } else {
           reject(new Error("File thiết lập không hợp lệ hoặc bị hỏng."));
         }

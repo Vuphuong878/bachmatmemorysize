@@ -97,6 +97,13 @@ Hãy viết một đoạn văn mạch lạc, kết hợp các yếu-tố trên �
     return (
         <FormSection title="Thông Tin Vị Diện" description="Đặt nền móng cho thế giới mà bạn sắp thống trị.">
             <InputField
+                label="Tên Truyện"
+                id="storyName"
+                placeholder="VD: Ma Đạo Tổ Sư, Phàm Nhân Tu Tiên..."
+                value={state.storyName}
+                onChange={e => setState(s => ({ ...s, storyName: e.target.value }))}
+            />
+            <InputField
                 label="Thể loại Vị Diện"
                 id="genre"
                 placeholder="VD: Tiên hiệp, Tận thế, Hoan dâm thế giới..."

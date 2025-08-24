@@ -17,6 +17,7 @@ export type DestinyCompassMode = 'NORMAL' | 'HARSH' | 'HELLISH';
 
 // State from the world creator screen
 export interface WorldCreationState {
+  storyName: string;
   genre: string;
   description: string;
   isNsfw: boolean;

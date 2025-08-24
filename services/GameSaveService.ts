@@ -3,14 +3,73 @@ import { GameState } from '../types';
 
 const MANUAL_SAVE_KEY = 'BMS_TG_ManualSaveData';
 const AUTO_SAVE_KEY = 'BMS_TG_AutoSaveData';
+const CORE_STATS = ['Sinh Lực', 'Thể Lực', 'Lý trí', 'Dục vọng', 'Cảnh Giới'];
+
 
 function validateAndHydrateGameState(parsedState: any): GameState | null {
   // Basic validation
   if (parsedState && parsedState.history && parsedState.playerStats && parsedState.worldContext) {
-    // Ensure npcs array exists for backward compatibility
+    // --- HYDRATION & MIGRATION FOR BACKWARD COMPATIBILITY ---
+    
+    // Ensure npcs array exists
     if (!Array.isArray(parsedState.npcs)) {
       parsedState.npcs = [];
     }
+    
+    // Ensure storyName exists in worldContext
+    if (typeof parsedState.worldContext.storyName === 'undefined') {
+      parsedState.worldContext.storyName = '';
+    }
+
+    // Migrate plotChronicle from old string format to new array format
+    if (typeof parsedState.plotChronicle === 'string') {
+        const oldChronicle = parsedState.plotChronicle as string;
+        parsedState.plotChronicle = oldChronicle ? [{
+            summary: oldChronicle,
+            eventType: 'Legacy Import',
+            involvedNpcIds: [],
+            isUnforgettable: true,
+            plotSignificanceScore: 10,
+        }] : [];
+    }
+    if (!Array.isArray(parsedState.plotChronicle)) parsedState.plotChronicle = [];
+    
+    // Add plotSignificanceScore to old chronicle entries that don't have it
+    if (parsedState.plotChronicle.length > 0) {
+        parsedState.plotChronicle = parsedState.plotChronicle.map((entry: any) => ({
+            ...entry,
+            plotSignificanceScore: entry.plotSignificanceScore ?? (entry.isUnforgettable ? 10 : 5)
+        }));
+    }
+
+    if (!Array.isArray(parsedState.playerSkills)) parsedState.playerSkills = [];
+    if (!parsedState.turnsSinceLastChronicle) {
+        parsedState.turnsSinceLastChronicle = [];
+    }
+
+    // Add sortOrder and ensure isProtected exists for NPCs in old saves
+    const isOldNpcSave = parsedState.npcs.some((npc: any) => npc.sortOrder === undefined);
+    if (isOldNpcSave) {
+        parsedState.npcs.sort((a: any, b: any) => {
+            const aProtected = a.isProtected ? 1 : 0;
+            const bProtected = b.isProtected ? 1 : 0;
+            if (aProtected !== bProtected) return bProtected - aProtected;
+            return a.name.localeCompare(b.name);
+        });
+        parsedState.npcs = parsedState.npcs.map((npc: any, index: number) => ({ ...npc, isProtected: !!npc.isProtected, sortOrder: index }));
+    } else {
+        // For newer saves, just ensure isProtected exists and re-sort
+        parsedState.npcs = parsedState.npcs.map((npc: any) => ({ ...npc, isProtected: !!npc.isProtected })).sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    }
+
+    // Generate playerStatOrder for old saves
+    if (!parsedState.playerStatOrder || !Array.isArray(parsedState.playerStatOrder)) {
+        const allStatKeys = Object.keys(parsedState.playerStats);
+        const coreStatKeys = CORE_STATS.filter(coreStat => allStatKeys.includes(coreStat));
+        const otherStatKeys = allStatKeys.filter((key: string) => !CORE_STATS.includes(key)).sort((a: string, b: string) => a.localeCompare(b));
+        parsedState.playerStatOrder = [...coreStatKeys, ...otherStatKeys];
+    }
+
     return parsedState as GameState;
   }
   return null;

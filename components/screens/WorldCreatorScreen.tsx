@@ -15,6 +15,7 @@ interface WorldCreatorScreenProps {
 
 const WorldCreatorScreen: React.FC<WorldCreatorScreenProps> = ({ onBackToMenu, onWorldCreated, settingsHook }) => {
   const [state, setState] = useState<WorldCreationState>({
+    storyName: '',
     genre: '',
     description: '',
     isNsfw: true,
@@ -80,8 +81,8 @@ const WorldCreatorScreen: React.FC<WorldCreatorScreenProps> = ({ onBackToMenu, o
       <div className="absolute inset-0 theme-sensual-bg"></div>
       <div className="relative max-w-4xl mx-auto">
         <header className="text-center my-8 animate-fade-in-down">
-          <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-wider theme-h1">Kiến Tạo Vị Diện</h1>
-          <p className="text-lg text-[#a08cb6] mt-2">Nơi những thế giới táo bạo nhất được khai sinh.</p>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-wider theme-h1">Bách Mật Sáng Thế Giả</h1>
+          <p className="text-lg text-[#a08cb6] mt-2">Kiến tạo vị diện mới của bạn.</p>
         </header>
         
         <main className="space-y-8">

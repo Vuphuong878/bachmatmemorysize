@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSettings } from '../../hooks/useSettings';
@@ -266,7 +264,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
           viewMode === 'mobile' && isActionsPanelCollapsed ? 'max-h-0 mb-0' : 'max-h-40 mb-2 sm:mb-4'
         }`}>
           <div className="flex justify-between items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-wider title-glow">Bách Mật Sáng Thế Giả</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-wider title-glow">{gameState?.worldContext?.storyName || 'Bách Mật Sáng Thế Giả'}</h1>
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-end">
               <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} disabled={!isGameInitialized} />
                <button 
