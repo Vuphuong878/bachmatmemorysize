@@ -907,7 +907,7 @@ const CORE_LOGIC_SYSTEM_PROMPT = `Bạn là một AI kể chuyện và quản l�
 **QUY TẮC PHÂN BIỆT TRẠNG THÁI (STAT) VÀ VẬT PHẨM (ITEM):**
 1.  Khi cập nhật hoặc tạo mới một chỉ số (stat/item), bạn PHẢI gán trường "type" cho mỗi chỉ số:
     - Nếu là một trong 5 chỉ số cốt lõi ("Sinh Lực", "Thể Lực", "Lý trí", "Dục vọng", "Cảnh Giới"), luôn gán type: "stat".
-    - Nếu là vật phẩm (item) hoặc chỉ số đại diện cho vật phẩm (ví dụ: tên bắt đầu bằng "Vật phẩm" hoặc có thuộc tính quantity), gán type: "item".
+    - Nếu là vật phẩm (item) hoặc chỉ đại diện cho vật phẩm (ví dụ: tên bắt đầu bằng "Vật phẩm" hoặc tên vật phẩm "Tru Tiên Kiếm"), gán type: "item".
     - Các trạng thái khác mặc định là type: "stat".
 2.  Trường "type" này giúp hệ thống phân biệt rõ ràng giữa trạng thái và vật phẩm để hiển thị và xử lý logic.
 
