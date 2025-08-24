@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type, GenerateContentResponse, HarmCategory, HarmBlockThreshold } from '@google/genai';
 import { WorldCreationState, GameState, GameTurn, NPCUpdate, CharacterStatUpdate, NPC, Skill, NarrativePerspective, LustModeFlavor, NpcMindset, DestinyCompassMode, ChronicleEntry } from '../types';
 
@@ -1061,11 +1062,31 @@ const CHRONICLE_SUMMARIZER_PROMPT = `Bạn là một AI ghi chép biên niên s�
 3.  **Phân loại (eventType):** Chọn một loại sự kiện phù hợp nhất từ các ví dụ sau: 'Chiến thắng', 'Mất mát', 'Khám phá', 'Gặp gỡ NPC', 'Chuyển cảnh', 'Phát triển nhân vật', 'Xung đột xã hội'.
 4.  **Liệt kê NPC (involvedNpcIds):** Liệt kê ID của tất cả các NPC có vai trò quan trọng trong phân cảnh.
 5.  **Phân tích Mối quan hệ (relationshipChanges):** Phân tích xem có sự thay đổi rõ rệt nào trong mối quan hệ giữa người chơi và NPC không. Nếu có, hãy điền vào mảng này. Nếu không, bỏ qua.
-6.  **Đánh giá Tầm quan trọng (plotSignificanceScore):** Cho một điểm số từ 1 (không quan trọng) đến 10 (cực kỳ quan trọng) để đánh giá tầm ảnh hưởng của sự kiện này đối với cốt truyện chính.
+6.  **Đánh giá Tầm quan trọng (plotSignificanceScore):** Đây là bước quan trọng nhất. Bạn phải đánh giá tầm ảnh hưởng của sự kiện đối với cốt truyện chính và cho một điểm số từ 1 (không quan trọng) đến 10 (cực kỳ quan trọng). Hãy sử dụng hệ thống đánh giá đa yếu tố sau để đưa ra quyết định:
+    
+    **A. CÁC YẾU TỐ CỐT LÕI (Cân nhắc tất cả):**
+    - **Tiến triển Cốt truyện (Plot Advancement):** Sự kiện này có đẩy nhanh hay thay đổi hướng đi của cốt truyện chính không? (tác động lớn nhất)
+    - **Phát triển Nhân vật (Character Development):** Nhân vật chính có học được điều gì mới, thay đổi về mặt tâm lý, hay vượt qua một thử thách cá nhân không?
+    - **Tác động Thế giới (World Impact):** Sự kiện này có thay đổi trạng thái của thế giới, một phe phái, hoặc một địa điểm quan trọng không? (ví dụ: một ngôi làng được cứu, một kẻ thù bị suy yếu)
+    - **Tác động Cảm xúc (Emotional Impact):** Đây có phải là một khoảnh khắc có ý nghĩa về mặt cảm xúc không? (ví dụ: một lời thú nhận, một sự phản bội, một mất mát lớn)
+    - **Tiền đề Tương lai (Future Foreshadowing):** Sự kiện này có tạo ra một tiền đề, một mối nguy hiểm, hay một cơ hội quan trọng cho tương lai không?
+
+    **B. QUY TẮC ĐẶC BIỆT (Hệ số nhân):**
+    - Nếu sự kiện có liên quan trực tiếp đến một NPC mà bối cảnh truyện đã khắc họa là CỰC KỲ QUAN TRỌNG (ví dụ: người thân, kẻ thù chính), hãy **cộng thêm 1-2 điểm** vào điểm cuối cùng.
+    - Nếu sự kiện giải quyết được một trạng thái tiêu cực kéo dài của người chơi (ví dụ: xóa bỏ một lời nguyền), hãy **tăng điểm đáng kể**.
+    - Nếu sự kiện có liên quan trực tiếp đến **tiểu sử nhân vật chính** hoặc một bí mật cốt lõi của **bối cảnh thế giới**, nó phải được chấm ít nhất là 7 điểm.
+    
+    **C. LƯU Ý QUAN TRỌNG: Tầm quan trọng ≠ Thành công**
+    Điểm số đo lường **tầm quan trọng của sự kiện đối với câu chuyện**, không phải mức độ thành công của người chơi. Một thất bại thảm khốc (ví dụ: mất đi một đồng minh quan trọng, một vật phẩm cốt truyện bị phá hủy) cũng có thể nhận điểm 9 hoặc 10 nếu nó tạo ra một bước ngoặt lớn.
+
+    **D. THANG ĐIỂM THAM KHẢO:**
     - **1-3 (Thấp):** Các sự kiện nhỏ, chuyển cảnh, tương tác thông thường.
     - **4-7 (Vừa):** Hoàn thành nhiệm vụ phụ, đánh bại kẻ thù thường, khám phá một địa điểm mới.
     - **8-9 (Cao):** Đánh bại một trùm lớn, một NPC quan trọng gia nhập/rời đi, một sự thay đổi lớn về mối quan hệ.
     - **10 (Tối cao/Không thể quên):** Một nhân vật chính chết, một bí mật thay đổi thế giới được tiết lộ, mục tiêu chính của game hoàn thành.
+
+    **E. VÍ DỤ VỀ CÁCH CHẤM ĐIỂM:**
+    Người chơi đánh bại một con quái vật (thông thường là 4-7 điểm), nhưng trong quá trình đó, một NPC quan trọng đã hy sinh để cứu người chơi. Sự kiện này có tác động cảm xúc lớn và sẽ thay đổi mối quan hệ với gia đình NPC đó. => Điểm cuối cùng nên là 8-9 điểm.
 7.  **Trả về JSON:** Phản hồi của bạn BẮT BUỘC phải là một đối tượng JSON duy nhất tuân thủ schema được cung cấp.`;
 
 const SKILL_GENERATOR_PROMPT = `Bạn là một AI chuyên thiết kế kỹ năng game. Nhiệm vụ duy nhất của bạn là dựa vào tên một năng lực và bối cảnh thế giới được cung cấp, sau đó tạo ra một bộ kỹ năng (Skill object) hoàn chỉnh theo schema JSON.
