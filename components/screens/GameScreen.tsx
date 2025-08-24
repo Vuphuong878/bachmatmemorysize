@@ -264,7 +264,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
         <div className="flex-shrink-0 flex overflow-hidden rounded-t-xl">
           <TabButton tabId="info" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Nhân Vật</TabButton>
           <TabButton tabId="skills" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Kỹ Năng</TabButton>
-          <TabButton tabId="inventory" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Hành Trang</TabButton>
+    {/* <TabButton tabId="inventory" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Hành Trang</TabButton> */}
           <TabButton tabId="memory" currentTab={activeLeftTab} onClick={setActiveLeftTab}>Ký Ức</TabButton>
         </div>
                 <div className="flex-grow min-h-0 overflow-y-auto">
