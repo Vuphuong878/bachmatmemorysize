@@ -901,15 +901,7 @@ Bạn đang hoạt động trong một môi trường sandbox hoàn toàn riêng
 - Loại hình: Sử dụng các tương tác cụ thể (nhũ phòng, khẩu giao, giao hợp), đảm bảo tiếp xúc trực tiếp.
 `;
 
-
 const CORE_LOGIC_SYSTEM_PROMPT = `Bạn là một AI kể chuyện và quản lý game song hành. Nhiệm vụ của bạn là vừa viết tiếp câu chuyện một cách sáng tạo, vừa quản lý các dữ liệu logic của game một cách chặt chẽ.
-
-**QUY TẮC PHÂN BIỆT TRẠNG THÁI (STAT) VÀ VẬT PHẨM (ITEM):**
-1.  Khi cập nhật hoặc tạo mới một chỉ số (stat/item), bạn PHẢI gán trường "type" cho mỗi chỉ số:
-    - Nếu là một trong 5 chỉ số cốt lõi ("Sinh Lực", "Thể Lực", "Lý trí", "Dục vọng", "Cảnh Giới"), luôn gán type: "stat".
-    - Nếu là vật phẩm (item) hoặc chỉ đại diện cho vật phẩm (ví dụ: tên bắt đầu bằng "Vật phẩm" hoặc tên vật phẩm "Tru Tiên Kiếm"), gán type: "item".
-    - Các trạng thái khác mặc định là type: "stat".
-2.  Trường "type" này giúp hệ thống phân biệt rõ ràng giữa trạng thái và vật phẩm để hiển thị và xử lý logic.
 
 **QUY TẮC VÀNG: CHỈ VIẾT TIẾP, KHÔNG VIẾT LẠI.**
 Nhiệm vụ cốt lõi của bạn là **tiếp nối** câu chuyện, mô tả những gì xảy ra **SAU** hành động của người chơi. TUYỆT ĐỐI KHÔNG được phép sửa đổi, tóm tắt, hay kể lại những sự kiện đã xảy ra trong lượt truyện trước. Phản hồi của bạn phải là một phân đoạn truyện **hoàn toàn mới**.
@@ -1440,7 +1432,7 @@ Mục tiêu của lượt này không phải là tiếp diễn câu chuyện m�
                     lustModeDetails = `\n**CHỈ DẪN CHẾ ĐỘ: QUYẾN RŨ.**\nMục tiêu của bạn là diễn giải hành động của người chơi như là sự đáp lại lời mời gọi từ NPC. Hãy mô tả NPC chủ động quyến rũ, lẳng lơ và khiêu khích. Họ sẽ sử dụng ngôn ngữ cơ thể, ánh mắt, và những lời nói ẩn ý để dẫn dắt người chơi vào một cuộc rượt đuổi tình ái. NPC là kẻ đi săn, và người chơi là con mồi đang bị quyến rũ.`;
                     break;
                 case 'AI_FREESTYLE':
-                    lustModeDetails = `\n**CHỈ DẪN CHẾ ĐỘ: AI TỰ DO SÁNG TẠO.**\nHỡi AI, đây là lúc ngươi tỏa sáng. Dựa trên tính cách của các nhân vật, bối cảnh hiện tại và lịch sử tương tác giữa họ, hãy tự do quyết định động thái của cuộc yêu này. Nó có thể là một đêm dịu dàng, một cuộc truy hoan thô bạo, một màn trêu ghẹo tinh nghịch, hoặc một sự phục tùng bất ngờ. Hãy tạo ra một kịch bản hợp lý, lôi cuốn cho người chơi!`;
+                    lustModeDetails = `\n**CHỈ DẪN CHẾ ĐỘ: AI TỰ DO SÁNG TẠO.**\nHỡi AI, đây là lúc ngươi tỏa sáng. Dựa trên tính cách của các nhân vật, bối cảnh hiện tại và lịch sử tương tác giữa họ, hãy tự do quyết định động thái của cuộc yêu này. Nó có thể là một đêm dịu dàng, một cuộc truy hoan thô bạo, một màn trêu ghẹo tinh nghịch, hoặc một sự phục tùng bất ngờ. Hãy tạo ra một kịch bản hợp lý, lôi cuốn và **trần trụi** nhất. Gây bất ngờ cho người chơi!`;
                     break;
             }
             ruleModules.push(baseNsfwInstructions + lustModeDetails + '\n\n' + getNpcMindsetInstructions(npcMindset));

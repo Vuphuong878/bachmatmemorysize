@@ -6,13 +6,6 @@ import * as GameSaveService from '../services/GameSaveService';
 
 const CORE_STATS = ['Sinh Lực', 'Thể Lực', 'Lý trí', 'Dục vọng', 'Cảnh Giới'];
 
-function classifyStatType(statName: string, statData: any): 'stat' | 'item' {
-    if (CORE_STATS.includes(statName)) return 'stat';
-    if (statName.startsWith('Vật phẩm') || statData?.quantity !== undefined) return 'item';
-    // Có thể mở rộng thêm logic nhận diện item ở đây
-    return 'stat';
-}
-
 /**
  * Converts an array of stat updates from the AI into the CharacterStats object format used by the game state.
  * @param updates - The array of stat update objects from the AI.
@@ -27,8 +20,7 @@ function convertStatUpdatesArrayToObject(updates: CharacterStatUpdate[]): Charac
         // The statName is the key, the rest of the object is the value
         const { statName, ...restOfStat } = update;
         if (statName) {
-            const type = classifyStatType(statName, restOfStat);
-            statsObject[statName] = { ...restOfStat, type };
+            statsObject[statName] = restOfStat;
         }
     }
     return statsObject;
@@ -168,29 +160,16 @@ function processSingleStatSet(currentStats: CharacterStats): CharacterStats {
 
     // Now, process durations for the remaining stats
     for (const key in newStats) {
-        const stat = newStats[key];
-        // Nếu là item
-        if (stat.type === 'item') {
-            if (typeof stat.duration === 'number') {
-                // Item có duration: giảm và xóa khi hết lượt
-                if (stat.duration <= 1) {
-                    delete newStats[key];
-                } else {
-                    newStats[key] = { ...stat, duration: stat.duration - 1 };
-                }
+         const stat = newStats[key];
+         if (typeof stat.duration === 'number') {
+            // If a stat's duration runs out, delete it, UNLESS it's a core stat.
+            if (stat.duration <= 1 && !CORE_STATS.includes(key)) {
+                delete newStats[key];
+            } else {
+                // Otherwise, just decrement the duration. Core stats with a duration will just have it tick down but never be removed by this logic.
+                newStats[key] = { ...stat, duration: stat.duration - 1 };
             }
-            // Item không có duration: tồn tại vĩnh viễn, không bị xóa
-        } else {
-            // Stat thường
-            if (typeof stat.duration === 'number') {
-                if (stat.duration <= 1 && !CORE_STATS.includes(key)) {
-                    delete newStats[key];
-                } else {
-                    newStats[key] = { ...stat, duration: stat.duration - 1 };
-                }
-            }
-            // Stat không có duration: tồn tại vĩnh viễn, không bị xóa
-        }
+         }
     }
     
     // Finally, add the newly evolved stats
@@ -654,8 +633,7 @@ export function useGameEngine(
                 value: newStat.value,
                 duration: isNaN(durationValue as any) ? undefined : durationValue,
                 history: editingStat.stat.history, // Preserve history on manual edit
-                evolution: editingStat.stat.evolution, // Preserve evolution
-                type: editingStat.stat.type // Preserve type (item/stat)
+                evolution: editingStat.stat.evolution // Preserve evolution
             };
 
             if (editingStat.target === 'player') {

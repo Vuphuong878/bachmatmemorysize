@@ -55,7 +55,6 @@ export interface CharacterStat {
     withValue: string; // The value of the new stat
     withDuration?: number; // The optional duration of the new stat
   };
-  type?: 'stat' | 'item'; // Thêm trường type để phân biệt
 }
 
 // Represents a single stat update from the AI.
