@@ -18,6 +18,13 @@ interface MainMenuProps {
 
 const changelogs = [
   {
+    version: '1.4.0',
+    date: '2025-08-25',
+    content: [
+      '- Thay đổi prompt để rõ ràng hơn về yêu cầu và ngữ cảnh.',
+    ].join('\n'),
+  },
+  {
     version: '1.3.0',
     date: '2025-08-23',
     content: [
