@@ -22,6 +22,9 @@ const TrashIcon = () => (
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings, setApiKeySource, setCustomApiKeys, isKeyConfigured }) => {
   const isCustomKeySelected = settings.apiKeySource === ApiKeySource.CUSTOM;
+  const handleOpenGuide = () => {
+    window.open('https://www.youtube.com/shorts/M_HODruvqd0', '_blank');
+  };
 
   const handleAddKey = () => {
     setCustomApiKeys([...settings.customApiKeys, '']);
@@ -42,7 +45,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
     <Modal isOpen={isOpen} onClose={onClose} title="Thiết lập API">
       <div className="space-y-8">
         <div>
-          <h3 className="text-xl font-rajdhani uppercase tracking-wider font-bold text-white mb-4">Nguồn Khóa API</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-rajdhani uppercase tracking-wider font-bold text-white">Nguồn Khóa API</h3>
+            <Button
+              onClick={handleOpenGuide}
+              variant="secondary"
+              className="border-2 border-[#e02585] text-[#e02585] font-semibold px-4 py-2 rounded-lg ml-4 hover:bg-[#e02585]/10 transition-colors"
+              style={{ minWidth: 0 }}
+            >
+              Hướng Dẫn Lấy API KEY
+            </Button>
+          </div>
           <div className="space-y-3">
             <label className={`flex items-center p-4 bg-[#2a2135] rounded-lg cursor-pointer hover:bg-[#3a2d47] transition-all duration-300 border-2 ${settings.apiKeySource === ApiKeySource.DEFAULT ? 'border-[#e02585] shadow-[0_0_10px_rgba(224,37,133,0.3)]' : 'border-transparent'}`}>
               <input
@@ -93,9 +106,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
                 </button>
               </div>
             ))}
-             <Button onClick={handleAddKey} variant="primary" disabled={!isCustomKeySelected} className="w-full mt-2">
-                + Thêm khóa API
-             </Button>
+      <Button onClick={handleAddKey} variant="primary" disabled={!isCustomKeySelected} className="w-full mt-2">
+        + Thêm khóa API
+      </Button>
+      {/* Nút hướng dẫn đã được đưa lên đầu */}
           </div>
         </div>
 

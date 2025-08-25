@@ -21,7 +21,10 @@ const changelogs = [
     version: '1.4.0',
     date: '2025-08-25',
     content: [
-      '- Thay đổi prompt để rõ ràng hơn về yêu cầu và ngữ cảnh.',
+      '- Rút gọn dữ liệu truyền vào prompt (NPC, kỹ năng, lịch sử) để tránh lỗi vượt giới hạn token.',
+      '- Thêm nút "Hướng Dẫn Lấy API KEY" ở phần thiết lập API, giao diện nổi bật và dễ nhận biết.',
+      '- Nút hướng dẫn API được đưa lên cạnh tiêu đề, giúp người dùng dễ tìm.',
+      '- Kiểm tra và xác nhận lại logic memory: MEMORY_CHAR_BUDGET chỉ áp dụng cho ký ức ngắn hạn, ký ức dài hạn được lọc riêng.'
     ].join('\n'),
   },
   {
