@@ -21,7 +21,7 @@ function highlightStory(
 ) {
     let result = text;
     // 1. Highlight đoạn hội thoại (câu trong "..." hoặc “...”)
-    result = result.replace(/([“"'])(.+?)([”"'])/g, '<span class="highlight-quote">$1$2$3</span>');
+    result = result.replace(/([“"])(.+?)([”"])/g, '<span class="highlight-quote">$1$2$3</span>');
 
     // 2. Highlight tên nhân vật chính
     if (mainCharacterName) {
@@ -41,7 +41,8 @@ function highlightStory(
     if (placeNames && placeNames.length > 0) {
         placeNames.forEach(place => {
             if (place) {
-                const re = new RegExp(`\\b${place.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}(?![\\w-])`, 'g');
+                // Highlight địa danh chỉ khi đứng giữa 2 dấu cách hoặc ở đầu/cuối chuỗi
+                const re = new RegExp(`(?<= |^)${place.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}(?= |$)`, 'g');
                 result = result.replace(re, '<span class="highlight-place">$&</span>');
             }
         });
@@ -107,11 +108,11 @@ const StoryLog: React.FC<StoryLogProps> = ({ history, mainCharacterName, npcName
                 }
                 .highlight-place {
                     color: #ffe082;
-                    font-weight: bold;
+                    font-weight: italic;
                 }
                 .highlight-quote {
-                    color: #4dd0e1;
-                    font-style: italic;
+                    color: #2bc2c7ff;
+                    font-style: bold;
                 }
             `}</style>
         </div>
