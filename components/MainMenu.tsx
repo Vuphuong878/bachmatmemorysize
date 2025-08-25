@@ -18,6 +18,18 @@ interface MainMenuProps {
 
 const changelogs = [
   {
+    version: '1.5.0',
+    date: '2025-08-26',
+    content: [
+      '- Cập nhật và xác nhận lại logic prompt NSFW, AI_FREESTYLE, tối ưu hóa prompt hướng dẫn AI viết truyện.',
+      '- Xác nhận block NSFW_CORE_RULES đã đúng và tích hợp chuẩn với hệ thống.',
+      '- Tối ưu lại quy trình lắp ghép prompt động, cho phép chuyển đổi module NSFW/AI_FREESTYLE linh hoạt.',
+      '- Sửa lỗi và cập nhật thông báo lỗi rõ ràng hơn.',
+      '- Tăng độ dài văn bản mỗi lượt.',
+      '- Cập nhật changelog, hướng dẫn kiểm tra prompt, memory, và các thay đổi UI liên quan.'
+    ].join('\n'),
+  },
+  {
     version: '1.4.0',
     date: '2025-08-25',
     content: [
