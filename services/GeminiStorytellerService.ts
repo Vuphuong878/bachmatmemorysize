@@ -878,7 +878,7 @@ function simplifyStatsForStoryteller(stats: any): any {
 // --- SYSTEM PROMPTS ---
 
 const NSFW_CORE_RULES = `
-**Bạn đang phân tích diễn biến hiện tại và thử lòng ghép yếu tố NSFW vào câu chuyện.**
+**Bạn đang phân tích diễn biến hiện tại và thử lòng ghép yếu tố NSFW vào câu chuyện một cách tự nhiên.**
 
 **1. Cơ chế NSFW Ngẫu nhiên và Gây sốc (The Twist Generator):**
 1. Chủ động tạo tình huống, mối quan hệ NSFW lén lút, cấm kỵ giữa NPC để gây bất ngờ, kích thích cho người chơi nhưng phải hợp lý với tình cảnh câu truyện và không thường xuyên.
