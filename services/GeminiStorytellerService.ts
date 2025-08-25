@@ -1626,7 +1626,7 @@ ${recentHistory}
 - **Dữ liệu nhân vật và kỹ năng (đã rút gọn):** ${JSON.stringify({ playerStats: simplifiedPlayerStats, npcs: simplifiedNpcs, playerSkills: gameState.playerSkills })}\n\n**Hành động mới nhất của người chơi là: "${choice}".**
 
 **YÊU CẦU CUỐI CÙNG (NGHIÊM NGẶT):**
-Hành động của người chơi là **sự kiện hiện tại duy nhất**. Dựa vào đó và 3 tầng ký ức, hãy viết một **đoạn truyện hoàn toàn mới** mô tả **kết quả trực tiếp** của hành động này. Đảm bảo đoạn truyện này có độ dài tối thiểu 250 từ, ưu tiên mô tả chi tiết cảm xúc, hành động, bối cảnh và hội thoại. Tuân thủ **QUY TẮC VÀNG**: KHÔNG tóm tắt, KHÔNG lặp lại, KHÔNG viết lại bất kỳ sự kiện nào từ lượt trước. Sau đó, tạo 8 lựa chọn mới và cập nhật dữ liệu logic (chỉ số, NPC) của game. KHÔNG trả về trường 'playerSkills' trong lượt này.`;
+Hành động của người chơi là **sự kiện hiện tại duy nhất**. Dựa vào đó và 3 tầng ký ức, hãy viết một **đoạn truyện hoàn toàn mới** mô tả **kết quả trực tiếp** của hành động này. Tuân thủ **QUY TẮC VÀNG**: KHÔNG tóm tắt, KHÔNG lặp lại, KHÔNG viết lại bất kỳ sự kiện nào từ lượt trước. Sau đó, tạo 8 lựa chọn mới và cập nhật dữ liệu logic (chỉ số, NPC) của game. KHÔNG trả về trường 'playerSkills' trong lượt này.`;
 
     const coreResult = await callJsonAI(corePrompt, continueSchema, geminiService, gameState.worldContext.isNsfw);
     const rawCoreResponse = parseAndValidateJsonResponse(coreResult.text);
