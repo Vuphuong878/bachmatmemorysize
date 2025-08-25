@@ -21,7 +21,7 @@ function highlightStory(
 ) {
     let result = text;
     // 1. Highlight đoạn hội thoại (câu trong "..." hoặc “...”)
-    result = result.replace(/([“"])(.+?)([”"])/g, '<span class="highlight-quote">$1$2$3</span>');
+    result = result.replace(/([“"'])(.+?)([”"'])/g, '<span class="highlight-quote">$1$2$3</span>');
 
     // 2. Highlight tên nhân vật chính
     if (mainCharacterName) {
