@@ -77,7 +77,7 @@ const npcUpdatePayloadCoreSchema = {
     properties: {
         name: { type: Type.STRING, description: "Tên riêng của nhân vật. Tên phải phù hợp với bối cảnh và lai lịch nhân vật. AI sẽ tự quyết định phong cách tên (ví dụ: Anh, Nhật, Hán Việt...)." },
         gender: { type: Type.STRING },
-        personality: { type: Type.STRING, description: "Tính cách của NPC. Đây là chỉ số cố định, không tiến hoá, không thay đổi sau khi tạo NPC." },
+    personality: { type: Type.STRING, description: "Tính cách của NPC. Đây là chỉ số cố định, được xác định khi tạo NPC và không thay đổi hoặc tiến hoá trong suốt quá trình chơi." },
         identity: { type: Type.STRING, description: "Thân phận, vai trò, xuất thân, nghề nghiệp hoặc vị trí xã hội của NPC." },
         appearance: { type: Type.STRING, description: "Mô tả ngoại hình, dáng vẻ, hoặc điểm nổi bật về hình thể của NPC." },
         virginity: { type: Type.STRING, description: "Trinh tiết hoặc Nguyên Âm (chỉ cho NPC nữ, mô tả theo chủ đề truyện)." },
@@ -956,7 +956,7 @@ Các quy tắc sau đây định hình môi trường, các sự kiện tổng t
 {DESTINY_COMPASS_RULES_PLACEHOLDER}
 ---
 **TẦNG 2: CÁC MODULE QUY TẮC TÌNH HUỐNG (Áp Dụng Đồng Thời)**
-Bạn sẽ nhận được một hoặc nhiều module quy tắc dưới đây. Bạn phải đọc, hiểu, và áp dụng **tất cả chúng đồng thời**. Nếu có vẻ mâu thuẫn (ví dụ: "Dục Vọng" và "Lương Tâm"), hãy kết hợp chúng một cách thông minh: thực hiện hành động táo bạo nhưng có sự kiềm chế để không gây tổn thương vĩnh viễn, hoặc mô tả sự giằng xé nội tâm. Quy tắc cụ thể hơn (Lương Tâm) sẽ định hướng cho quy tắc chung chung hơn (Dục Vọng).
+Bạn sẽ nhận được một hoặc nhiều module quy tắc dưới đây. Bạn phải đọc kỹ, hiểu rõ và áp dụng **đồng thời tất cả các quy tắc**. Nếu xuất hiện mâu thuẫn (ví dụ: giữa "Lý trí" và "Tình cảm"), hãy xử lý một cách linh hoạt và hợp lý: có thể thực hiện hành động táo bạo nhưng vẫn giữ sự kiềm chế để tránh gây tổn thương lâu dài, hoặc mô tả sự giằng xé nội tâm của nhân vật. Luôn ưu tiên áp dụng quy tắc cụ thể (như Tình cảm) để định hướng cho quy tắc chung hơn (như Lý trí).
 {SITUATIONAL_RULES_PLACEHOLDER}
 ---
 
