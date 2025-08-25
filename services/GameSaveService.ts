@@ -3,7 +3,7 @@ import { GameState } from '../types';
 
 const MANUAL_SAVE_KEY = 'BMS_TG_ManualSaveData';
 const AUTO_SAVE_KEY = 'BMS_TG_AutoSaveData';
-const CORE_STATS = ['Sinh Lực', 'Thể Lực', 'Lý trí', 'Dục vọng', 'Cảnh Giới'];
+const CORE_STATS = ['Sinh Lực', 'Thể Lực', 'Lý trí', 'Cảnh Giới'];
 
 
 function validateAndHydrateGameState(parsedState: any): GameState | null {

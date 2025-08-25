@@ -40,11 +40,11 @@ const statUpdateItemSchema = {
         },
         value: {
             type: Type.STRING,
-            description: "Giá trị mới của chỉ số. PHẢI là một chuỗi văn bản mô tả trạng thái. Ví dụ, với chỉ số 'Sinh Lực', giá trị có thể là 'Khỏe mạnh', 'Bị thương nhẹ', 'Thoi thóp'. Với chỉ số 'Dục vọng', có thể là 'Bình thường', 'Hứng Thú', 'Mong Muốn'. CHỈ dùng số cho các vật phẩm có thể đếm được (ví dụ: '15' cho 'Linh thạch')."
+            description: "Giá trị mới của chỉ số. PHẢI là một chuỗi văn bản mô tả trạng thái. Ví dụ, với chỉ số 'Sinh Lực', giá trị có thể là 'Khỏe mạnh', 'Bị thương nhẹ', 'Thoi thóp'. CHỈ dùng số cho các vật phẩm có thể đếm được (ví dụ: '15' cho 'Linh thạch')."
         },
         duration: {
             type: Type.INTEGER,
-            description: "BẮT BUỘC cho MỌI chỉ số không phải là chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Dục vọng, Cảnh Giới). Gán thời gian tồn tại dựa trên mức độ nghiêm trọng (ngắn, dài, hoặc gần như vĩnh viễn với số lượt lớn)."
+            description: "BẮT BUỘC cho MỌI chỉ số không phải là chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Cảnh Giới). Gán thời gian tồn tại dựa trên mức độ nghiêm trọng (ngắn, dài, hoặc gần như vĩnh viễn với số lượt lớn)."
         },
         history: {
             type: Type.ARRAY,
@@ -77,7 +77,7 @@ const npcUpdatePayloadCoreSchema = {
     properties: {
         name: { type: Type.STRING, description: "Tên riêng của nhân vật. Tên phải phù hợp với bối cảnh và lai lịch nhân vật. AI sẽ tự quyết định phong cách tên (ví dụ: Anh, Nhật, Hán Việt...)." },
         gender: { type: Type.STRING },
-        personality: { type: Type.STRING, description: "Tính cách của NPC." },
+        personality: { type: Type.STRING, description: "Tính cách của NPC. Đây là chỉ số cố định, không tiến hoá, không thay đổi sau khi tạo NPC." },
         identity: { type: Type.STRING, description: "Thân phận, vai trò, xuất thân, nghề nghiệp hoặc vị trí xã hội của NPC." },
         appearance: { type: Type.STRING, description: "Mô tả ngoại hình, dáng vẻ, hoặc điểm nổi bật về hình thể của NPC." },
         virginity: { type: Type.STRING, description: "Trinh tiết hoặc Nguyên Âm (chỉ cho NPC nữ, mô tả theo chủ đề truyện)." },
@@ -685,7 +685,7 @@ export function findEmotionalContinuityRecalls(
     const emotionalStats = Object.entries(currentPlayerStats).filter(([key, stat]) => {
         const keyLower = key.toLowerCase();
         return keyLower.includes('tình cảm') || keyLower.includes('mối quan hệ') || 
-               keyLower.includes('dục vọng') || keyLower.includes('tâm trạng');
+               keyLower.includes('cảnh giới') || keyLower.includes('tâm trạng');
     });
     
     for (const chronicle of chronicles) {
@@ -987,8 +987,8 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
     5.  Nếu không có NPC nào hiện diện, trả về một mảng rỗng \`[]\`.
 - **QUY TẮC SUY LUẬN CHỦ ĐỘNG:** Bạn BẮT BUỘC phải chủ động suy luận ra các thay đổi về chỉ số từ hành động và diễn biến. Đừng chờ đợi câu chuyện mô tả rõ ràng. Ví dụ: một cuộc rượt đuổi dài -> giảm 'Thể Lực'; một cảnh kinh hoàng -> giảm 'Lý trí'.
 - **HỆ THỐNG TRẠNG THÁI ĐỘNG:**
-    1.  **CHỈ SỐ DẠNG VĂN BẢN:** Các chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Dục vọng, Cảnh Giới) PHẢI ở dạng văn bản mô tả (ví dụ: Sinh Lực: 'Khỏe mạnh', 'Bị thương nhẹ').
-    2.  **BẮT BUỘC HÓA DURATION:** MỌI chỉ số không phải cốt lõi (ví dụ: 'Choáng váng', 'Gãy xương') BẮT BUỘC phải có thuộc tính 'duration' (số lượt tồn tại). TUYỆT ĐỐI CẤM gán 'duration' cho 5 chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Dục vọng, Cảnh Giới).
+    1.  **CHỈ SỐ DẠNG VĂN BẢN:** Các chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Cảnh Giới) PHẢI ở dạng văn bản mô tả (ví dụ: Sinh Lực: 'Khỏe mạnh', 'Bị thương nhẹ').
+    2.  **BẮT BUỘC HÓA DURATION:** MỌI chỉ số không phải cốt lõi (ví dụ: 'Choáng váng', 'Gãy xương') BẮT BUỘC phải có thuộc tính 'duration' (số lượt tồn tại). TUYỆT ĐỐI CẤM gán 'duration' cho 4 chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Cảnh Giới).
     3.  **SỰ DIỄN BIẾN (EVOLUTION):** Với các trạng thái có thể trở nặng (ví dụ: 'Vết thương nhỏ' -> 'Nhiễm trùng nhẹ'), hãy NÊN thêm thuộc tính 'evolution'.
     4.  **CÔ ĐỌNG THUỘC TÍNH (ATTRIBUTE CONDENSATION):** Để giữ giao diện gọn gàng, bạn BẮT BUỘC phải tuân thủ quy tắc cô đọng. Khi bạn cập nhật một chỉ số và thấy rằng giá trị (\`value\`) mới của nó quá dài (ví dụ: hơn 50 ký tự):
         a. **Sáng tạo danh hiệu:** Dựa vào nội dung của giá trị dài đó, hãy tự sáng tạo ra một danh hiệu ngắn gọn, súc tích và mạnh mẽ hơn (dưới 35 ký tự) để làm giá trị \`value\` mới.
@@ -1479,7 +1479,7 @@ Mục tiêu của lượt này không phải là tiếp diễn câu chuyện m�
                     lustModeDetails = `\n**CHỈ DẪN CHẾ ĐỘ: QUYẾN RŨ.**\nMục tiêu của bạn là diễn giải hành động của người chơi như là sự đáp lại lời mời gọi từ NPC. Hãy mô tả NPC chủ động quyến rũ, lẳng lơ và khiêu khích. Họ sẽ sử dụng ngôn ngữ cơ thể, ánh mắt, và những lời nói ẩn ý để dẫn dắt người chơi vào một cuộc rượt đuổi tình ái. NPC là kẻ đi săn, và người chơi là con mồi đang bị quyến rũ.`;
                     break;
                 case 'AI_FREESTYLE':
-                    lustModeDetails = `\n**CHỈ DẪN CHẾ ĐỘ: AI TỰ DO SÁNG TẠO.**\nHỡi AI, đây là lúc ngươi tỏa sáng. Dựa trên tính cách của các nhân vật, bối cảnh hiện tại và lịch sử tương tác giữa họ, hãy tự do quyết định động thái của cuộc yêu này. Nó có thể là một đêm dịu dàng, một cuộc truy hoan thô bạo, một màn trêu ghẹo tinh nghịch, hoặc một sự phục tùng bất ngờ. Hãy tạo ra một kịch bản hợp lý, lôi cuốn và **trần trụi** nhất. Gây bất ngờ cho người chơi!`;
+                    lustModeDetails = `\n**CHỈ DẪN CHẾ ĐỘ: AI TỰ DO SÁNG TẠO.**\nMục tiêu của bạn là dựa trên tính cách của các nhân vật, bối cảnh hiện tại và lịch sử tương tác giữa họ, hãy tự do quyết định nội dung. Hãy tạo ra một kịch bản hợp lý, để mọi thứ diễn ra tự nhiên nhất. Tạo cảm giác chân thực.`;
                     break;
             }
             ruleModules.push(baseNsfwInstructions + lustModeDetails + '\n\n' + getNpcMindsetInstructions(npcMindset));
