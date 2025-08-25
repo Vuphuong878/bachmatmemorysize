@@ -942,31 +942,6 @@ Không phải mọi hành động của người chơi đều thành công. AI p
     *   Các lựa chọn sau đó phải xoay quanh hành trình mới này.
 3.  **Cái Giá Của Sức Mạnh:** Sức mạnh phi thường luôn đi kèm cái giá tương xứng. Sau khi nhân vật chính hoàn thành một hành trình và đạt được sức mạnh lớn, AI nên cân nhắc tạo ra một **hậu quả** trong cốt truyện hoặc chỉ số (ví dụ: một kẻ thù mới bị thu hút, một chỉ số 'Lương tâm' bị giảm, một mối quan hệ bị rạn nứt).
 
---- 
-ĐỊNH DẠNG VĂN BẢN
-
-**LỜI KỂ:**
-- Viết truyện tập trung mô tả sâu sắc môi trường, cảm xúc, diễn biến, giao tiếp, tương tác.
-- Suy nghĩ nội tâm của nhân vật chính dùng ký hiệu \`'...'\`, tuyệt đối không miêu tả nội tâm của NPC.
-- Xuất hiện nhiều đoạn hội thoại để tăng tính tương tác và chiều sâu cho câu chuyện và dùng ký hiệu \`"..." \` hoặc \`“...”\`.
-- Luôn tôn trọng tính cách và động cơ của NPC, không để mọi tình tiết chỉ xoay quanh hoặc chiều lòng người chơi.
-- Duy trì độ khó: nhân vật có thể gặp bất lợi hoặc thất bại, nhưng câu chuyện vẫn phải tiếp diễn hợp lý.
-- Chủ động xây dựng các sự kiện bất ngờ (ví dụ: cướp bóc, ám sát, tỏ tình, cầu hôn...) sau một số lượt nhất định dựa trên \`history\`.
-
-**MÔ TẢ HÀNH ĐỘNG:**
-1. **Cốt lõi:** AI chỉ mô tả hành vi vật lý thuần túy, loại bỏ suy đoán tâm lý/cảm xúc
-2. **Tập trung hiện tại:** Ghi lại hành vi vật lý đang diễn ra và kết quả trực tiếp
-3. **Phân rã động tác:** Chia hành động lớn thành các đơn vị miêu tả nhỏ nhất
-4. **Từ ngữ chính xác:** Dùng động từ khẩu ngữ trung tính và âm thanh mô phỏng phù hợp
-5. **Ưu tiên giác quan:** Thị giác (chuyển động, vị trí), Xúc giác (áp lực, nhiệt độ), Thính giác (âm thanh vật lý)
-6. **Ngôn ngữ khách quan:** Giọng văn tỉnh táo, trung lập, tập trung động lực học và kết quả vật lý
-
-**QUY TẮC MÔ TẢ TRÀNG CẢNH VẬT LÝ:**
-1. **Vật thể:** Chất liệu cụ thể, dấu vết sử dụng, bộ phận chức năng, tránh mô tả mơ hồ và ví von văn học
-2. **Cảnh quan:** Chi tiết môi trường (loại cây, vật liệu xây dựng, tình trạng bề mặt), kết cấu kiến trúc cụ thể
-3. **Ánh sáng:** Mô tả khách quan ánh sáng và tác động vật lý, tránh cảm tính
-4. **Nhân vật:** Đặc điểm vật lý khách quan, trang phục chi tiết, vật phẩm tùy thân và dấu vết sử dụng
-5. **Nguyên tắc:** Ngôn ngữ trực tiếp, khách quan, tập trung hiện trạng tức thời, không thêm cảm xúc hay suy đoán
 
 **NSFW (KHI CHẾ ĐỘ 18+ ĐƯỢC BẬT \`isNsfw\` = \`true\`):**
 **MÔ TẢ TÌNH TIẾT GỢI CẢM (SFW & NSFW)**
@@ -1459,7 +1434,7 @@ export async function continueStory(gameState: GameState, choice: string, gemini
 }> {
     // Dynamic budget based on API capabilities - increased significantly
     // since we removed manual token limits
-    const MEMORY_CHAR_BUDGET = 23000; // Further increased from 20000 to 25000
+    const MEMORY_CHAR_BUDGET = 15000; // Further increased from 20000 to 25000
     
     // Use smart context optimization
     const optimization = optimizeContextWhenFull(gameState.history, MEMORY_CHAR_BUDGET);
