@@ -1,5 +1,6 @@
 
-import React from 'react';
+
+import React, { useState } from 'react';
 import { CharacterStats, CharacterStat, Skill } from '../../types';
 import Button from '../ui/Button';
 
@@ -69,6 +70,15 @@ const StatItem: React.FC<{
     isLastSortable: boolean;
     isHighlighted: boolean;
 }> = ({ label, stat, onAcquire, isLoading, acquireButtonText, onEdit, onDelete, onReorder, onMoveToTop, isCoreStat, isFirstSortable, isLastSortable, isHighlighted }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const valueStr = String(stat.value);
+    const TRUNCATE_LENGTH = 60;
+    const isLongText = valueStr.length > TRUNCATE_LENGTH;
+    const canToggle = isLongText;
+
+    const displayText = isLongText && !isExpanded
+        ? `${valueStr.substring(0, TRUNCATE_LENGTH)}...`
+        : valueStr;
     
     const highlightClass = 'bg-gradient-to-r from-amber-500/20 to-transparent border-l-4 border-amber-400 scale-[1.01] shadow-lg';
     const baseClass = 'odd:bg-white/5 border-l-4 border-transparent';
@@ -92,7 +102,7 @@ const StatItem: React.FC<{
             </div>
             
             {/* Bottom row: Value, duration, acquire button */}
-            <div className="flex items-baseline justify-end text-right gap-x-2 mt-1">
+            <div className="flex items-baseline justify-start text-left gap-x-2 mt-1">
                 {stat.history && stat.history.length > 0 && (
                     <span
                         className="text-blue-400 cursor-help"
@@ -101,7 +111,13 @@ const StatItem: React.FC<{
                         <HistoryIcon />
                     </span>
                 )}
-                <span className="text-sm font-bold text-white break-words">{String(stat.value)}</span>
+                <span 
+                    className={`text-sm font-bold text-white break-words ${canToggle ? 'cursor-pointer hover:text-amber-300' : ''}`}
+                    onClick={() => canToggle && setIsExpanded(!isExpanded)}
+                    title={canToggle ? (isExpanded ? 'Thu gọn' : 'Nhấn để xem đầy đủ') : ''}
+                >
+                    {displayText}
+                </span>
                 {stat.duration && (
                     <span className="text-xs font-mono text-cyan-400 whitespace-nowrap">({stat.duration} lượt)</span>
                 )}

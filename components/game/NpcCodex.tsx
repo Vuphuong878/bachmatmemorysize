@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { NPC, CharacterStat } from '../../types';
 
@@ -33,7 +34,16 @@ const HistoryIcon = () => (
 
 
 const DetailItem: React.FC<{ label: string; value: string | undefined }> = ({ label, value }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
     if (!value) return null;
+
+    const TRUNCATE_LENGTH = 60;
+    const isLongText = value.length > TRUNCATE_LENGTH;
+    const canToggle = isLongText;
+
+    const displayText = isLongText && !isExpanded
+        ? `${value.substring(0, TRUNCATE_LENGTH)}...`
+        : value;
 
     const baseClass = 'odd:bg-white/5 border-l-4 border-transparent';
     
@@ -43,7 +53,13 @@ const DetailItem: React.FC<{ label: string; value: string | undefined }> = ({ la
                 <span className="text-sm font-semibold text-[#c5b5dd]" title={label}>{label}</span>
             </div>
             <div className="mt-1 text-left">
-                <span className="text-sm font-bold text-white break-words">{value}</span>
+                <span 
+                    className={`text-sm font-bold text-white break-words ${canToggle ? 'cursor-pointer hover:text-amber-300' : ''}`}
+                    onClick={() => canToggle && setIsExpanded(!isExpanded)}
+                    title={canToggle ? (isExpanded ? 'Thu gọn' : 'Nhấn để xem đầy đủ') : ''}
+                >
+                    {displayText}
+                </span>
             </div>
         </div>
     );
@@ -56,6 +72,15 @@ const NpcStatItem: React.FC<{
     onDelete: () => void;
     isHighlighted: boolean;
 }> = ({ label, stat, onEdit, onDelete, isHighlighted }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const valueStr = String(stat.value);
+    const TRUNCATE_LENGTH = 60;
+    const isLongText = valueStr.length > TRUNCATE_LENGTH;
+    const canToggle = isLongText;
+
+    const displayText = isLongText && !isExpanded
+        ? `${valueStr.substring(0, TRUNCATE_LENGTH)}...`
+        : valueStr;
     
     const highlightClass = 'bg-gradient-to-r from-amber-500/20 to-transparent border-l-4 border-amber-400 scale-[1.01] shadow-lg';
     const baseClass = 'odd:bg-white/5 border-l-4 border-transparent';
@@ -78,7 +103,13 @@ const NpcStatItem: React.FC<{
                         <HistoryIcon />
                     </span>
                 )}
-                <span className="text-sm font-bold text-white break-words">{String(stat.value)}</span>
+                <span 
+                    className={`text-sm font-bold text-white break-words ${canToggle ? 'cursor-pointer hover:text-amber-300' : ''}`}
+                    onClick={() => canToggle && setIsExpanded(!isExpanded)}
+                    title={canToggle ? (isExpanded ? 'Thu gọn' : 'Nhấn để xem đầy đủ') : ''}
+                >
+                    {displayText}
+                </span>
                 {stat.duration && (
                     <span className="text-xs font-mono text-cyan-400 whitespace-nowrap">({stat.duration})</span>
                 )}
