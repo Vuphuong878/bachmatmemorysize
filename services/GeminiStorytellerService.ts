@@ -1238,6 +1238,14 @@ export async function generateImageFromStory(
     The prompt should focus on the key characters, actions, and the environment described. It should be in English for best results with the image model.
     Describe the scene as if you are setting up a movie shot. Mention character appearance, clothing, mood, lighting, and setting.
     Be specific. Avoid vague terms.
+    
+    1. Main setting (e.g., "a deep valley shrouded in spiritual mist")
+    2. Main character and their pose/activity (e.g., "the cultivator is standing on a cliff, white robe fluttering in the wind")
+    3. Lighting or weather effects (e.g., "afternoon sunlight streaming through the leaves, creating golden rays")
+    4. Elements related to cultivation (e.g., "streams of spiritual energy swirling around the body")
+    5. Art style suitable for xianxia (e.g., "in the style of classic Chinese ink wash painting")
+
+    IMPORTANT: Filter out or omit any explicit, sexual, violent, or otherwise sensitive details. The prompt must be safe for work and suitable for all audiences. Do not include nudity, sexual acts, graphic violence, or any content that may violate content policies.
     The final prompt should be a single, detailed paragraph.
 
     **World Context:**
@@ -1249,8 +1257,6 @@ export async function generateImageFromStory(
     ---
     ${storyText}
     ---
-
-    Style: The image should be in the style of classic Chinese ink wash painting (shui-mo hua).
 
     **Image Generation Prompt (in English):**
     `;
