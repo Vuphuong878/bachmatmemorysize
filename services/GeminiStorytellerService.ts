@@ -281,7 +281,7 @@ Bạn là người kể chuyện biết mọi thứ, có thể mô tả suy ngh�
 **QUY TẮC VỀ NGÔI KỂ (TUYỆT ĐỐI NGHIÊM NGẶT): Ngôi thứ ba Giới hạn**
 Bạn BẮT BUỘC phải kể chuyện theo góc nhìn của nhân vật chính. Bạn chỉ biết những gì nhân vật chính biết, thấy, nghe và cảm nhận.
 1.  **Đối với Nhân vật chính (PC):**
-    *   **Lần đầu nhắc đến trong một đoạn văn:** LUÔN LUÔN dùng tên riêng (ví dụ: "Trần Phàm bước vào...").
+    *   **Lần đầu nhắc đến trong một đoạn văn:** LUÔN LUÔN dùng tên riêng (ví dụ: "Bách Mật bước vào...").
     *   **Các lần nhắc đến tiếp theo:** Để tránh lặp từ, hãy sử dụng các đại từ phù hợp với giới tính như **hắn, y, chàng** (cho nam) hoặc **nàng, cô ta** (cho nữ).
     *   **TUYỆT ĐỐI CẤM:** Không bao giờ dùng "Anh", "Chị", "Bạn", "Cậu" trong lời kể.
 2.  **Đối với Nhân vật phụ (NPC):**
@@ -1083,19 +1083,19 @@ Mục tiêu chính của bạn là **bảo tồn trí nhớ** của NPC. Chỉ c
 
 **VÍ DỤ:**
 **Đầu vào:**
-- Bối cảnh: "Trần Phàm gật đầu với Lạc Thần rồi quay sang nhìn ra biển."
-- NPC: \`- Lạc Thần (id: lac_than, tóm tắt cũ: "Vừa được Trần Phàm cứu khỏi tay hải tặc.")\`
+- Bối cảnh: "Bách Mật gật đầu với Lạc Thần rồi quay sang nhìn ra biển."
+- NPC: \`- Lạc Thần (id: lac_than, tóm tắt cũ: "Vừa được Bách Mật cứu khỏi tay hải tặc.")\`
 **Phân tích:** Không có tương tác mới quan trọng.
 **Đầu ra đúng:**
-\`id: lac_than | status: Đang đứng cạnh Trần Phàm. | summary: Vừa được Trần Phàm cứu khỏi tay hải tặc.\`
+\`id: lac_than | status: Đang đứng cạnh Bách Mật. | summary: Vừa được Bách Mật cứu khỏi tay hải tặc.\`
 (Lưu ý: 'summary' được giữ nguyên)
 
 **Đầu vào:**
-- Bối cảnh: "Trần Phàm nói với Lạc Thần: 'Hãy kể cho ta nghe về quá khứ của cô.'"
-- NPC: \`- Lạc Thần (id: lac_than, tóm tắt cũ: "Vừa được Trần Phàm cứu khỏi tay hải tặc.")\`
+- Bối cảnh: "Bách Mật nói với Lạc Thần: 'Hãy kể cho ta nghe về quá khứ của cô.'"
+- NPC: \`- Lạc Thần (id: lac_than, tóm tắt cũ: "Vừa được Bách Mật cứu khỏi tay hải tặc.")\`
 **Phân tích:** Có tương tác mới quan trọng.
 **Đầu ra đúng:**
-\`id: lac_than | status: Bắt đầu kể lại câu chuyện của mình. | summary: Được Trần Phàm hỏi về quá khứ.\`
+\`id: lac_than | status: Bắt đầu kể lại câu chuyện của mình. | summary: Được Bách Mật hỏi về quá khứ.\`
 (Lưu ý: 'summary' đã được cập nhật)`;
 
 const CHRONICLE_SUMMARIZER_PROMPT = `Bạn là một AI ghi chép biên niên sử. Nhiệm vụ của bạn là đọc các diễn biến của một phân cảnh truyện và tóm tắt chúng thành một đối tượng JSON duy nhất.
@@ -1230,23 +1230,9 @@ async function callGeminiImageAPI(prompt: string): Promise<string> {
 export async function generateImageFromStory(
     storyText: string,
     worldContext: WorldCreationState,
-    npcs: NPC[],
-    presentNpcIds: string[],
     geminiService: GoogleGenAI
 ): Promise<string> {
-    // Step 1: Extract NPCs present in the scene from the provided list
-    const presentNpcs = npcs.filter(npc => presentNpcIds.includes(npc.id));
-    
-    // Step 2: Create NPC context string for the prompt
-    let npcContext = '';
-    if (presentNpcs.length > 0) {
-        npcContext = `
-    **NPCs Present in Scene:**
-${presentNpcs.map(npc => `    - ${npc.name} (${npc.gender}): ${npc.appearance || 'No appearance description'}, ${npc.personality}, Status: ${npc.status}`).join('\n')}
-        `;
-    }
-
-    // Step 3: Generate a descriptive image prompt from the story text.
+    // Step 1: Generate a descriptive image prompt from the story text.
     const promptCreationPrompt = `
     Based on the following story segment and world context, create a concise, visually descriptive prompt for an image generation AI.
     The prompt should focus on the key characters, actions, and the environment described. It should be in English for best results with the image model.
@@ -1255,10 +1241,9 @@ ${presentNpcs.map(npc => `    - ${npc.name} (${npc.gender}): ${npc.appearance ||
     
     1. Main setting (e.g., "a deep valley shrouded in spiritual mist")
     2. Main character and their pose/activity (e.g., "the cultivator is standing on a cliff, white robe fluttering in the wind")
-    3. NPCs present and their visual characteristics (if any)
-    4. Lighting or weather effects (e.g., "afternoon sunlight streaming through the leaves, creating golden rays")
-    5. Elements related to cultivation (e.g., "streams of spiritual energy swirling around the body")
-    6. Art style suitable for xianxia (e.g., "in the style of classic Chinese ink wash painting")
+    3. Lighting or weather effects (e.g., "afternoon sunlight streaming through the leaves, creating golden rays")
+    4. Elements related to cultivation (e.g., "streams of spiritual energy swirling around the body")
+    5. Art style suitable for xianxia (e.g., "in the style of classic Chinese ink wash painting")
 
     IMPORTANT: Filter out or omit any explicit, sexual, violent, or otherwise sensitive details. The prompt must be safe for work and suitable for all audiences. Do not include nudity, sexual acts, graphic violence, or any content that may violate content policies.
     The final prompt should be a single, detailed paragraph.
@@ -1267,7 +1252,7 @@ ${presentNpcs.map(npc => `    - ${npc.name} (${npc.gender}): ${npc.appearance ||
     - Genre: ${worldContext.genre}
     - Description: ${worldContext.description}
     - Main Character: ${worldContext.character.name}, ${worldContext.character.gender}, ${worldContext.character.personality}
-${npcContext}
+
     **Story Segment:**
     ---
     ${storyText}

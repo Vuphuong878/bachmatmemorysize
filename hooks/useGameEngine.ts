@@ -351,25 +351,22 @@ export function useGameEngine(
                 }
             }
             
-            // Update newTurn to include presentNpcIds
-            const updatedNewTurn = { ...newTurn, presentNpcIds: newPresentNpcIds };
-            
             const newState: GameState = {
                 ...gameState,
-                history: [...gameState.history, updatedNewTurn],
+                history: [...gameState.history, newTurn],
                 playerStats: newPlayerStats,
                 playerStatOrder: newPlayerStatOrder,
                 npcs: updatedNpcs,
                 plotChronicle: newPlotChronicle,
                 // If a scene break happened, reset the turns buffer. Otherwise, add the new turn.
-                turnsSinceLastChronicle: isSceneBreak ? [] : [...(gameState.turnsSinceLastChronicle || []), updatedNewTurn],
+                turnsSinceLastChronicle: isSceneBreak ? [] : [...(gameState.turnsSinceLastChronicle || []), newTurn],
             };
 
             setGameState(newState);
             GameSaveService.saveAutoSave(newState);
             setPresentNpcIds(newPresentNpcIds);
             
-            const tokenCount = updatedNewTurn.tokenCount || 0;
+            const tokenCount = newTurn.tokenCount || 0;
             setLastTurnTokenCount(tokenCount);
             setTotalTokenCount(prev => prev + tokenCount);
             if (newlyAcquiredSkill) setSkillToLearn(newlyAcquiredSkill);
@@ -381,10 +378,8 @@ export function useGameEngine(
                 setGeneratedImageUrl(null); // Clear previous image
                 try {
                     const imageUrl = await storytellerService.generateImageFromStory(
-                        updatedNewTurn.storyText,
+                        newTurn.storyText,
                         newState.worldContext,
-                        newState.npcs,
-                        newPresentNpcIds || [],
                         geminiService
                     );
                     setGeneratedImageUrl(imageUrl);
@@ -395,7 +390,7 @@ export function useGameEngine(
                             const { imageUrl, ...rest } = turn;
                             return { ...rest };
                         });
-                        const updatedLastTurn = { ...updatedNewTurn, imageUrl };
+                        const updatedLastTurn = { ...newTurn, imageUrl };
                         const updatedHistory = [...cleanedHistory, updatedLastTurn];
                         const updatedState: GameState = {
                             ...newState,
@@ -864,8 +859,6 @@ export function useGameEngine(
             const imageUrl = await storytellerService.generateImageFromStory(
                 lastTurn.storyText,
                 gameState.worldContext,
-                gameState.npcs,
-                lastTurn.presentNpcIds || [],
                 geminiService
             );
             setGeneratedImageUrl(imageUrl);
