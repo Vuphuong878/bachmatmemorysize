@@ -1187,6 +1187,8 @@ export async function generateImageFromStory(
     ---
     ${storyText}
     ---
+    The image should be in the style of classic Chinese ink wash painting (shui-mo hua).
+    
 
     **Image Generation Prompt (in English):**
     `;
@@ -1206,7 +1208,7 @@ export async function generateImageFromStory(
 
     // Step 2: Generate the image using the created prompt.
     const imageResponse = await geminiService.models.generateImages({
-        model: 'imagen-4.0-generate-001',
+        model: 'gemini-2.0-flash-preview-image-generation',
         prompt: imagePrompt,
         config: {
             numberOfImages: 1,

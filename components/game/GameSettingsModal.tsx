@@ -35,8 +35,8 @@ const GameSettingsModal: React.FC<GameSettingsModalProps> = ({
                 />
                  <ToggleSwitch
                     id="image-generation-toggle"
-                    label="Tự động tạo hình ảnh"
-                    description="AI sẽ tự động tạo một hình ảnh minh họa cho mỗi lượt truyện. (Tính năng thử nghiệm)"
+                    label="Kích hoạt tạo hình ảnh"
+                    description="AI sẽ tự động tạo một hình ảnh minh họa khi yêu cầu cho lượt truyện mới nhất. (Tính năng thử nghiệm)"
                     enabled={isImageGenerationEnabled}
                     setEnabled={setIsImageGenerationEnabled}
                 />

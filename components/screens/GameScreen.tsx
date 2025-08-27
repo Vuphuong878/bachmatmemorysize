@@ -29,6 +29,7 @@ import AbilityEditModal from '../game/AbilityEditModal';
 import { CogIcon } from '../icons/CogIcon';
 import GameSettingsModal from '../game/GameSettingsModal';
 import InventorySheet from '../game/InventorySheet';
+import AiControlPanelModal from '../game/AiControlPanelModal';
 
 
 interface GameScreenProps {
@@ -83,6 +84,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isPowerCreationModalOpen, setIsPowerCreationModalOpen] = useState(false);
   const [isGameSettingsModalOpen, setIsGameSettingsModalOpen] = useState(false);
+  const [isAiControlPanelOpen, setIsAiControlPanelOpen] = useState(false);
   const [isLogicModeOn, setIsLogicModeOn] = useState(true);
   const [lustModeFlavor, setLustModeFlavor] = useState<LustModeFlavor | null>(null);
   const [npcMindset, setNpcMindset] = useState<NpcMindset>('IRON_WILL');
@@ -538,20 +540,10 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
                                 choices={latestTurn?.choices || []} 
                                 onChoice={doPlayerChoice}
                                 isLoading={isLoading || !!skillToLearn}
-                                isLogicModeOn={isLogicModeOn}
-                                onLogicModeChange={setIsLogicModeOn}
-                                lustModeFlavor={lustModeFlavor}
-                                onLustModeFlavorChange={setLustModeFlavor}
-                                npcMindset={npcMindset}
-                                onNpcMindsetChange={setNpcMindset}
                                 customAction={customAction}
                                 onCustomActionChange={setCustomAction}
-                                isConscienceModeOn={isConscienceModeOn}
-                                onConscienceModeChange={setIsConscienceModeOn}
-                                isStrictInterpretationOn={isStrictInterpretationOn}
-                                onStrictInterpretationChange={setIsStrictInterpretationOn}
-                                destinyCompassMode={destinyCompassMode}
-                                onDestinyCompassModeChange={setDestinyCompassMode}
+                                onRegenerate={() => { /* Placeholder for future feature */}}
+                                onOpenAiControls={() => setIsAiControlPanelOpen(true)}
                             />
                         </div>
                     </div>
@@ -602,6 +594,23 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
       )}
 
       {/* Modals */}
+      <AiControlPanelModal
+        isOpen={isAiControlPanelOpen}
+        onClose={() => setIsAiControlPanelOpen(false)}
+        isLoading={isLoading || !!skillToLearn}
+        isLogicModeOn={isLogicModeOn}
+        onLogicModeChange={setIsLogicModeOn}
+        lustModeFlavor={lustModeFlavor}
+        onLustModeFlavorChange={setLustModeFlavor}
+        npcMindset={npcMindset}
+        onNpcMindsetChange={setNpcMindset}
+        isConscienceModeOn={isConscienceModeOn}
+        onConscienceModeChange={setIsConscienceModeOn}
+        isStrictInterpretationOn={isStrictInterpretationOn}
+        onStrictInterpretationChange={setIsStrictInterpretationOn}
+        destinyCompassMode={destinyCompassMode}
+        onDestinyCompassModeChange={setDestinyCompassMode}
+      />
       <ExitConfirmationModal
         isOpen={isExitModalOpen}
         onClose={() => setIsExitModalOpen(false)}

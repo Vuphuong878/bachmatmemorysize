@@ -18,6 +18,14 @@ interface MainMenuProps {
 
 const changelogs = [
   {
+    version: '1.6.0',
+    date: '2025-08-27',
+    content: [
+      '- Thêm cơ chế tạo hình ảnh AI trực tiếp từ nội dung truyện, cho phép sinh ảnh minh họa tự động.',
+      '- Toàn bộ hình ảnh AI sinh ra đều mang phong cách tranh thủy mặc Trung Hoa cổ điển (classic Chinese ink wash painting, shui-mo hua, ancient China, elegant, poetic, atmospheric).'
+    ].join('\n'),
+  },
+  {
     version: '1.5.0',
     date: '2025-08-26',
     content: [

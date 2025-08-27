@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { GameTurn } from '../../types';
 import StoryVisualizer from './StoryVisualizer';
+import { PaintBrushIcon } from '../icons/PaintBrushIcon';
 
 
 interface StoryLogProps {
@@ -85,21 +86,35 @@ const StoryLog: React.FC<StoryLogProps> = ({
                 )}
                 {displayedHistory.map((turn, index) => {
                     const isLastTurn = index === displayedHistory.length - 1;
+                    const showCreateButton = isLastTurn && isImageGenerationEnabled && !generatedImageUrl && !isGeneratingImage && !imageGenerationError;
+                    const showVisualizer = isLastTurn && isImageGenerationEnabled && (isGeneratingImage || !!generatedImageUrl || !!imageGenerationError);
+
                     return (
                         <div key={index} className="mb-6 animate-fade-in">
                             {turn.playerAction && (
-                                <div className="mb-4 italic text-[#a08cb6] p-3 bg-black/20 rounded-lg border border-[#3a2d47]/50 text-base">
-                                    <span className="font-semibold text-[#c5b5dd]">Hành động của bạn:</span> {turn.playerAction}
+                                <div className="mb-4 flex justify-between items-center italic text-[#a08cb6] p-3 bg-black/20 rounded-lg border border-[#3a2d47]/50 text-base">
+                                    <p className="flex-grow mr-4">
+                                        <span className="font-semibold text-[#c5b5dd]">Hành động của bạn:</span> {turn.playerAction}
+                                    </p>
+                                    {showCreateButton && (
+                                        <button
+                                            onClick={onRegenerateImage}
+                                            disabled={isGeneratingImage}
+                                            className="flex-shrink-0 p-2 bg-[#1d1526]/80 rounded-lg border border-solid border-[#3a2d47]/50 text-[#a08cb6] hover:text-white hover:border-[#e02585] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed not-italic"
+                                            title="Tạo hình ảnh"
+                                        >
+                                            <PaintBrushIcon />
+                                        </button>
+                                    )}
                                 </div>
                             )}
 
-                            {isLastTurn && isImageGenerationEnabled && (
+                            {showVisualizer && (
                                 <StoryVisualizer
                                     imageUrl={generatedImageUrl}
                                     isLoading={isGeneratingImage}
                                     error={imageGenerationError}
                                     onRetry={onRegenerateImage}
-                                    isGameInitialized={true}
                                 />
                             )}
                             

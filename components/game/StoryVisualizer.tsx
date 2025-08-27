@@ -6,10 +6,14 @@ interface StoryVisualizerProps {
     isLoading: boolean;
     error: string | null;
     onRetry: () => void;
-    isGameInitialized: boolean;
 }
 
-const StoryVisualizer: React.FC<StoryVisualizerProps> = ({ imageUrl, isLoading, error, onRetry, isGameInitialized }) => {
+const StoryVisualizer: React.FC<StoryVisualizerProps> = ({ imageUrl, isLoading, error, onRetry }) => {
+    // If there is nothing to show, render nothing.
+    if (!imageUrl && !isLoading && !error) {
+        return null;
+    }
+    
     return (
         <div className="relative aspect-video bg-[#120c18]/50 rounded-lg overflow-hidden border border-[#3a2d47]/50 flex items-center justify-center text-center text-[#a08cb6] mb-4 shadow-inner">
             {isLoading && (
@@ -38,19 +42,6 @@ const StoryVisualizer: React.FC<StoryVisualizerProps> = ({ imageUrl, isLoading, 
                     alt="Hình ảnh minh họa cho câu chuyện"
                     className="w-full h-full object-cover animate-fade-in-fast"
                 />
-            )}
-            {!imageUrl && !isLoading && !error && (
-                 <div className="p-4 flex flex-col items-center gap-3">
-                    <p className="text-sm">Hình ảnh minh họa sẽ xuất hiện ở đây.</p>
-                     {isGameInitialized && (
-                         <button
-                            onClick={onRetry}
-                            className="px-4 py-1.5 text-xs font-bold rounded-md bg-[#633aab] text-white hover:bg-opacity-80 transition-colors"
-                        >
-                            Tạo hình ảnh
-                        </button>
-                    )}
-                </div>
             )}
             <style>{`
                  @keyframes fade-in-fast {
