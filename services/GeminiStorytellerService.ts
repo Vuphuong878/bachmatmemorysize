@@ -1230,9 +1230,23 @@ async function callGeminiImageAPI(prompt: string): Promise<string> {
 export async function generateImageFromStory(
     storyText: string,
     worldContext: WorldCreationState,
+    npcs: NPC[],
+    presentNpcIds: string[],
     geminiService: GoogleGenAI
 ): Promise<string> {
-    // Step 1: Generate a descriptive image prompt from the story text.
+    // Step 1: Extract NPCs present in the scene from the provided list
+    const presentNpcs = npcs.filter(npc => presentNpcIds.includes(npc.id));
+    
+    // Step 2: Create NPC context string for the prompt
+    let npcContext = '';
+    if (presentNpcs.length > 0) {
+        npcContext = `
+    **NPCs Present in Scene:**
+${presentNpcs.map(npc => `    - ${npc.name} (${npc.gender}): ${npc.appearance || 'No appearance description'}, ${npc.personality}, Status: ${npc.status}`).join('\n')}
+        `;
+    }
+
+    // Step 3: Generate a descriptive image prompt from the story text.
     const promptCreationPrompt = `
     Based on the following story segment and world context, create a concise, visually descriptive prompt for an image generation AI.
     The prompt should focus on the key characters, actions, and the environment described. It should be in English for best results with the image model.
@@ -1241,9 +1255,10 @@ export async function generateImageFromStory(
     
     1. Main setting (e.g., "a deep valley shrouded in spiritual mist")
     2. Main character and their pose/activity (e.g., "the cultivator is standing on a cliff, white robe fluttering in the wind")
-    3. Lighting or weather effects (e.g., "afternoon sunlight streaming through the leaves, creating golden rays")
-    4. Elements related to cultivation (e.g., "streams of spiritual energy swirling around the body")
-    5. Art style suitable for xianxia (e.g., "in the style of classic Chinese ink wash painting")
+    3. NPCs present and their visual characteristics (if any)
+    4. Lighting or weather effects (e.g., "afternoon sunlight streaming through the leaves, creating golden rays")
+    5. Elements related to cultivation (e.g., "streams of spiritual energy swirling around the body")
+    6. Art style suitable for xianxia (e.g., "in the style of classic Chinese ink wash painting")
 
     IMPORTANT: Filter out or omit any explicit, sexual, violent, or otherwise sensitive details. The prompt must be safe for work and suitable for all audiences. Do not include nudity, sexual acts, graphic violence, or any content that may violate content policies.
     The final prompt should be a single, detailed paragraph.
@@ -1252,7 +1267,7 @@ export async function generateImageFromStory(
     - Genre: ${worldContext.genre}
     - Description: ${worldContext.description}
     - Main Character: ${worldContext.character.name}, ${worldContext.character.gender}, ${worldContext.character.personality}
-
+${npcContext}
     **Story Segment:**
     ---
     ${storyText}
