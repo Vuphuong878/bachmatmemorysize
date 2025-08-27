@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSettings } from './useSettings';
 import { WorldCreationState, GameState, GameTurn, CharacterStats, NPC, NPCUpdate, CharacterStat, CharacterStatUpdate, Skill, LustModeFlavor, ApiKeySource, NpcMindset, Ability, DestinyCompassMode, ChronicleEntry } from '../types';
@@ -216,6 +215,11 @@ export function useGameEngine(
     const [skillToDelete, setSkillToDelete] = useState<Skill | null>(null);
     const [editingAbility, setEditingAbility] = useState<{ skillName: string; ability: Ability } | null>(null);
 
+    // State for image generation
+    const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+    const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+    const [imageGenerationError, setImageGenerationError] = useState<string | null>(null);
+
     const { geminiService, settings, rotateApiKey } = settingsHook;
 
     const handleApiError = (e: any, contextAction: string) => {
@@ -299,7 +303,7 @@ export function useGameEngine(
     }, [initialData, initializeGame]);
 
 
-    const handlePlayerChoice = async (choice: string, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode) => {
+    const handlePlayerChoice = async (choice: string, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode, isImageGenerationEnabled: boolean) => {
         if (!gameState || !geminiService) return;
         setIsLoading(true);
         setError(null);
@@ -366,6 +370,31 @@ export function useGameEngine(
             setLastTurnTokenCount(tokenCount);
             setTotalTokenCount(prev => prev + tokenCount);
             if (newlyAcquiredSkill) setSkillToLearn(newlyAcquiredSkill);
+
+            // Trigger image generation only if the feature is enabled.
+            if (isImageGenerationEnabled) {
+                setIsGeneratingImage(true);
+                setImageGenerationError(null);
+                setGeneratedImageUrl(null); // Clear previous image
+                try {
+                    const imageUrl = await storytellerService.generateImageFromStory(
+                        newTurn.storyText,
+                        newState.worldContext,
+                        geminiService
+                    );
+                    setGeneratedImageUrl(imageUrl);
+                } catch (imgErr: any) {
+                    console.error("Image generation failed:", imgErr);
+                    setImageGenerationError(imgErr.message || "Không thể tạo hình ảnh.");
+                } finally {
+                    setIsGeneratingImage(false);
+                }
+            } else {
+                 // If the feature is off, ensure all image-related states are cleared.
+                setGeneratedImageUrl(null);
+                setIsGeneratingImage(false);
+                setImageGenerationError(null);
+            }
 
         } catch (e: any) {
             handleApiError(e, "tiếp nối câu chuyện");
@@ -802,6 +831,30 @@ export function useGameEngine(
         });
     }
 
+    const regenerateLastImage = async () => {
+        if (!gameState || !geminiService) return;
+        const lastTurn = gameState.history[gameState.history.length - 1];
+        if (!lastTurn) return;
+
+        setIsGeneratingImage(true);
+        setImageGenerationError(null);
+        setGeneratedImageUrl(null);
+        try {
+            const imageUrl = await storytellerService.generateImageFromStory(
+                lastTurn.storyText,
+                gameState.worldContext,
+                geminiService
+            );
+            setGeneratedImageUrl(imageUrl);
+        } catch (imgErr: any) {
+            console.error("Image regeneration failed:", imgErr);
+            setImageGenerationError(imgErr.message || "Không thể tạo hình ảnh.");
+        } finally {
+            setIsGeneratingImage(false);
+        }
+    };
+
+
     return {
         gameState,
         isLoading,
@@ -844,5 +897,9 @@ export function useGameEngine(
         recentlyUpdatedNpcStats,
         updatePlotChronicleEntry,
         updateShortTermMemoryTurn,
+        generatedImageUrl,
+        isGeneratingImage,
+        imageGenerationError,
+        regenerateLastImage,
     };
 }

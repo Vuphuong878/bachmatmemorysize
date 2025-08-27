@@ -51,7 +51,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
       editingAbility, requestAbilityEdit, confirmAbilityEdit, cancelAbilityEdit,
       reorderPlayerStat, movePlayerStatToTop,
       recentlyUpdatedPlayerStats, recentlyUpdatedNpcStats,
-      updatePlotChronicleEntry, updateShortTermMemoryTurn
+      updatePlotChronicleEntry, updateShortTermMemoryTurn,
+      generatedImageUrl, isGeneratingImage, imageGenerationError, regenerateLastImage,
   } = useGameEngine(initialData, settingsHook);
 
   const [editingChronicleIdx, setEditingChronicleIdx] = useState<number | string | null>(null);
@@ -76,6 +77,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>('bms-view-mode', 'desktop');
   const [autoHideActionPanel, setAutoHideActionPanel] = useLocalStorage<boolean>('bms-auto-hide-panel', false);
+  const [isImageGenerationEnabled, setIsImageGenerationEnabled] = useLocalStorage<boolean>('bms-image-gen-enabled', false);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
@@ -185,7 +187,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   };
   
   const doPlayerChoice = async (choice: string) => {
-    await handlePlayerChoice(choice, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode);
+    await handlePlayerChoice(choice, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode, isImageGenerationEnabled);
     setCustomAction(''); // Clear input after any action
     if (autoHideActionPanel) {
       setIsActionsPanelCollapsed(true);
@@ -503,7 +505,16 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
             {gameState && isGameInitialized && !error && (
                 <>
                     <div className="flex-grow bg-[#1d1526]/80 rounded-2xl overflow-y-auto p-6 min-h-0 border border-solid border-[#633aab]/70 shadow-[0_0_20px_rgba(99,58,171,0.4)] transition-all duration-300">
-                        <StoryLog history={gameState.history} />
+                        <StoryLog 
+                            history={gameState.history} 
+                            mainCharacterName={gameState.worldContext.character.name}
+                            npcNames={gameState.npcs.map(n => n.name)}
+                            isImageGenerationEnabled={isImageGenerationEnabled}
+                            generatedImageUrl={generatedImageUrl}
+                            isGeneratingImage={isGeneratingImage}
+                            imageGenerationError={imageGenerationError}
+                            onRegenerateImage={regenerateLastImage}
+                        />
                     </div>
                     <div className="flex-shrink-0 pt-2 flex flex-col">
                         <button
@@ -674,6 +685,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
         onClose={() => setIsGameSettingsModalOpen(false)}
         autoHideActionPanel={autoHideActionPanel}
         setAutoHideActionPanel={setAutoHideActionPanel}
+        isImageGenerationEnabled={isImageGenerationEnabled}
+        setIsImageGenerationEnabled={setIsImageGenerationEnabled}
       />
     </div>
   );

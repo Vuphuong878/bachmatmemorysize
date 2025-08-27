@@ -8,21 +8,37 @@ interface GameSettingsModalProps {
   onClose: () => void;
   autoHideActionPanel: boolean;
   setAutoHideActionPanel: (enabled: boolean) => void;
+  isImageGenerationEnabled: boolean;
+  setIsImageGenerationEnabled: (enabled: boolean) => void;
 }
 
-const GameSettingsModal: React.FC<GameSettingsModalProps> = ({ isOpen, onClose, autoHideActionPanel, setAutoHideActionPanel }) => {
+const GameSettingsModal: React.FC<GameSettingsModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  autoHideActionPanel, 
+  setAutoHideActionPanel,
+  isImageGenerationEnabled,
+  setIsImageGenerationEnabled
+}) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Cài Đặt Trong Game">
       <div className="space-y-8">
         <div>
             <h3 className="text-xl font-rajdhani uppercase tracking-wider font-bold text-white mb-4">Giao Diện</h3>
-            <div className="p-4 bg-[#2a2135] rounded-lg">
+            <div className="p-4 bg-[#2a2135] rounded-lg space-y-4">
                 <ToggleSwitch
                     id="auto-hide-panel-toggle"
                     label="Tự động ẩn Bảng Hành Động"
                     description="Tự động thu gọn bảng lựa chọn và hành động sau khi bạn gửi đi một lựa chọn."
                     enabled={autoHideActionPanel}
                     setEnabled={setAutoHideActionPanel}
+                />
+                 <ToggleSwitch
+                    id="image-generation-toggle"
+                    label="Tự động tạo hình ảnh"
+                    description="AI sẽ tự động tạo một hình ảnh minh họa cho mỗi lượt truyện. (Tính năng thử nghiệm)"
+                    enabled={isImageGenerationEnabled}
+                    setEnabled={setIsImageGenerationEnabled}
                 />
             </div>
         </div>

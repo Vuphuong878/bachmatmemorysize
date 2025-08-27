@@ -1165,6 +1165,67 @@ Hãy bắt đầu tạo đối tượng kỹ năng.`;
 
 // --- CORE LOGIC ---
 
+export async function generateImageFromStory(
+    storyText: string,
+    worldContext: WorldCreationState,
+    geminiService: GoogleGenAI
+): Promise<string> {
+    // Step 1: Generate a descriptive image prompt from the story text.
+    const promptCreationPrompt = `
+    Based on the following story segment and world context, create a concise, visually descriptive prompt for an image generation AI (like Imagen).
+    The prompt should focus on the key characters, actions, and the environment described. It should be in English for best results with the image model.
+    Describe the scene as if you are setting up a movie shot. Mention character appearance, clothing, mood, lighting, and setting.
+    Be specific. Avoid vague terms.
+    The final prompt should be a single, detailed paragraph.
+
+    **World Context:**
+    - Genre: ${worldContext.genre}
+    - Description: ${worldContext.description}
+    - Main Character: ${worldContext.character.name}, ${worldContext.character.gender}, ${worldContext.character.personality}
+
+    **Story Segment:**
+    ---
+    ${storyText}
+    ---
+
+    **Image Generation Prompt (in English):**
+    `;
+
+    const promptResponse = await geminiService.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: promptCreationPrompt,
+    });
+    
+    const imagePrompt = promptResponse.text.trim();
+
+    if (!imagePrompt) {
+        throw new Error("Failed to generate a descriptive prompt for the image model.");
+    }
+    
+    console.log("Generated Image Prompt:", imagePrompt);
+
+    // Step 2: Generate the image using the created prompt.
+    const imageResponse = await geminiService.models.generateImages({
+        model: 'imagen-4.0-generate-001',
+        prompt: imagePrompt,
+        config: {
+            numberOfImages: 1,
+            outputMimeType: 'image/jpeg',
+            aspectRatio: '16:9', // A cinematic aspect ratio
+        },
+    });
+
+    if (!imageResponse.generatedImages || imageResponse.generatedImages.length === 0) {
+        throw new Error("Image generation failed or returned no images.");
+    }
+
+    const base64ImageBytes: string = imageResponse.generatedImages[0].image.imageBytes;
+    const imageUrl = `data:image/jpeg;base64,${base64ImageBytes}`;
+    
+    return imageUrl;
+}
+
+
 export async function generateSkillFromUserInput(
     name: string,
     description: string,

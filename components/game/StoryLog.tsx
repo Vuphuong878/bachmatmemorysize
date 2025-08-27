@@ -1,7 +1,6 @@
-
-
 import React, { useRef, useEffect } from 'react';
 import { GameTurn } from '../../types';
+import StoryVisualizer from './StoryVisualizer';
 
 
 interface StoryLogProps {
@@ -9,6 +8,11 @@ interface StoryLogProps {
     mainCharacterName?: string;
     npcNames?: string[];
     placeNames?: string[];
+    isImageGenerationEnabled: boolean;
+    generatedImageUrl: string | null;
+    isGeneratingImage: boolean;
+    imageGenerationError: string | null;
+    onRegenerateImage: () => void;
 }
 
 
@@ -50,7 +54,17 @@ function highlightStory(
     return result;
 }
 
-const StoryLog: React.FC<StoryLogProps> = ({ history, mainCharacterName, npcNames, placeNames }) => {
+const StoryLog: React.FC<StoryLogProps> = ({ 
+    history, 
+    mainCharacterName, 
+    npcNames, 
+    placeNames,
+    isImageGenerationEnabled,
+    generatedImageUrl,
+    isGeneratingImage,
+    imageGenerationError,
+    onRegenerateImage
+}) => {
     const endOfLogRef = useRef<HTMLDivElement>(null);
     // Only display the last 10 turns for performance.
     const displayedHistory = history.slice(-10);
@@ -69,25 +83,39 @@ const StoryLog: React.FC<StoryLogProps> = ({ history, mainCharacterName, npcName
                         <p>Toàn bộ câu chuyện vẫn được lưu lại.</p>
                     </div>
                 )}
-                {displayedHistory.map((turn, index) => (
-                    <div key={index} className="mb-6 animate-fade-in">
-                        {turn.playerAction && (
-                            <div className="mb-4 italic text-[#a08cb6] p-3 bg-black/20 rounded-lg border border-[#3a2d47]/50 text-base">
-                                <span className="font-semibold text-[#c5b5dd]">Hành động của bạn:</span> {turn.playerAction}
-                            </div>
-                        )}
-                        {turn.storyText.split('\n').filter(p => p.trim() !== '').map((paragraph, pIndex) => (
-                            <p
-                                key={pIndex}
-                                className="text-lg leading-loose mb-4 text-[#e8dff5]"
-                                dangerouslySetInnerHTML={{
-                                    __html: highlightStory(paragraph, mainCharacterName, npcNames, placeNames),
-                                }}
-                            />
-                        ))}
-                        {index < displayedHistory.length - 1 && <hr className="my-6 border-t-2 border-[#3a2d47]/50" />}
-                    </div>
-                ))}
+                {displayedHistory.map((turn, index) => {
+                    const isLastTurn = index === displayedHistory.length - 1;
+                    return (
+                        <div key={index} className="mb-6 animate-fade-in">
+                            {turn.playerAction && (
+                                <div className="mb-4 italic text-[#a08cb6] p-3 bg-black/20 rounded-lg border border-[#3a2d47]/50 text-base">
+                                    <span className="font-semibold text-[#c5b5dd]">Hành động của bạn:</span> {turn.playerAction}
+                                </div>
+                            )}
+
+                            {isLastTurn && isImageGenerationEnabled && (
+                                <StoryVisualizer
+                                    imageUrl={generatedImageUrl}
+                                    isLoading={isGeneratingImage}
+                                    error={imageGenerationError}
+                                    onRetry={onRegenerateImage}
+                                    isGameInitialized={true}
+                                />
+                            )}
+                            
+                            {turn.storyText.split('\n').filter(p => p.trim() !== '').map((paragraph, pIndex) => (
+                                <p
+                                    key={pIndex}
+                                    className="text-lg leading-loose mb-4 text-[#e8dff5]"
+                                    dangerouslySetInnerHTML={{
+                                        __html: highlightStory(paragraph, mainCharacterName, npcNames, placeNames),
+                                    }}
+                                />
+                            ))}
+                            {index < displayedHistory.length - 1 && <hr className="my-6 border-t-2 border-[#3a2d47]/50" />}
+                        </div>
+                    );
+                })}
             </div>
             <div ref={endOfLogRef} />
             <style>{`
