@@ -22,6 +22,7 @@ const changelogs = [
     date: '2025-08-27',
     content: [
       '- Thêm cơ chế tạo hình ảnh AI trực tiếp từ nội dung truyện, cho phép sinh ảnh minh họa tự động.',
+      '- Prompt tạo ảnh sẽ lấy thông tin từ toàn bộ các NPC xuất hiện trong cảnh truyện (tên, giới tính, ngoại hình, tính cách, trạng thái), không chỉ nhân vật chính.',
       '- Toàn bộ hình ảnh AI sinh ra đều mang phong cách tranh thủy mặc Trung Hoa cổ điển (classic Chinese ink wash painting, shui-mo hua, ancient China, elegant, poetic, atmospheric).'
     ].join('\n'),
   },

@@ -281,7 +281,7 @@ Bạn là người kể chuyện biết mọi thứ, có thể mô tả suy ngh�
 **QUY TẮC VỀ NGÔI KỂ (TUYỆT ĐỐI NGHIÊM NGẶT): Ngôi thứ ba Giới hạn**
 Bạn BẮT BUỘC phải kể chuyện theo góc nhìn của nhân vật chính. Bạn chỉ biết những gì nhân vật chính biết, thấy, nghe và cảm nhận.
 1.  **Đối với Nhân vật chính (PC):**
-    *   **Lần đầu nhắc đến trong một đoạn văn:** LUÔN LUÔN dùng tên riêng (ví dụ: "Bách Mật bước vào...").
+    *   **Lần đầu nhắc đến trong một đoạn văn:** LUÔN LUÔN dùng tên riêng (ví dụ: "Trần Phàm bước vào...").
     *   **Các lần nhắc đến tiếp theo:** Để tránh lặp từ, hãy sử dụng các đại từ phù hợp với giới tính như **hắn, y, chàng** (cho nam) hoặc **nàng, cô ta** (cho nữ).
     *   **TUYỆT ĐỐI CẤM:** Không bao giờ dùng "Anh", "Chị", "Bạn", "Cậu" trong lời kể.
 2.  **Đối với Nhân vật phụ (NPC):**
@@ -1083,19 +1083,19 @@ Mục tiêu chính của bạn là **bảo tồn trí nhớ** của NPC. Chỉ c
 
 **VÍ DỤ:**
 **Đầu vào:**
-- Bối cảnh: "Bách Mật gật đầu với Lạc Thần rồi quay sang nhìn ra biển."
-- NPC: \`- Lạc Thần (id: lac_than, tóm tắt cũ: "Vừa được Bách Mật cứu khỏi tay hải tặc.")\`
+- Bối cảnh: "Trần Phàm gật đầu với Lạc Thần rồi quay sang nhìn ra biển."
+- NPC: \`- Lạc Thần (id: lac_than, tóm tắt cũ: "Vừa được Trần Phàm cứu khỏi tay hải tặc.")\`
 **Phân tích:** Không có tương tác mới quan trọng.
 **Đầu ra đúng:**
-\`id: lac_than | status: Đang đứng cạnh Bách Mật. | summary: Vừa được Bách Mật cứu khỏi tay hải tặc.\`
+\`id: lac_than | status: Đang đứng cạnh Trần Phàm. | summary: Vừa được Trần Phàm cứu khỏi tay hải tặc.\`
 (Lưu ý: 'summary' được giữ nguyên)
 
 **Đầu vào:**
-- Bối cảnh: "Bách Mật nói với Lạc Thần: 'Hãy kể cho ta nghe về quá khứ của cô.'"
-- NPC: \`- Lạc Thần (id: lac_than, tóm tắt cũ: "Vừa được Bách Mật cứu khỏi tay hải tặc.")\`
+- Bối cảnh: "Trần Phàm nói với Lạc Thần: 'Hãy kể cho ta nghe về quá khứ của cô.'"
+- NPC: \`- Lạc Thần (id: lac_than, tóm tắt cũ: "Vừa được Trần Phàm cứu khỏi tay hải tặc.")\`
 **Phân tích:** Có tương tác mới quan trọng.
 **Đầu ra đúng:**
-\`id: lac_than | status: Bắt đầu kể lại câu chuyện của mình. | summary: Được Bách Mật hỏi về quá khứ.\`
+\`id: lac_than | status: Bắt đầu kể lại câu chuyện của mình. | summary: Được Trần Phàm hỏi về quá khứ.\`
 (Lưu ý: 'summary' đã được cập nhật)`;
 
 const CHRONICLE_SUMMARIZER_PROMPT = `Bạn là một AI ghi chép biên niên sử. Nhiệm vụ của bạn là đọc các diễn biến của một phân cảnh truyện và tóm tắt chúng thành một đối tượng JSON duy nhất.
