@@ -54,6 +54,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
       recentlyUpdatedPlayerStats, recentlyUpdatedNpcStats,
       updatePlotChronicleEntry, updateShortTermMemoryTurn,
       generatedImageUrl, isGeneratingImage, imageGenerationError, regenerateLastImage,
+      undoLastTurn,
+      previousGameState,
   } = useGameEngine(initialData, settingsHook);
 
   const [editingChronicleIdx, setEditingChronicleIdx] = useState<number | string | null>(null);
@@ -543,7 +545,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
                                 isLoading={isLoading || !!skillToLearn}
                                 customAction={customAction}
                                 onCustomActionChange={setCustomAction}
-                                onRegenerate={() => { /* Placeholder for future feature */}}
+                                onUndo={undoLastTurn}
+                                isUndoDisabled={!previousGameState || gameState.history.length <= 1}
                                 onOpenAiControls={() => setIsAiControlPanelOpen(true)}
                             />
                         </div>

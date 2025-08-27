@@ -199,6 +199,7 @@ export function useGameEngine(
     settingsHook: ReturnType<typeof useSettings>
 ) {
     const [gameState, setGameState] = useState<GameState | null>(null);
+    const [previousGameState, setPreviousGameState] = useState<GameState | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [lastTurnTokenCount, setLastTurnTokenCount] = useState(0);
@@ -305,6 +306,7 @@ export function useGameEngine(
 
     const handlePlayerChoice = async (choice: string, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode, isImageGenerationEnabled: boolean) => {
         if (!gameState || !geminiService) return;
+        setPreviousGameState(gameState); // Save state before making the move
         setIsLoading(true);
         setError(null);
         const { newPlayerStats: processedPlayerStats, newNpcs: processedNpcs } = processEndOfTurnStatChanges(gameState.playerStats, gameState.npcs);
@@ -411,6 +413,28 @@ export function useGameEngine(
         }
     };
     
+    const undoLastTurn = useCallback(() => {
+        if (previousGameState) {
+            setGameState(previousGameState);
+
+            // Reset related states to match the undone state
+            const lastValidTurn = previousGameState.history[previousGameState.history.length - 1];
+            const totalTokens = previousGameState.history.reduce((sum, turn) => sum + (turn.tokenCount || 0), 0);
+            setLastTurnTokenCount(lastValidTurn?.tokenCount || 0);
+            setTotalTokenCount(totalTokens);
+
+            setGeneratedImageUrl(previousGameState.lastImageUrl || null);
+            setImageGenerationError(null);
+            setRecentlyUpdatedPlayerStats(new Set());
+            setRecentlyUpdatedNpcStats(new Map());
+            setPresentNpcIds(null); // Will be recalculated on the next turn
+
+            setPreviousGameState(null); // Prevent multiple undos in a row
+        } else {
+            console.warn("No previous game state to undo to.");
+        }
+    }, [previousGameState]);
+
     const confirmLearnSkill = (skill: Skill) => {
         if (!gameState) return;
         setGameState(prevState => {
@@ -917,5 +941,7 @@ export function useGameEngine(
         isGeneratingImage,
         imageGenerationError,
         regenerateLastImage,
+        undoLastTurn,
+        previousGameState,
     };
 }

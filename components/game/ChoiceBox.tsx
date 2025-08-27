@@ -11,7 +11,8 @@ interface ChoiceBoxProps {
     isLoading: boolean;
     customAction: string;
     onCustomActionChange: (action: string) => void;
-    onRegenerate: () => void;
+    onUndo: () => void;
+    isUndoDisabled: boolean;
     onOpenAiControls: () => void;
 }
 
@@ -22,7 +23,8 @@ const ChoiceBox: React.FC<ChoiceBoxProps> = ({
     isLoading,
     customAction,
     onCustomActionChange,
-    onRegenerate,
+    onUndo,
+    isUndoDisabled,
     onOpenAiControls,
 }) => {
     const handleCustomAction = () => {
@@ -74,10 +76,10 @@ const ChoiceBox: React.FC<ChoiceBoxProps> = ({
                                 </button>
                             </div>
                              <button
-                                onClick={onRegenerate}
-                                disabled={isLoading}
+                                onClick={onUndo}
+                                disabled={isLoading || isUndoDisabled}
                                 className="flex-shrink-0 p-3 bg-[#120c18] rounded-lg border-2 border-[#3a2d47] text-[#a08cb6] hover:text-white hover:border-[#e02585] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Phát triển chức năng mới"
+                                title="Hoàn tác lượt đi"
                             >
                                 <RedoIcon />
                             </button>

@@ -1023,7 +1023,7 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
     Bạn có quyền và trách nhiệm giữ cho bảng chỉ số của người chơi và NPC gọn gàng và hợp lý. Sau mỗi lượt, hãy rà soát các chỉ số hiện có và áp dụng các quy tắc sau thông qua các trường \`playerStatUpdates\` và \`npcUpdates.payload.stats\`:
 
     1.  **HỢP NHẤT (MERGE):**
-        *   **Khi nào:** Khi có nhiều chỉ số mô tả cùng một vấn đề, cùng một trạng thái cảm xúc hoặc cùng một bộ phận cơ thể.
+        *   **Khi nào:** Khi có nhiều chỉ số mô tả cùng một vấn đề hoặc cùng một bộ phận cơ thể.
             *   *Ví dụ:* \`Vết thương vai (duration: 10)\` và \`Trầy xước tay (duration: 5)\`.
         *   **Làm thế nào:** Tạo ra một chỉ số tổng hợp mới và đánh dấu các chỉ số cũ để xóa.
             *   *Ví dụ:* Gửi 3 cập nhật:
