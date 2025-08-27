@@ -1165,6 +1165,68 @@ Hãy bắt đầu tạo đối tượng kỹ năng.`;
 
 // --- CORE LOGIC ---
 
+// Helper function to get API key
+function getApiKey(): string {
+    // Lấy settings từ localStorage
+    try {
+        const settingsRaw = localStorage.getItem('appSettings');
+        if (settingsRaw) {
+            const settings = JSON.parse(settingsRaw);
+            if (settings.apiKeySource === 'CUSTOM' && Array.isArray(settings.customApiKeys)) {
+                const idx = settings.currentApiKeyIndex ?? 0;
+                if (settings.customApiKeys[idx]) {
+                    return settings.customApiKeys[idx];
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Không thể lấy custom API key từ localStorage', e);
+    }
+    // Fallback: lấy từ biến môi trường (Vite inject)
+    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+        return process.env.API_KEY;
+    }
+    throw new Error('API Key chưa được thiết lập. Vui lòng kiểm tra cài đặt API.');
+}
+
+// Direct fetch to Gemini Image Generation API
+async function callGeminiImageAPI(prompt: string): Promise<string> {
+    const apiKey = getApiKey();
+    
+    const response = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent",
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey
+            },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseModalities: ["TEXT", "IMAGE"]
+                }
+            })
+        }
+    );
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('[Gemini Image API] Full response:', data);
+    const imagePart = data?.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData?.data);
+    
+    if (imagePart) {
+        return `data:${imagePart.inlineData.mimeType || 'image/png'};base64,${imagePart.inlineData.data}`;
+    }
+
+    console.error('[Gemini Image API] Không tìm thấy dữ liệu hình ảnh trong response:', data);
+    throw new Error("Không tìm thấy dữ liệu hình ảnh trong response");
+}
+
 export async function generateImageFromStory(
     storyText: string,
     worldContext: WorldCreationState,
@@ -1172,7 +1234,7 @@ export async function generateImageFromStory(
 ): Promise<string> {
     // Step 1: Generate a descriptive image prompt from the story text.
     const promptCreationPrompt = `
-    Based on the following story segment and world context, create a concise, visually descriptive prompt for an image generation AI (like Imagen).
+    Based on the following story segment and world context, create a concise, visually descriptive prompt for an image generation AI.
     The prompt should focus on the key characters, actions, and the environment described. It should be in English for best results with the image model.
     Describe the scene as if you are setting up a movie shot. Mention character appearance, clothing, mood, lighting, and setting.
     Be specific. Avoid vague terms.
@@ -1187,8 +1249,8 @@ export async function generateImageFromStory(
     ---
     ${storyText}
     ---
-    The image should be in the style of classic Chinese ink wash painting (shui-mo hua).
-    
+
+    Style: The image should be in the style of classic Chinese ink wash painting (shui-mo hua).
 
     **Image Generation Prompt (in English):**
     `;
@@ -1198,7 +1260,7 @@ export async function generateImageFromStory(
         contents: promptCreationPrompt,
     });
     
-    const imagePrompt = promptResponse.text.trim();
+    const imagePrompt = promptResponse.text?.trim();
 
     if (!imagePrompt) {
         throw new Error("Failed to generate a descriptive prompt for the image model.");
@@ -1206,25 +1268,14 @@ export async function generateImageFromStory(
     
     console.log("Generated Image Prompt:", imagePrompt);
 
-    // Step 2: Generate the image using the created prompt.
-    const imageResponse = await geminiService.models.generateImages({
-        model: 'gemini-2.0-flash-preview-image-generation',
-        prompt: imagePrompt,
-        config: {
-            numberOfImages: 1,
-            outputMimeType: 'image/jpeg',
-            aspectRatio: '16:9', // A cinematic aspect ratio
-        },
-    });
-
-    if (!imageResponse.generatedImages || imageResponse.generatedImages.length === 0) {
-        throw new Error("Image generation failed or returned no images.");
+    // Step 2: Generate the image using direct fetch to Gemini API
+    try {
+        const imageUrl = await callGeminiImageAPI(imagePrompt);
+        return imageUrl;
+    } catch (error) {
+        console.error("Image generation error:", error);
+        throw new Error(`Lỗi tạo hình ảnh: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
     }
-
-    const base64ImageBytes: string = imageResponse.generatedImages[0].image.imageBytes;
-    const imageUrl = `data:image/jpeg;base64,${base64ImageBytes}`;
-    
-    return imageUrl;
 }
 
 
