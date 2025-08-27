@@ -11,6 +11,7 @@ interface StoryLogProps {
     placeNames?: string[];
     isImageGenerationEnabled: boolean;
     generatedImageUrl: string | null;
+    lastImageUrl?: string;
     isGeneratingImage: boolean;
     imageGenerationError: string | null;
     onRegenerateImage: () => void;
@@ -62,6 +63,7 @@ const StoryLog: React.FC<StoryLogProps> = ({
     placeNames,
     isImageGenerationEnabled,
     generatedImageUrl,
+    lastImageUrl,
     isGeneratingImage,
     imageGenerationError,
     onRegenerateImage
@@ -86,16 +88,17 @@ const StoryLog: React.FC<StoryLogProps> = ({
                 )}
                 {displayedHistory.map((turn, index) => {
                     const isLastTurn = index === displayedHistory.length - 1;
-                    const showCreateButton = isLastTurn && isImageGenerationEnabled && !generatedImageUrl && !isGeneratingImage && !imageGenerationError;
-                    // Ưu tiên hiển thị ảnh vừa tạo, nếu không thì lấy imageUrl đã lưu của turn cuối cùng
+                    const showCreateButton = isLastTurn && isImageGenerationEnabled && !generatedImageUrl && !lastImageUrl && !isGeneratingImage && !imageGenerationError;
+                    
                     let imageToShow: string | null = null;
                     if (isLastTurn && isImageGenerationEnabled) {
-                        if (generatedImageUrl) {
+                        if (generatedImageUrl) { // Prioritize the most recently generated one.
                             imageToShow = generatedImageUrl;
-                        } else if (!isGeneratingImage && !imageGenerationError && turn.imageUrl) {
-                            imageToShow = turn.imageUrl;
+                        } else if (!isGeneratingImage && !imageGenerationError) { // If not currently generating, show the one from the save state.
+                            imageToShow = lastImageUrl || null;
                         }
                     }
+
                     const showVisualizer = isLastTurn && isImageGenerationEnabled && (isGeneratingImage || !!imageToShow || !!imageGenerationError);
 
                     return (

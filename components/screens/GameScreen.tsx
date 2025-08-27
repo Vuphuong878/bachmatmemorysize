@@ -513,6 +513,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
                             npcNames={gameState.npcs.map(n => n.name)}
                             isImageGenerationEnabled={isImageGenerationEnabled}
                             generatedImageUrl={generatedImageUrl}
+                            lastImageUrl={gameState.lastImageUrl}
                             isGeneratingImage={isGeneratingImage}
                             imageGenerationError={imageGenerationError}
                             onRegenerateImage={regenerateLastImage}
