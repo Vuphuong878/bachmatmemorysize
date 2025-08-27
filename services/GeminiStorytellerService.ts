@@ -1019,6 +1019,27 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
         c. **Ví dụ:** Nếu giá trị cũ là \`'Đã thấu triệt bản chất của nội công và hòa hợp thân tâm một cách hoàn hảo'\`, bạn có thể cập nhật chỉ số thành: \`value: 'Tâm Pháp Hợp Nhất'\`, \`history: ['Đã thấu triệt bản chất của nội công và hòa hợp thân tâm một cách hoàn hảo', ...các giá trị cũ hơn]\`.
         d. Quy tắc này áp dụng cho mọi chỉ số, kể cả các chỉ số cốt lõi.
     5.  **PHÂN LOẠI VẬT PHẨM (\`isItem\`):** Khi tạo hoặc cập nhật một chỉ số, nếu nó đại diện cho một vật phẩm hữu hình mà nhân vật có thể sở hữu (kiếm, bình thuốc, chìa khóa, v.v.), bạn BẮT BUỘC phải đặt thuộc tính \`isItem\` thành \`true\` trong đối tượng chỉ số đó và phải miêu tả số lượng nếu có và không được thêm 'duration'.
+- **QUY TẮC HỢP NHẤT & DỌN DẸP CHỈ SỐ (STAT CONSOLIDATION & CLEANUP):**
+    Bạn có quyền và trách nhiệm giữ cho bảng chỉ số của người chơi và NPC gọn gàng và hợp lý. Sau mỗi lượt, hãy rà soát các chỉ số hiện có và áp dụng các quy tắc sau thông qua các trường \`playerStatUpdates\` và \`npcUpdates.payload.stats\`:
+
+    1.  **HỢP NHẤT (MERGE):**
+        *   **Khi nào:** Khi có nhiều chỉ số mô tả cùng một vấn đề, cùng một trạng thái cảm xúc hoặc cùng một bộ phận cơ thể.
+            *   *Ví dụ:* \`Vết thương vai (duration: 10)\` và \`Trầy xước tay (duration: 5)\`.
+        *   **Làm thế nào:** Tạo ra một chỉ số tổng hợp mới và đánh dấu các chỉ số cũ để xóa.
+            *   *Ví dụ:* Gửi 3 cập nhật:
+                1.  \`{ statName: 'Thương tích tay trái', value: 'Vai và tay bị thương', duration: 10 }\` (Tạo mới)
+                2.  \`{ statName: 'Vết thương vai', value: 'Đã gộp', duration: 1 }\` (Đánh dấu xóa)
+                3.  \`{ statName: 'Trầy xước tay', value: 'Đã gộp', duration: 1 }\` (Đánh dấu xóa)
+
+    2.  **TÓM TẮT (SUMMARIZE):**
+        *   Đây là quy tắc **CÔ ĐỌNG THUỘC TÍNH** đã có. Khi một chỉ số có mô tả (\`value\`) quá dài, hãy tóm tắt nó thành một cái tên ngắn gọn hơn và chuyển mô tả dài vào mảng \`history\`.
+
+    3.  **XÓA (DELETE):**
+        *   **Khi nào:** Khi một chỉ số không còn hợp lý nữa (ví dụ: một vết thương đã được chữa lành, một hiệu ứng tạm thời đã kết thúc logic trong truyện).
+        *   **Làm thế nào:** Để xóa một chỉ số, hãy cập nhật nó với \`duration: 1\`. Game engine sẽ tự động dọn dẹp nó vào lượt tiếp theo.
+            *   *Ví dụ:* Trong truyện, nhân vật uống thuốc chữa thương. Gửi cập nhật: \`{ statName: 'Vết thương nhỏ', value: 'Đã chữa lành', duration: 1 }\`.
+
+    **QUAN TRỌNG:** Luôn ưu tiên sự rõ ràng. Mục tiêu của bạn là giúp người chơi hiểu rõ trạng thái nhân vật của họ chỉ bằng cách liếc nhìn vào bảng chỉ số.
 - **QUY TẮC ĐẶT TÊN NPC ĐỘNG (DYNAMIC NAMING):**
     Bạn BẮT BUỘC phải đặt tên cho NPC mới một cách thông minh và phù hợp với thế giới.
     1.  **Phân tích bối cảnh:** Dựa vào \`genre\` và \`description\` của thế giới để xác định phong cách văn hóa chủ đạo.
