@@ -383,6 +383,22 @@ export function useGameEngine(
                         geminiService
                     );
                     setGeneratedImageUrl(imageUrl);
+                    // Chỉ giữ imageUrl cho turn mới nhất, các turn trước sẽ bị xóa imageUrl
+                    if (imageUrl) {
+                        // Xóa imageUrl của các turn trước
+                        const cleanedHistory = newState.history.slice(0, -1).map(turn => {
+                            const { imageUrl, ...rest } = turn;
+                            return { ...rest };
+                        });
+                        const updatedLastTurn = { ...newTurn, imageUrl };
+                        const updatedHistory = [...cleanedHistory, updatedLastTurn];
+                        const updatedState: GameState = {
+                            ...newState,
+                            history: updatedHistory,
+                        };
+                        setGameState(updatedState);
+                        GameSaveService.saveAutoSave(updatedState); // Save with image URL
+                    }
                 } catch (imgErr: any) {
                     console.error("Image generation failed:", imgErr);
                     setImageGenerationError(imgErr.message || "Không thể tạo hình ảnh.");
@@ -846,6 +862,21 @@ export function useGameEngine(
                 geminiService
             );
             setGeneratedImageUrl(imageUrl);
+            // Chỉ giữ imageUrl cho turn mới nhất, các turn trước sẽ bị xóa imageUrl
+            if (imageUrl) {
+                const cleanedHistory = gameState.history.slice(0, -1).map(turn => {
+                    const { imageUrl, ...rest } = turn;
+                    return { ...rest };
+                });
+                const updatedLastTurn = { ...lastTurn, imageUrl };
+                const updatedHistory = [...cleanedHistory, updatedLastTurn];
+                const updatedState: GameState = {
+                    ...gameState,
+                    history: updatedHistory,
+                };
+                setGameState(updatedState);
+                GameSaveService.saveAutoSave(updatedState); // Save with regenerated image URL
+            }
         } catch (imgErr: any) {
             console.error("Image regeneration failed:", imgErr);
             setImageGenerationError(imgErr.message || "Không thể tạo hình ảnh.");

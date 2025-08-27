@@ -87,7 +87,16 @@ const StoryLog: React.FC<StoryLogProps> = ({
                 {displayedHistory.map((turn, index) => {
                     const isLastTurn = index === displayedHistory.length - 1;
                     const showCreateButton = isLastTurn && isImageGenerationEnabled && !generatedImageUrl && !isGeneratingImage && !imageGenerationError;
-                    const showVisualizer = isLastTurn && isImageGenerationEnabled && (isGeneratingImage || !!generatedImageUrl || !!imageGenerationError);
+                    // Ưu tiên hiển thị ảnh vừa tạo, nếu không thì lấy imageUrl đã lưu của turn cuối cùng
+                    let imageToShow: string | null = null;
+                    if (isLastTurn && isImageGenerationEnabled) {
+                        if (generatedImageUrl) {
+                            imageToShow = generatedImageUrl;
+                        } else if (!isGeneratingImage && !imageGenerationError && turn.imageUrl) {
+                            imageToShow = turn.imageUrl;
+                        }
+                    }
+                    const showVisualizer = isLastTurn && isImageGenerationEnabled && (isGeneratingImage || !!imageToShow || !!imageGenerationError);
 
                     return (
                         <div key={index} className="mb-6 animate-fade-in">
@@ -111,13 +120,13 @@ const StoryLog: React.FC<StoryLogProps> = ({
 
                             {showVisualizer && (
                                 <StoryVisualizer
-                                    imageUrl={generatedImageUrl}
+                                    imageUrl={imageToShow}
                                     isLoading={isGeneratingImage}
                                     error={imageGenerationError}
                                     onRetry={onRegenerateImage}
                                 />
                             )}
-                            
+
                             {turn.storyText.split('\n').filter(p => p.trim() !== '').map((paragraph, pIndex) => (
                                 <p
                                     key={pIndex}

@@ -21,6 +21,14 @@ function validateAndHydrateGameState(parsedState: any): GameState | null {
       parsedState.worldContext.storyName = '';
     }
 
+    // Migrate history entries to ensure imageUrl property exists (for backward compatibility)
+    if (Array.isArray(parsedState.history)) {
+      parsedState.history = parsedState.history.map((turn: any) => ({
+        ...turn,
+        imageUrl: turn.imageUrl || undefined // Ensure imageUrl exists even if undefined
+      }));
+    }
+
     // Migrate plotChronicle from old string format to new array format
     if (typeof parsedState.plotChronicle === 'string') {
         const oldChronicle = parsedState.plotChronicle as string;

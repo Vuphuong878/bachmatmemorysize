@@ -88,6 +88,7 @@ export interface GameTurn {
   choices: string[];
   tokenCount?: number; // How many tokens this turn cost
   isMajorEvent?: boolean; // Flag for important plot points
+  imageUrl?: string; // Optional URL for AI-generated image for this turn
 }
 
 // Represents an entry in the structured plot chronicle.
