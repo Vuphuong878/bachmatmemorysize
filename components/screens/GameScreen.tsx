@@ -39,6 +39,7 @@ interface GameScreenProps {
 }
 
 type LeftPanelTab = 'info' | 'skills' | 'inventory' | 'memory';
+type RightPanelTab = 'npcs' | 'world';
 
 const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, settingsHook }) => {
   const { 
@@ -95,6 +96,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   const [isIntroModalOpen, setIsIntroModalOpen] = useState(false);
   const [isGameInitialized, setIsGameInitialized] = useState(false);
   const [activeLeftTab, setActiveLeftTab] = useState<LeftPanelTab>('info');
+  const [activeRightTab, setActiveRightTab] = useState<RightPanelTab>('npcs');
   const [customAction, setCustomAction] = useState('');
   const [isActionsPanelCollapsed, setIsActionsPanelCollapsed] = useState(false);
   const [destinyCompassMode, setDestinyCompassMode] = useState<DestinyCompassMode>('NORMAL');
@@ -206,7 +208,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   const worldContextForModal = gameState?.worldContext || (isNewGame ? initialData as WorldCreationState : null);
 
 
-  const TabButton: React.FC<{ tabId: LeftPanelTab; currentTab: LeftPanelTab; onClick: (tabId: LeftPanelTab) => void; children: React.ReactNode }> = ({ tabId, currentTab, onClick, children }) => {
+  const TabButton: React.FC<{ tabId: string; currentTab: string; onClick: (tabId: any) => void; children: React.ReactNode }> = ({ tabId, currentTab, onClick, children }) => {
     const isActive = tabId === currentTab;
     return (
         <button
@@ -557,12 +559,35 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
 
         {/* Right Panel */}
         <div className={`${viewMode === 'desktop' 
-            ? 'flex-shrink-0 h-full min-h-0' 
+            ? 'flex flex-col h-full min-h-0' 
             : `fixed z-40 inset-y-0 right-0 w-4/5 max-w-sm h-full transform transition-transform duration-300 ease-in-out ${isRightPanelOpen ? 'translate-x-0' : 'translate-x-full'}`
         }`}>
             {gameState && isGameInitialized && (
-                <div className="bg-[#1d1526]/95 backdrop-blur-sm h-full w-full">
-                    <NpcCodex npcs={gameState.npcs} onToggleProtection={toggleNpcProtection} onDeleteRequest={requestNpcDeletion} onReorderNpc={reorderNpc} onRequestNpcStatEdit={(npcId, statName, stat) => requestStatEdit('npc', statName, stat, npcId)} onRequestNpcStatDelete={(npcId, statName) => requestStatDelete('npc', statName, npcId)} recentlyUpdatedStats={recentlyUpdatedNpcStats} />
+                <div className="bg-[#1d1526]/95 backdrop-blur-sm rounded-2xl border border-solid border-[#633aab]/70 shadow-[0_0_20px_rgba(99,58,171,0.4)] h-full flex flex-col">
+                  <div className="flex-shrink-0 flex overflow-hidden rounded-t-xl">
+                    <TabButton tabId="npcs" currentTab={activeRightTab} onClick={setActiveRightTab}>Nhân Vật</TabButton>
+                    <TabButton tabId="world" currentTab={activeRightTab} onClick={setActiveRightTab}>Thế Giới</TabButton>
+                  </div>
+
+                  <div className="flex-grow min-h-0 overflow-y-auto">
+                    <div style={{ display: activeRightTab === 'npcs' ? 'block' : 'none' }}>
+                        <NpcCodex 
+                            npcs={gameState.npcs} 
+                            onToggleProtection={toggleNpcProtection} 
+                            onDeleteRequest={requestNpcDeletion} 
+                            onReorderNpc={reorderNpc} 
+                            onRequestNpcStatEdit={(npcId, statName, stat) => requestStatEdit('npc', statName, stat, npcId)} 
+                            onRequestNpcStatDelete={(npcId, statName) => requestStatDelete('npc', statName, npcId)} 
+                            recentlyUpdatedStats={recentlyUpdatedNpcStats} 
+                        />
+                    </div>
+                    <div style={{ display: activeRightTab === 'world' ? 'block' : 'none' }}>
+                      <div className="p-4 text-center text-[#a08cb6]">
+                        <h3 className="text-lg font-bold text-white mb-2 font-rajdhani uppercase tracking-wider">World Codex</h3>
+                        <p className="text-sm">Tính năng quản lý thông tin, địa danh, và các sự kiện của thế giới sẽ được phát triển ở đây.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
             )}
         </div>

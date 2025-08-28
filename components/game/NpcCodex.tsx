@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo } from 'react';
 import { NPC, CharacterStat } from '../../types';
 
@@ -240,32 +241,27 @@ const NpcCodex: React.FC<NpcCodexProps> = ({ npcs, onToggleProtection, onDeleteR
     }, [npcs]);
 
     return (
-        <div className="bg-[#1d1526]/80 rounded-2xl h-full flex flex-col border border-solid border-[#633aab]/70 shadow-[0_0_20px_rgba(99,58,171,0.4)] transition-all duration-300">
-            <h2 className="text-xl font-bold text-center text-white p-4 border-b-2 border-[#3a2d47] flex-shrink-0" style={{ textShadow: '0 0 5px rgba(224, 37, 133, 0.7)' }}>
-                Hồ Sơ Nhân Vật
-            </h2>
-            <div className="overflow-y-auto p-2 flex-grow">
-                 {sortedNpcs.length === 0 ? (
-                    <p className="text-center text-sm text-[#a08cb6] p-4">Chưa gặp gỡ nhân vật nào.</p>
-                ) : (
-                    <div className="space-y-2">
-                        {sortedNpcs.map((npc, index) => (
-                            <NpcEntry 
-                                key={npc.id} 
-                                npc={npc} 
-                                onToggle={() => onToggleProtection(npc.id)}
-                                onDelete={() => onDeleteRequest(npc.id)}
-                                onReorder={(direction) => onReorderNpc(npc.id, direction)}
-                                isFirst={index === 0}
-                                isLast={index === sortedNpcs.length - 1}
-                                onRequestNpcStatEdit={onRequestNpcStatEdit}
-                                onRequestNpcStatDelete={onRequestNpcStatDelete}
-                                recentlyUpdatedStats={recentlyUpdatedStats.get(npc.id) || new Set()}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
+        <div className="p-2">
+             {sortedNpcs.length === 0 ? (
+                <p className="text-center text-sm text-[#a08cb6] p-4">Chưa gặp gỡ nhân vật nào.</p>
+            ) : (
+                <div className="space-y-2">
+                    {sortedNpcs.map((npc, index) => (
+                        <NpcEntry 
+                            key={npc.id} 
+                            npc={npc} 
+                            onToggle={() => onToggleProtection(npc.id)}
+                            onDelete={() => onDeleteRequest(npc.id)}
+                            onReorder={(direction) => onReorderNpc(npc.id, direction)}
+                            isFirst={index === 0}
+                            isLast={index === sortedNpcs.length - 1}
+                            onRequestNpcStatEdit={onRequestNpcStatEdit}
+                            onRequestNpcStatDelete={onRequestNpcStatDelete}
+                            recentlyUpdatedStats={recentlyUpdatedStats.get(npc.id) || new Set()}
+                        />
+                    ))}
+                </div>
+            )}
             <style>{`
                 @keyframes fade-in-fast {
                     from { opacity: 0; transform: translateY(-5px); }
