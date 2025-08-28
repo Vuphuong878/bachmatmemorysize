@@ -102,6 +102,9 @@ export interface ChronicleEntry {
         change: string;
         reason: string;
     }[];
+    // --- Các trường mới được thêm vào ---
+    keyDetail?: string; // Chi tiết ẩn quan trọng nhất được phát hiện
+    potentialConsequence?: string; // Dự đoán về hệ quả tương lai
 }
 
 // Represents a Non-Player Character
