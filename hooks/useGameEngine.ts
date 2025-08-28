@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSettings } from './useSettings';
-import { WorldCreationState, GameState, GameTurn, CharacterStats, NPC, NPCUpdate, CharacterStat, CharacterStatUpdate, Skill, LustModeFlavor, ApiKeySource, NpcMindset, Ability, DestinyCompassMode, ChronicleEntry } from '../types';
+import { WorldCreationState, GameState, GameTurn, CharacterStats, NPC, NPCUpdate, CharacterStat, CharacterStatUpdate, Skill, LustModeFlavor, ApiKeySource, NpcMindset, Ability, DestinyCompassMode, ChronicleEntry, WorldLocation, WorldLocationUpdate } from '../types';
 import * as storytellerService from '../services/GeminiStorytellerService';
 import * as GameSaveService from '../services/GameSaveService';
 
@@ -129,6 +129,50 @@ function applyNpcUpdates(currentNpcs: NPC[], updates: NPCUpdate[]): NPC[] {
     return newNpcList;
 }
 
+function applyWorldLocationUpdates(currentLocations: WorldLocation[], updates: WorldLocationUpdate[]): WorldLocation[] {
+    let newLocationList = [...currentLocations];
+
+    updates.forEach(update => {
+        const index = newLocationList.findIndex(loc => loc.id === update.id);
+
+        switch (update.action) {
+            case 'CREATE':
+                if (index === -1 && update.payload) {
+                    const newLocation: WorldLocation = {
+                        ...(update.payload as Omit<WorldLocation, 'id' | 'status' | 'lastEventSummary'>),
+                        id: update.id,
+                        status: 'Chưa xác định',
+                        lastEventSummary: 'Vừa được khám phá.',
+                        isProtected: update.payload.isProtected || false,
+                        sortOrder: newLocationList.length,
+                    };
+                    newLocationList.push(newLocation);
+                }
+                break;
+            case 'UPDATE':
+                if (index !== -1 && update.payload) {
+                    newLocationList[index] = {
+                        ...newLocationList[index],
+                        ...update.payload,
+                    };
+                }
+                break;
+            case 'DELETE':
+                if (index !== -1) {
+                    const locToDelete = newLocationList[index];
+                    if (locToDelete.isProtected) {
+                        break; 
+                    }
+                    newLocationList.splice(index, 1);
+                }
+                break;
+        }
+    });
+
+    return newLocationList;
+}
+
+
 /**
  * Processes a single set of stats for evolutions and duration decrements.
  * This function is the core of the new Dynamic State System.
@@ -206,7 +250,9 @@ export function useGameEngine(
     const [totalTokenCount, setTotalTokenCount] = useState(0);
     const [skillToLearn, setSkillToLearn] = useState<Skill | null>(null);
     const [npcToDelete, setNpcToDelete] = useState<NPC | null>(null);
+    const [locationToDelete, setLocationToDelete] = useState<WorldLocation | null>(null);
     const [editingStat, setEditingStat] = useState<{ target: 'player' | 'npc', npcId?: string, statName: string, stat: CharacterStat } | null>(null);
+    const [editingLocation, setEditingLocation] = useState<WorldLocation | null>(null);
     const [deletingStat, setDeletingStat] = useState<{ target: 'player' | 'npc', npcId?: string, statName: string } | null>(null);
     const [presentNpcIds, setPresentNpcIds] = useState<string[] | null>(null);
     const [recentlyUpdatedPlayerStats, setRecentlyUpdatedPlayerStats] = useState<Set<string>>(new Set());
@@ -263,9 +309,10 @@ export function useGameEngine(
             return;
         }
         try {
-            const { initialTurn, initialPlayerStatUpdates, initialNpcUpdates, initialPlayerSkills, presentNpcIds: initialPresentNpcs } = await storytellerService.initializeStory(worldState, geminiService);
+            const { initialTurn, initialPlayerStatUpdates, initialNpcUpdates, initialPlayerSkills, presentNpcIds: initialPresentNpcs, initialWorldLocationUpdates } = await storytellerService.initializeStory(worldState, geminiService);
             const initialPlayerStats = convertStatUpdatesArrayToObject(initialPlayerStatUpdates);
             const initialNpcs = applyNpcUpdates([], initialNpcUpdates);
+            const initialLocations = applyWorldLocationUpdates([], initialWorldLocationUpdates);
             
             const allInitialStatKeys = Object.keys(initialPlayerStats);
             const coreInitialStatKeys = CORE_STATS.filter(coreStat => allInitialStatKeys.includes(coreStat));
@@ -278,6 +325,7 @@ export function useGameEngine(
                 playerStatOrder: initialPlayerStatOrder,
                 worldContext: worldState,
                 npcs: initialNpcs,
+                worldLocations: initialLocations,
                 playerSkills: initialPlayerSkills,
                 plotChronicle: [],
                 turnsSinceLastChronicle: [initialTurn],
@@ -317,7 +365,7 @@ export function useGameEngine(
 
             const stateForAI: GameState = { ...gameState, playerStats: processedPlayerStats, npcs: npcsForAI };
             
-            const { newTurn, playerStatUpdates, npcUpdates, newlyAcquiredSkill, newChronicleEntry, presentNpcIds: newPresentNpcIds, isSceneBreak } = await storytellerService.continueStory(stateForAI, choice, geminiService, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode);
+            const { newTurn, playerStatUpdates, npcUpdates, worldLocationUpdates, newlyAcquiredSkill, newChronicleEntry, presentNpcIds: newPresentNpcIds, isSceneBreak } = await storytellerService.continueStory(stateForAI, choice, geminiService, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode);
             
             const playerChanges = new Set(playerStatUpdates.map(u => u.statName));
             setRecentlyUpdatedPlayerStats(playerChanges);
@@ -335,6 +383,7 @@ export function useGameEngine(
 
 
             const updatedNpcs = applyNpcUpdates(processedNpcs, npcUpdates);
+            const updatedLocations = applyWorldLocationUpdates(gameState.worldLocations, worldLocationUpdates);
             const playerStatChanges = convertStatUpdatesArrayToObject(playerStatUpdates);
             const newPlayerStats = smartMergeStats(processedPlayerStats, playerStatChanges);
             
@@ -359,6 +408,7 @@ export function useGameEngine(
                 playerStats: newPlayerStats,
                 playerStatOrder: newPlayerStatOrder,
                 npcs: updatedNpcs,
+                worldLocations: updatedLocations,
                 plotChronicle: newPlotChronicle,
                 // If a scene break happened, reset the turns buffer. Otherwise, add the new turn.
                 turnsSinceLastChronicle: isSceneBreak ? [] : [...(gameState.turnsSinceLastChronicle || []), newTurn],
@@ -724,6 +774,71 @@ export function useGameEngine(
 
         setDeletingStat(null);
     };
+
+    const toggleLocationProtection = (locationId: string) => {
+        setGameState(prevState => {
+            if (!prevState) return null;
+            const newLocations = prevState.worldLocations.map(loc => {
+                if (loc.id === locationId) {
+                    return { ...loc, isProtected: !loc.isProtected };
+                }
+                return loc;
+            });
+            return { ...prevState, worldLocations: newLocations };
+        });
+    };
+
+    const reorderLocation = useCallback((locationId: string, direction: 'up' | 'down') => {
+        setGameState(prevState => {
+            if (!prevState) return null;
+            const locations = [...prevState.worldLocations];
+            const index = locations.findIndex(l => l.id === locationId);
+            if (index === -1) return prevState;
+            if (direction === 'up' && index > 0) {
+                [locations[index], locations[index - 1]] = [locations[index - 1], locations[index]];
+            } else if (direction === 'down' && index < locations.length - 1) {
+                [locations[index], locations[index + 1]] = [locations[index + 1], locations[index]];
+            } else {
+                return prevState;
+            }
+            const updatedLocationsWithSortOrder = locations.map((loc, i) => ({ ...loc, sortOrder: i }));
+            return { ...prevState, worldLocations: updatedLocationsWithSortOrder };
+        });
+    }, []);
+
+    const requestLocationDeletion = (locationId: string) => {
+        const location = gameState?.worldLocations.find(l => l.id === locationId);
+        if (location) {
+            setLocationToDelete(location);
+        }
+    };
+    const cancelLocationDeletion = () => setLocationToDelete(null);
+    const confirmLocationDeletion = () => {
+        if (!gameState || !locationToDelete) return;
+        setGameState(prevState => {
+            if (!prevState) return null;
+            const newLocations = prevState.worldLocations.filter(loc => loc.id !== locationToDelete.id);
+            return { ...prevState, worldLocations: newLocations };
+        });
+        setLocationToDelete(null);
+    };
+    
+    const requestLocationEdit = (location: WorldLocation) => setEditingLocation(location);
+    const cancelLocationEdit = () => setEditingLocation(null);
+    const confirmLocationEdit = (originalId: string, newData: { name: string; description: string }) => {
+        if (!gameState) return;
+        setGameState(prevState => {
+            if (!prevState) return null;
+            const newLocations = prevState.worldLocations.map(loc => {
+                if (loc.id === originalId) {
+                    return { ...loc, ...newData };
+                }
+                return loc;
+            });
+            return { ...prevState, worldLocations: newLocations };
+        });
+        setEditingLocation(null);
+    };
     
     // --- Skill Management ---
     const requestSkillDeletion = (skill: Skill) => {
@@ -943,5 +1058,15 @@ export function useGameEngine(
         regenerateLastImage,
         undoLastTurn,
         previousGameState,
+        toggleLocationProtection,
+        reorderLocation,
+        locationToDelete,
+        requestLocationDeletion,
+        confirmLocationDeletion,
+        cancelLocationDeletion,
+        editingLocation,
+        requestLocationEdit,
+        confirmLocationEdit,
+        cancelLocationEdit,
     };
 }

@@ -129,6 +129,24 @@ export interface NPCUpdate {
   // virginity, identity, appearance are included via Partial<Omit<NPC, 'stats'>>
 }
 
+// Represents a location in the world
+export interface WorldLocation {
+  id: string; // A unique, machine-readable ID (e.g., 'thanh_huyen_mon')
+  name: string;
+  description: string; // Detailed description of the location
+  status: string; // Current status (e.g., 'Yên bình', 'Bị phá hủy', 'Bị bao vây')
+  lastEventSummary: string; // A one-sentence summary of the last key event that happened here
+  isProtected?: boolean; // If true, AI is forbidden from deleting this location
+  sortOrder?: number;
+}
+
+// Represents an update instruction for a world location from the AI
+export interface WorldLocationUpdate {
+  action: 'CREATE' | 'UPDATE' | 'DELETE';
+  id: string;
+  payload?: Partial<Omit<WorldLocation, 'status' | 'lastEventSummary'>>;
+}
+
 
 // The overall state of the game session
 export interface GameState {
@@ -137,6 +155,7 @@ export interface GameState {
   playerStatOrder?: string[];
   worldContext: WorldCreationState;
   npcs: NPC[];
+  worldLocations: WorldLocation[];
   playerSkills: Skill[]; // Structured skills
   plotChronicle: ChronicleEntry[]; // The structured, summarized history of major plot points.
   turnsSinceLastChronicle: GameTurn[]; // Track turns for the next summary

@@ -1,4 +1,3 @@
-
 import { GameState } from '../types';
 
 const MANUAL_SAVE_KEY = 'BMS_TG_ManualSaveData';
@@ -16,6 +15,11 @@ function validateAndHydrateGameState(parsedState: any): GameState | null {
       parsedState.npcs = [];
     }
     
+    // Ensure worldLocations array exists
+    if (!Array.isArray(parsedState.worldLocations)) {
+        parsedState.worldLocations = [];
+    }
+
     // Ensure storyName exists in worldContext
     if (typeof parsedState.worldContext.storyName === 'undefined') {
       parsedState.worldContext.storyName = '';

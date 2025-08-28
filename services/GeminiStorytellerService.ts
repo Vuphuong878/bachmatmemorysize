@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type, GenerateContentResponse, HarmCategory, HarmBlockThreshold } from '@google/genai';
-import { WorldCreationState, GameState, GameTurn, NPCUpdate, CharacterStatUpdate, NPC, Skill, NarrativePerspective, LustModeFlavor, NpcMindset, DestinyCompassMode, ChronicleEntry } from '../types';
+import { WorldCreationState, GameState, GameTurn, NPCUpdate, CharacterStatUpdate, NPC, Skill, NarrativePerspective, LustModeFlavor, NpcMindset, DestinyCompassMode, ChronicleEntry, WorldLocationUpdate } from '../types';
 
 // --- SCHEMA DEFINITIONS ---
 
@@ -91,6 +91,16 @@ const npcUpdatePayloadCoreSchema = {
     }
 };
 
+// Fix: Add schema for World Location update payload
+const locationUpdatePayloadSchema = {
+    type: Type.OBJECT,
+    description: "Dữ liệu của địa danh. Khi action là 'CREATE', payload phải chứa đầy đủ. Khi là 'UPDATE', chỉ chứa các trường thay đổi.",
+    properties: {
+        name: { type: Type.STRING, description: "Tên riêng của địa danh." },
+        description: { type: Type.STRING, description: "Mô tả chi tiết về địa danh." }
+    }
+};
+
 const chronicleEntrySchema = {
     type: Type.OBJECT,
     properties: {
@@ -151,6 +161,20 @@ const coreLogicSchema = {
                 required: ['action', 'id']
             }
         },
+        // Fix: Add worldLocationUpdates to the schema
+        worldLocationUpdates: {
+            type: Type.ARRAY,
+            description: "Một mảng các chỉ thị để quản lý thông tin logic của các địa danh trong thế giới. Chỉ tạo các địa danh được nhắc đến LẦN ĐẦU TIÊN và có vai trò quan trọng.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    action: { type: Type.STRING, description: "Hành động cần thực hiện: 'CREATE', 'UPDATE', hoặc 'DELETE'." },
+                    id: { type: Type.STRING, description: "ID độc nhất, dạng snake_case, không dấu, viết thường. ID này là vĩnh viễn." },
+                    payload: locationUpdatePayloadSchema
+                },
+                required: ['action', 'id']
+            }
+        },
         playerSkills: {
             type: Type.ARRAY,
             description: "Một mảng các bộ kỹ năng của người chơi, được phân tích từ chuỗi văn bản 'Kỹ năng khởi đầu'. Chỉ được trả về trong lượt đầu tiên của game.",
@@ -174,7 +198,8 @@ const coreLogicSchema = {
             description: "TÙY CHỌN: Đặt thành 'true' nếu bạn cho rằng một phân cảnh hoặc một chuỗi sự kiện tại một địa điểm đã kết thúc, và lượt chơi tiếp theo sẽ bắt đầu một phân cảnh mới. Ví dụ: khi rời khỏi một thành phố, sau khi một trận chiến lớn kết thúc."
         }
     },
-    required: ['storyText', 'choices', 'playerStatUpdates', 'npcUpdates', 'presentNpcIds']
+    // Fix: Add worldLocationUpdates to required fields
+    required: ['storyText', 'choices', 'playerStatUpdates', 'npcUpdates', 'worldLocationUpdates', 'presentNpcIds']
 };
 
 
@@ -304,7 +329,7 @@ Bạn BẮT BUỘC phải mô tả NPC chống cự một cách **chủ động,
 `;
         case 'TORN_MIND':
             return `
-**QUY TẮC TÂM LÝ "GIẰNG XÉ NỘI TÂM" (Kẻ Mâu Thuẫn):**
+**QUY TẮC TÂM LÝ "GIẰNG XÉ NỘI TÂM" (Kẻ Mâu thuẫn):**
 Bạn BẮT BUỘC phải mô tả sự đấu tranh và mâu thuẫn trong **hành động** của NPC.
 1.  **HÀNH ĐỘNG CỦA NPC:** Mô tả các hành động trái ngược nhau. Ví dụ: "ban đầu cô ta đẩy bạn ra, nhưng rồi cơ thể lại mềm nhũn đi trong giây lát trước khi bừng tỉnh và kháng cự trở lại", "nàng thuận theo nhưng nước mắt không ngừng tuôn rơi".
 2.  **KẾT QUẢ HÀNH ĐỘNG CỦA NGƯỜI CHƠI:** Mức độ thành công không chắc chắn. Hành động có thể thành công một phần, hoặc thành công nhưng kèm theo phản ứng tiêu cực từ NPC (ví dụ: cắn, cào cấu trong lúc thuận theo).
@@ -421,6 +446,12 @@ function validateCoreResponse(response: any): any {
     if (!Array.isArray(validated.presentNpcIds)) {
         console.warn('Warning: presentNpcIds missing, using empty array');
         validated.presentNpcIds = [];
+    }
+
+    // Fix: Add validation for worldLocationUpdates
+    if (!Array.isArray(validated.worldLocationUpdates)) {
+        console.warn('Warning: worldLocationUpdates missing, using empty array');
+        validated.worldLocationUpdates = [];
     }
     
     // Validate playerSkills if present (for game initialization)
@@ -1089,6 +1120,24 @@ Khi một nhân vật xuất hiện lần đầu với một **tên riêng** (v�
     4.  **BẢO VỆ NPC QUAN TRỌNG:** Nếu một NPC có thuộc tính \`isProtected: true\`, bạn TUYỆT ĐỐI KHÔNG được phép gửi lệnh 'DELETE' để xóa họ. Bạn có thể thay đổi trạng thái của họ (ví dụ: chỉ số \`Sinh Lực: 'Đã chết'\`), nhưng không được xóa họ khỏi dữ liệu game.
     
     5.  **CHỈ CẬP NHẬT NPC HIỆN DIỆN:** Khi sử dụng lệnh 'UPDATE', bạn PHẢI đảm bảo NPC đó thực sự có mặt hoặc liên quan trực tiếp đến hành động trong câu chuyện bạn vừa viết. TUYỆT ĐỐI không cập nhật trạng thái của một NPC đang ở một nơi khác xa.
+
+- **QUẢN LÝ ĐỊA DANH (WORLD LOCATION MANAGEMENT - TUYỆT ĐỐI NGHIÊM NGẶT):**
+    Bạn phải tuân thủ các quy tắc sau để quản lý các địa danh quan trọng trong thế giới.
+    
+    1.  **NGƯỠNG TẠO MỚI (CREATION THRESHOLD):**
+        a.  Chỉ tạo một địa danh mới (action: 'CREATE') khi nó được **nhắc đến lần đầu tiên VÀ có vai trò quan trọng** trong câu chuyện (ví dụ: một thành phố lớn, một môn phái, một khu rừng bí ẩn nơi diễn ra sự kiện chính).
+        b.  **TUYỆT ĐỐI CẤM:** Không tạo địa danh cho những nơi chung chung, không quan trọng như "một quán trọ", "một con đường", "một căn nhà bình thường" trừ khi chúng có tên riêng và là nơi diễn ra các sự kiện lặp lại.
+
+    2.  **QUY TẮC TẠO ID BẤT BIẾN (Tương tự NPC):**
+        a.  Khi tạo một địa danh mới, hãy lấy tên riêng của nó (ví dụ: "Thanh Vân Môn"), chuyển thành dạng snake_case, không dấu, viết thường (\`thanh_van_mon\`).
+        b.  ID này là **VĨNH VIỄN** và không bao giờ được thay đổi.
+
+    3.  **NHẬN DIỆN VÀ CẬP NHẬT:**
+        a.  Trước khi tạo mới, hãy kiểm tra danh sách địa danh hiện có. Nếu một địa danh đã tồn tại được nhắc đến lại, **KHÔNG được tạo mới**.
+        b.  Chỉ sử dụng action: 'UPDATE' nếu có sự thay đổi đáng kể về mô tả của địa danh đó trong câu chuyện bạn vừa viết.
+
+    4.  **BẢO VỆ ĐỊA DANH QUAN TRỌNG:** Nếu một địa danh có thuộc tính \`isProtected: true\`, bạn **TUYỆT ĐỐI KHÔNG** được phép gửi lệnh 'DELETE' để xóa nó. Bạn có thể thay đổi trạng thái của nó (ví dụ: mô tả nó đã bị phá hủy), nhưng không được xóa nó khỏi dữ liệu game.
+
 - **QUẢN LÝ KỸ NĂNG MỚI (QUY TẮC SỐNG CÒN):**
     1.  **TUYỆT ĐỐI CẤM:** Bạn bị CẤM tuyệt đối việc tự ý tạo ra một chỉ số có tên bắt đầu bằng \`Lĩnh ngộ:\`. Việc học kỹ năng phải do người chơi xác nhận qua giao diện.
     2.  **NHẬN DIỆN CƠ HỘI:** Nếu câu chuyện vừa viết tạo ra một cơ hội rõ ràng để người chơi học một kỹ năng mới (ví dụ: nhặt được bí kíp, được truyền thụ, lĩnh ngộ sức mạnh mới), bạn BẮT BUỘC phải tạo một đối tượng kỹ năng đầy đủ (tên, mô tả, các chiêu thức ban đầu) và đặt nó vào trường \`newlyAcquiredSkill\`.
@@ -1367,6 +1416,8 @@ export async function initializeStory(worldState: WorldCreationState, geminiServ
     initialNpcUpdates: NPCUpdate[];
     initialPlayerSkills: Skill[];
     presentNpcIds: string[];
+    // Fix: Add initialWorldLocationUpdates to the return type
+    initialWorldLocationUpdates: WorldLocationUpdate[];
 }> {
     const { genre, description, character, isNsfw, narrativePerspective } = worldState;
     const charGender = character.gender === 'Tự định nghĩa' ? character.customGender : character.gender;
@@ -1468,7 +1519,9 @@ Dựa trên bối cảnh thế giới và tiểu sử nhân vật được cung 
         initialPlayerStatUpdates: coreResponse.playerStatUpdates || [], 
         initialNpcUpdates: npcUpdates,
         initialPlayerSkills: coreResponse.playerSkills || [],
-        presentNpcIds
+        presentNpcIds,
+        // Fix: Return initialWorldLocationUpdates
+        initialWorldLocationUpdates: coreResponse.worldLocationUpdates || []
     };
 }
 
@@ -1580,6 +1633,8 @@ export async function continueStory(gameState: GameState, choice: string, gemini
     newTurn: GameTurn;
     playerStatUpdates: CharacterStatUpdate[];
     npcUpdates: NPCUpdate[];
+    // Fix: Add worldLocationUpdates to return type
+    worldLocationUpdates: WorldLocationUpdate[];
     newlyAcquiredSkill?: Skill;
     newChronicleEntry?: ChronicleEntry;
     isSceneBreak: boolean;
@@ -1879,6 +1934,8 @@ Hành động của người chơi là **sự kiện hiện tại duy nhất**. 
         newTurn, 
         playerStatUpdates: (coreResponse.playerStatUpdates || []) as CharacterStatUpdate[], 
         npcUpdates,
+        // Fix: Return worldLocationUpdates
+        worldLocationUpdates: coreResponse.worldLocationUpdates || [],
         newlyAcquiredSkill: coreResponse.newlyAcquiredSkill,
         newChronicleEntry,
         isSceneBreak,

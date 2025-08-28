@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSettings } from '../../hooks/useSettings';
-import { WorldCreationState, GameState, Skill, LustModeFlavor, ViewMode, NpcMindset, Ability, DestinyCompassMode, CharacterStats } from '../../types';
+import { WorldCreationState, GameState, Skill, LustModeFlavor, ViewMode, NpcMindset, Ability, DestinyCompassMode, CharacterStats, WorldLocation } from '../../types';
 import { useGameEngine } from '../../hooks/useGameEngine';
 import CharacterSheet from '../game/CharacterSheet';
 import StoryLog from '../game/StoryLog';
@@ -30,6 +30,8 @@ import { CogIcon } from '../icons/CogIcon';
 import GameSettingsModal from '../game/GameSettingsModal';
 import InventorySheet from '../game/InventorySheet';
 import AiControlPanelModal from '../game/AiControlPanelModal';
+import WorldCodex from '../game/WorldCodex';
+import LocationEditModal from '../game/LocationEditModal';
 
 
 interface GameScreenProps {
@@ -57,6 +59,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
       generatedImageUrl, isGeneratingImage, imageGenerationError, regenerateLastImage,
       undoLastTurn,
       previousGameState,
+      toggleLocationProtection, reorderLocation, locationToDelete, requestLocationDeletion, confirmLocationDeletion, cancelLocationDeletion,
+      editingLocation, requestLocationEdit, confirmLocationEdit, cancelLocationEdit,
   } = useGameEngine(initialData, settingsHook);
 
   const [editingChronicleIdx, setEditingChronicleIdx] = useState<number | string | null>(null);
@@ -582,10 +586,13 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
                         />
                     </div>
                     <div style={{ display: activeRightTab === 'world' ? 'block' : 'none' }}>
-                      <div className="p-4 text-center text-[#a08cb6]">
-                        <h3 className="text-lg font-bold text-white mb-2 font-rajdhani uppercase tracking-wider">World Codex</h3>
-                        <p className="text-sm">Tính năng quản lý thông tin, địa danh, và các sự kiện của thế giới sẽ được phát triển ở đây.</p>
-                      </div>
+                       <WorldCodex
+                          locations={gameState.worldLocations}
+                          onToggleProtection={toggleLocationProtection}
+                          onDeleteRequest={requestLocationDeletion}
+                          onReorderLocation={reorderLocation}
+                          onEditRequest={requestLocationEdit}
+                       />
                     </div>
                   </div>
                 </div>
@@ -697,8 +704,25 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
         <p>Hành động này sẽ xóa vĩnh viễn chỉ số này.</p>
         <p className="font-bold mt-2">Bạn có chắc chắn muốn xóa '{deletingStat?.statName}' không?</p>
       </ConfirmationModal>
-
-      {/* New Modals for Skill Management */}
+      <LocationEditModal
+        isOpen={!!editingLocation}
+        onClose={cancelLocationEdit}
+        onSave={confirmLocationEdit}
+        locationData={editingLocation}
+        isLoading={isLoading}
+      />
+      <ConfirmationModal
+        isOpen={!!locationToDelete}
+        onClose={cancelLocationDeletion}
+        onConfirm={confirmLocationDeletion}
+        title="Xác nhận Xóa Địa Danh"
+        confirmText="Xóa Vĩnh Viễn"
+        cancelText="Hủy"
+        confirmVariant="primary"
+      >
+        <p>Hành động này sẽ xóa vĩnh viễn Địa danh này khỏi thế giới.</p>
+        <p className="font-bold mt-2">Bạn có chắc chắn muốn xóa {locationToDelete?.name} không?</p>
+      </ConfirmationModal>
       <ConfirmationModal
         isOpen={!!skillToDelete}
         onClose={cancelSkillDeletion}
