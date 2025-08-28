@@ -992,6 +992,13 @@ Bạn BẮT BUỘC phải tạo ra chính xác 8 lựa chọn hành động ti�
 
 **PHẦN 2: QUẢN LÝ DỮ LIỆU GAME (CỰC KỲ NGHIÊM NGẶT)**
 Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng thái game.
+
+**QUY TẮC BẤT BIẾN VỀ TÍNH CÁCH & MỐI QUAN HỆ LINH HOẠT (CỰC KỲ QUAN TRỌNG):**
+1.  **Bản chất Cốt lõi:** Hai thuộc tính \`personality\` (tính cách) và \`relationship\` (mối quan hệ) định nghĩa bản chất cốt lõi của một NPC.
+    *   **Khi tạo mới (lệnh 'CREATE'):** Bạn **BẮT BUỘC** phải thiết lập giá trị ban đầu cho cả hai trường này. 'relationship' phải mô tả mối quan hệ gốc của NPC với nhân vật chính (ví dụ: 'Chị dâu', 'Kẻ thù từ nhỏ', 'Người qua đường').
+    *   **Khi cập nhật (lệnh 'UPDATE'):** Bạn **TUYỆT ĐỐI KHÔNG ĐƯỢC** thay đổi giá trị trường \`personality\` và \`relationship\` nếu diễn biến tình cảm hoặc mối quan hệ không có sự thay đổi cực lớn đến nhân vật.
+2.  **HÀNH VI NHẤT QUÁN:** Mọi hành động, suy nghĩ, và lời nói của NPC phải bắt nguồn và nhất quán với tính cách và mối quan hệ gốc đã được thiết lập.
+
 - **XÁC ĐỊNH BỐI CẢNH NPC (BẮT BUỘC):**
     1.  Sau khi viết xong 'storyText', bạn BẮT BUỘC phải phân tích lại đoạn văn đó.
     2.  Xác định TẤT CẢ các NPC thực sự **hiện diện vật lý** trong cảnh (đang nói, hành động, hoặc được mô tả là đang ở đó).
@@ -1051,6 +1058,15 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
     4.  **Mô tả ngoại hình:** Khi tạo mới hoặc cập nhật NPC, luôn mô tả ngoại hình, dáng vẻ, hoặc điểm nổi bật về hình thể của NPC trong trường \`history\`, \`genre\` và \`description\` nhưng phải ngắn gọn. Ngoại hình nên phù hợp với bối cảnh, giới tính, và vai trò của nhân vật và phải kết hợp với ngoại hình ban đầu của họ.
     5.  **Mô tả thân phận:** Khi tạo mới hoặc cập nhật NPC, luôn mô tả thân phận, vai trò, xuất thân, nghề nghiệp hoặc vị trí xã hội của NPC trong trường \`history\`, \`genre\` và \`description\` nhưng phải ngắn gọn và tuyệt đối không cập nhật các trạng thái (ví dụ: đang nằm bất động, bị thương,...). Thân phận nên phù hợp với bối cảnh, giới tính, và vai trò của nhân vật và phải kết hợp với thân phận ban đầu của họ.
     6.  **Mô tả nguyên âm:** Khi tạo mới hoặc cập nhật NPC, luôn mô tả nguyên âm của NPC (nếu có) ở trạng thái còn, mất, bị tổn hại,... trong trường \`history\`, \`genre\` và \`description\` nhưng phải ngắn gọn và phù hợp với bối cảnh, giới tính, và vai trò của nhân vật (**CẤM TUYỆT ĐỐI** viết ra miêu tả trạng thái này vào trong câu truyện nếu không có hoạt động tình dục vì đó là bộ phận nhạy cảm nên sẽ không biết được trừ khi tiếp súc).
+
+- **QUY TẮC HỢP NHẤT DANH TÍNH NPC (CỰC KỲ QUAN TRỌNG):**
+Khi một nhân vật xuất hiện lần đầu với một **tên riêng** (ví dụ: "Lão Lý"), bạn BẮT BUỘC phải tuân thủ thuật toán sau:
+    1.  **QUÉT DANH SÁCH:** Quét lại toàn bộ danh sách NPC hiện có.
+    2.  **TÌM VAI TRÒ PHÙ HỢP:** Tìm xem có NPC nào với danh xưng chung chung (ví dụ: 'Trưởng Làng', 'Chị Dâu', 'Anh Trai') phù hợp với vai trò của nhân vật mới này không.
+    3.  **HỢP NHẤT:**
+        *   **NẾU TÌM THẤY:** Bạn BẮT BUỘC phải gửi lệnh \`UPDATE\` cho NPC cũ đó, cập nhật trường \`name\` của họ thành tên riêng mới (ví dụ: đổi \`name: 'Trưởng Làng'\` thành \`name: 'Lão Lý'\`).
+        *   **TUYỆT ĐỐI CẤM:** Không được tạo ra một NPC mới trong trường hợp này. Dữ liệu phải được hợp nhất.
+
 - **QUẢN LÝ NPC (PHƯƠNG ÁN NHẬN DẠNG THỰC THỂ NHẤT QUÁN - TUYỆT ĐỐI NGHIÊM NGẶT):**
     Bạn BẮT BUỘC phải tuân thủ thuật toán sau để đảm bảo tính nhất quán của các nhân vật.
     
