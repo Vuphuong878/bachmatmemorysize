@@ -1124,19 +1124,21 @@ Khi một nhân vật xuất hiện lần đầu với một **tên riêng** (v�
 - **QUẢN LÝ ĐỊA DANH (WORLD LOCATION MANAGEMENT - TUYỆT ĐỐI NGHIÊM NGẶT):**
     Bạn phải tuân thủ các quy tắc sau để quản lý các địa danh quan trọng trong thế giới.
     
-    1.  **NGƯỠNG TẠO MỚI (CREATION THRESHOLD):**
+    1.  **SỬ DỤNG DỮ LIỆU ĐỊA DANH:** Bạn sẽ được cung cấp một danh sách các địa danh đã tồn tại trong dữ liệu game. Bạn BẮT BUỘC phải tham chiếu đến danh sách này và sử dụng các mô tả của chúng để làm cho lời kể trở nên phong phú và nhất quán. Kiểm tra danh sách này trước khi tạo địa danh mới để tránh trùng lặp.
+    
+    2.  **NGƯỠNG TẠO MỚI (CREATION THRESHOLD):**
         a.  Chỉ tạo một địa danh mới (action: 'CREATE') khi nó được **nhắc đến lần đầu tiên VÀ có vai trò quan trọng** trong câu chuyện (ví dụ: một thành phố lớn, một môn phái, một khu rừng bí ẩn nơi diễn ra sự kiện chính).
         b.  **TUYỆT ĐỐI CẤM:** Không tạo địa danh cho những nơi chung chung, không quan trọng như "một quán trọ", "một con đường", "một căn nhà bình thường" trừ khi chúng có tên riêng và là nơi diễn ra các sự kiện lặp lại.
 
-    2.  **QUY TẮC TẠO ID BẤT BIẾN (Tương tự NPC):**
+    3.  **QUY TẮC TẠO ID BẤT BIẾN (Tương tự NPC):**
         a.  Khi tạo một địa danh mới, hãy lấy tên riêng của nó (ví dụ: "Thanh Vân Môn"), chuyển thành dạng snake_case, không dấu, viết thường (\`thanh_van_mon\`).
         b.  ID này là **VĨNH VIỄN** và không bao giờ được thay đổi.
 
-    3.  **NHẬN DIỆN VÀ CẬP NHẬT:**
+    4.  **NHẬN DIỆN VÀ CẬP NHẬT:**
         a.  Trước khi tạo mới, hãy kiểm tra danh sách địa danh hiện có. Nếu một địa danh đã tồn tại được nhắc đến lại, **KHÔNG được tạo mới**.
         b.  Chỉ sử dụng action: 'UPDATE' nếu có sự thay đổi đáng kể về mô tả của địa danh đó trong câu chuyện bạn vừa viết.
 
-    4.  **BẢO VỆ ĐỊA DANH QUAN TRỌNG:** Nếu một địa danh có thuộc tính \`isProtected: true\`, bạn **TUYỆT ĐỐI KHÔNG** được phép gửi lệnh 'DELETE' để xóa nó. Bạn có thể thay đổi trạng thái của nó (ví dụ: mô tả nó đã bị phá hủy), nhưng không được xóa nó khỏi dữ liệu game.
+    5.  **BẢO VỆ ĐỊA DANH QUAN TRỌNG:** Nếu một địa danh có thuộc tính \`isProtected: true\`, bạn **TUYỆT ĐỐI KHÔNG** được phép gửi lệnh 'DELETE' để xóa nó. Bạn có thể thay đổi trạng thái của nó (ví dụ: mô tả nó đã bị phá hủy), nhưng không được xóa nó khỏi dữ liệu game.
 
 - **QUẢN LÝ KỸ NĂNG MỚI (QUY TẮC SỐNG CÒN):**
     1.  **TUYỆT ĐỐI CẤM:** Bạn bị CẤM tuyệt đối việc tự ý tạo ra một chỉ số có tên bắt đầu bằng \`Lĩnh ngộ:\`. Việc học kỹ năng phải do người chơi xác nhận qua giao diện.
@@ -1633,7 +1635,6 @@ export async function continueStory(gameState: GameState, choice: string, gemini
     newTurn: GameTurn;
     playerStatUpdates: CharacterStatUpdate[];
     npcUpdates: NPCUpdate[];
-    // Fix: Add worldLocationUpdates to return type
     worldLocationUpdates: WorldLocationUpdate[];
     newlyAcquiredSkill?: Skill;
     newChronicleEntry?: ChronicleEntry;
@@ -1830,7 +1831,7 @@ ${worldFoundation}\n\n**--- TẦNG 2: BIÊN NIÊN SỬ CỐT TRUYỆN (SỰ KI�
 ${plotChronicleText}\n\n**--- TẦNG 3: BỐI CẢNH GẦN NHẤT ---**
 - **Các sự kiện gần nhất:**
 ${recentHistory}
-- **Dữ liệu nhân vật và kỹ năng (đã rút gọn):** ${JSON.stringify({ playerStats: simplifiedPlayerStats, npcs: simplifiedNpcs, playerSkills: gameState.playerSkills })}\n\n**Hành động mới nhất của người chơi là: "${choice}".**
+- **Dữ liệu nhân vật, kỹ năng và thế giới (đã rút gọn):** ${JSON.stringify({ playerStats: simplifiedPlayerStats, npcs: simplifiedNpcs, playerSkills: gameState.playerSkills, worldLocations: gameState.worldLocations })}\n\n**Hành động mới nhất của người chơi là: "${choice}".**
 
 **YÊU CẦU CUỐI CÙNG (NGHIÊM NGẶT):**
 Hành động của người chơi là **sự kiện hiện tại duy nhất**. Dựa vào đó và 3 tầng ký ức, hãy viết một **đoạn truyện hoàn toàn mới** mô tả **kết quả trực tiếp** của hành động này. Tuân thủ **QUY TẮC VÀNG**: KHÔNG tóm tắt, KHÔNG lặp lại, KHÔNG viết lại bất kỳ sự kiện nào từ lượt trước. Sau đó, tạo 8 lựa chọn mới và cập nhật dữ liệu logic (chỉ số, NPC) của game. KHÔNG trả về trường 'playerSkills' trong lượt này.`;
@@ -1934,11 +1935,75 @@ Hành động của người chơi là **sự kiện hiện tại duy nhất**. 
         newTurn, 
         playerStatUpdates: (coreResponse.playerStatUpdates || []) as CharacterStatUpdate[], 
         npcUpdates,
-        // Fix: Return worldLocationUpdates
         worldLocationUpdates: coreResponse.worldLocationUpdates || [],
         newlyAcquiredSkill: coreResponse.newlyAcquiredSkill,
         newChronicleEntry,
         isSceneBreak,
         presentNpcIds
     };
+}
+
+
+const WORLD_PROGRESSION_SYSTEM_PROMPT = `Bạn là một "Động Cơ Tiến Triển Thế Giới" (World Progression Engine). Nhiệm vụ của bạn là đọc trạng thái hiện tại của thế giới game và dự đoán 1-3 sự kiện hợp lý sẽ xảy ra một cách độc lập trong khi người chơi đang bận rộn với các sự kiện khác. Những sự kiện này sẽ được ghi vào biên niên sử của game để làm cho thế giới cảm thấy sống động và luôn vận động.
+
+**QUY TRÌNH LÀM VIỆC (NGHIÊM NGẶT):**
+1.  **PHÂN TÍCH TOÀN DIỆN:** Đọc kỹ toàn bộ trạng thái game được cung cấp:
+    -   **Biên niên sử Cốt truyện (Plot Chronicle):** Nắm bắt các sự kiện lớn đã xảy ra.
+    -   **Thông tin NPC:** Chú ý đến tính cách, mục tiêu, và mối quan hệ của họ. Một NPC có tham vọng sẽ không ngồi yên.
+    -   **Thông tin Địa danh (World Locations):** Xem xét tình trạng của các địa điểm.
+2.  **DỰ ĐOÁN & SÁNG TẠO:** Dựa trên phân tích, hãy sáng tạo ra 1 đến 3 sự kiện logic có thể đã xảy ra "ngoài màn hình". Các sự kiện này phải:
+    -   **Hợp lý:** Phù hợp với tính cách và động cơ của NPC, hoặc tình hình chính trị/xã hội của thế giới.
+    -   **Tác động ngầm:** Không cần phải là những sự kiện kinh thiên động địa, nhưng nên có khả năng ảnh hưởng đến thế giới trong tương lai (ví dụ: một phe phái chiếm được một mỏ tài nguyên, một NPC hoàn thành việc luyện chế đan dược, hai kẻ thù bí mật gặp nhau).
+    -   **Độc lập:** Là những sự kiện mà nhân vật chính không trực tiếp tham gia hay chứng kiến.
+3.  **TẠO KẾT QUẢ JSON:** Định dạng các sự kiện bạn đã tạo thành một mảng các đối tượng 'ChronicleEntry' và đặt chúng vào trường 'progressions' của đối tượng JSON đầu ra. Tuân thủ nghiêm ngặt schema đã cho.
+
+**VÍ DỤ:**
+-   Nếu một NPC là một Luyện đan sư và biên niên sử ghi rằng họ đang tìm kiếm một loại thảo dược, một sự kiện hợp lý có thể là: \`{ summary: "Luyện đan sư X đã thành công luyện chế ra Hóa Hình Đan sau nhiều ngày bế quan.", eventType: 'Phát triển nhân vật', ... }\`
+-   Nếu hai phe phái đang xung đột, một sự kiện hợp lý có thể là: \`{ summary: "Quân của Hắc Long Hội đã chiếm được Mỏ Linh Thạch ở phía Tây sau một cuộc đột kích chớp nhoáng.", eventType: 'Xung đột phe phái', ... }\`
+
+**ĐỊNH DẠNG ĐẦU RA:** Phản hồi của bạn BẮT BUỘC phải là một đối tượng JSON hợp lệ duy nhất, tuân thủ schema được cung cấp.`;
+
+const worldProgressionSchema = {
+    type: Type.OBJECT,
+    properties: {
+        progressions: {
+            type: Type.ARRAY,
+            description: "Một mảng chứa 1-3 sự kiện diễn ra 'ngoài màn hình' mà người chơi không chứng kiến.",
+            items: chronicleEntrySchema
+        }
+    },
+    required: ['progressions']
+};
+
+export async function runWorldProgression(gameState: GameState, geminiService: GoogleGenAI): Promise<ChronicleEntry[]> {
+    const { plotChronicle, npcs, worldLocations, worldContext } = gameState;
+
+    const prompt = `${WORLD_PROGRESSION_SYSTEM_PROMPT}\n\n**TRẠNG THÁI THẾ GIỚI HIỆN TẠI:**
+- **Biên niên sử:**\n${plotChronicle.map(c => `- (${c.eventType}): ${c.summary}`).join('\n') || "Chưa có."}
+- **Danh sách NPC:**\n${npcs.map(n => `- ${n.name} (ID: ${n.id}, Tính cách: ${n.personality}, Mối quan hệ: ${n.relationship})`).join('\n') || "Chưa có."}
+- **Danh sách Địa danh:**\n${worldLocations.map(l => `- ${l.name} (ID: ${l.id}, Trạng thái: ${l.status})`).join('\n') || "Chưa có."}
+
+Hãy tạo ra các sự kiện tiến triển cho thế giới.`;
+
+    try {
+        const result = await callJsonAI(prompt, worldProgressionSchema, geminiService, worldContext.isNsfw);
+        const response = parseAndValidateJsonResponse(result.text);
+        
+        if (response && Array.isArray(response.progressions)) {
+            // Validate each entry before returning
+            const validatedProgressions = response.progressions
+                .map((p: any) => validateChronicleEntry(p))
+                .filter((p: ChronicleEntry) => !isDuplicateChronicleEntry(p, gameState.plotChronicle)); // Final check for duplicates
+            
+            if(validatedProgressions.length > 0) {
+                 console.log(`World Progression Engine created ${validatedProgressions.length} new events.`);
+            }
+            return validatedProgressions;
+        }
+        return [];
+    } catch (error) {
+        console.error("Lỗi trong World Progression Engine:", error);
+        // Don't throw, just return empty array to not break the game flow
+        return [];
+    }
 }

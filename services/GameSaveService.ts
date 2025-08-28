@@ -81,6 +81,11 @@ function validateAndHydrateGameState(parsedState: any): GameState | null {
         const otherStatKeys = allStatKeys.filter((key: string) => !CORE_STATS.includes(key)).sort((a: string, b: string) => a.localeCompare(b));
         parsedState.playerStatOrder = [...coreStatKeys, ...otherStatKeys];
     }
+    
+    // Add turnsSinceLastProgression for old saves
+    if (typeof parsedState.turnsSinceLastProgression === 'undefined') {
+      parsedState.turnsSinceLastProgression = 0;
+    }
 
     return parsedState as GameState;
   }

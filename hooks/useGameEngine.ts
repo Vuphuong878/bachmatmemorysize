@@ -329,6 +329,7 @@ export function useGameEngine(
                 playerSkills: initialPlayerSkills,
                 plotChronicle: [],
                 turnsSinceLastChronicle: [initialTurn],
+                turnsSinceLastProgression: 0,
             };
             setGameState(newState);
             GameSaveService.saveAutoSave(newState); // Auto-save after initialization
@@ -402,6 +403,27 @@ export function useGameEngine(
                 }
             }
             
+            // --- WORLD PROGRESSION ENGINE ---
+            const PROGRESSION_INTERVAL = 10;
+            let turnsSinceProgression = (gameState.turnsSinceLastProgression || 0) + 1;
+            let worldProgressions: ChronicleEntry[] = [];
+
+            if (turnsSinceProgression >= PROGRESSION_INTERVAL || isSceneBreak) {
+                console.log(`Triggering World Progression Engine. Reason: ${isSceneBreak ? 'Scene Break' : 'Turn Interval'}`);
+                // We need to pass a state that includes the potential new chronicle entry from this turn
+                const stateForProgression = {
+                    ...gameState,
+                    plotChronicle: newPlotChronicle,
+                };
+                worldProgressions = await storytellerService.runWorldProgression(stateForProgression, geminiService);
+                if (worldProgressions.length > 0) {
+                    newPlotChronicle.push(...worldProgressions);
+                }
+                turnsSinceProgression = 0; // Reset counter
+            }
+            // --- END WORLD PROGRESSION ENGINE ---
+
+
             const newState: GameState = {
                 ...gameState,
                 history: [...gameState.history, newTurn],
@@ -412,6 +434,7 @@ export function useGameEngine(
                 plotChronicle: newPlotChronicle,
                 // If a scene break happened, reset the turns buffer. Otherwise, add the new turn.
                 turnsSinceLastChronicle: isSceneBreak ? [] : [...(gameState.turnsSinceLastChronicle || []), newTurn],
+                turnsSinceLastProgression: turnsSinceProgression,
             };
 
             setGameState(newState);
