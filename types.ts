@@ -176,5 +176,6 @@ export interface GameState {
     isWpeEnabled: boolean;
     wpeTurnInterval: number;
     wpeOnSceneBreak?: boolean;
+    wpeOnTurnInterval?: boolean;
   };
 }

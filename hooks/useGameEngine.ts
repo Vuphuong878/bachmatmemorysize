@@ -354,7 +354,7 @@ export function useGameEngine(
     }, [initialData, initializeGame]);
 
 
-    const handlePlayerChoice = async (choice: string, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode, isImageGenerationEnabled: boolean, isWpeEnabled: boolean, wpeTurnInterval: number, wpeOnSceneBreak: boolean) => {
+    const handlePlayerChoice = async (choice: string, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode, isImageGenerationEnabled: boolean, isWpeEnabled: boolean, wpeTurnInterval: number, wpeOnSceneBreak: boolean, wpeOnTurnInterval: boolean) => {
         if (!gameState || !geminiService) return;
         setPreviousGameState(gameState); // Save state before making the move
         setIsLoading(true);
@@ -408,7 +408,7 @@ export function useGameEngine(
             let worldProgressChronicleEntry: ChronicleEntry | undefined = undefined;
 
             if (isWpeEnabled) {
-                const triggerByTurnInterval = turnsSinceProgression >= wpeTurnInterval;
+                const triggerByTurnInterval = wpeOnTurnInterval && turnsSinceProgression >= wpeTurnInterval;
                 const triggerBySceneBreak = isSceneBreak && wpeOnSceneBreak;
             
                 if (triggerByTurnInterval || triggerBySceneBreak) {

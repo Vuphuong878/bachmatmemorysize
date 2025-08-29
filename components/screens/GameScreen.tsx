@@ -73,6 +73,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   const [isWpeEnabled, setIsWpeEnabled] = useState(true);
   const [wpeTurnInterval, setWpeTurnInterval] = useState(10);
   const [wpeOnSceneBreak, setWpeOnSceneBreak] = useState(true);
+  const [wpeOnTurnInterval, setWpeOnTurnInterval] = useState(true);
   
   // Restore UI settings from save (if any)
   useEffect(() => {
@@ -86,6 +87,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
       setIsWpeEnabled(gameState.uiSettings.isWpeEnabled ?? true);
       setWpeTurnInterval(gameState.uiSettings.wpeTurnInterval ?? 10);
       setWpeOnSceneBreak(gameState.uiSettings.wpeOnSceneBreak ?? true);
+      setWpeOnTurnInterval(gameState.uiSettings.wpeOnTurnInterval ?? true);
     }
   }, [gameState]);
   
@@ -198,6 +200,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
           isWpeEnabled,
           wpeTurnInterval,
           wpeOnSceneBreak,
+          wpeOnTurnInterval,
         }
       };
       GameSaveService.saveManualSave(gameStateWithSettings);
@@ -206,7 +209,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   };
   
   const doPlayerChoice = async (choice: string) => {
-    await handlePlayerChoice(choice, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode, isImageGenerationEnabled, isWpeEnabled, wpeTurnInterval, wpeOnSceneBreak);
+    await handlePlayerChoice(choice, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode, isImageGenerationEnabled, isWpeEnabled, wpeTurnInterval, wpeOnSceneBreak, wpeOnTurnInterval);
     setCustomAction(''); // Clear input after any action
     if (autoHideActionPanel) {
       setIsActionsPanelCollapsed(true);
@@ -661,6 +664,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
         onWpeTurnIntervalChange={setWpeTurnInterval}
         wpeOnSceneBreak={wpeOnSceneBreak}
         onWpeOnSceneBreakChange={setWpeOnSceneBreak}
+        wpeOnTurnInterval={wpeOnTurnInterval}
+        onWpeOnTurnIntervalChange={setWpeOnTurnInterval}
       />
       <ExitConfirmationModal
         isOpen={isExitModalOpen}

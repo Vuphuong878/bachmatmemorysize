@@ -29,6 +29,8 @@ interface AiControlPanelModalProps {
     onWpeTurnIntervalChange: (interval: number) => void;
     wpeOnSceneBreak: boolean;
     onWpeOnSceneBreakChange: (isOn: boolean) => void;
+    wpeOnTurnInterval: boolean;
+    onWpeOnTurnIntervalChange: (isOn: boolean) => void;
 }
 
 const LUST_FLAVOR_TEXT: Record<LustModeFlavor, string> = {
@@ -198,7 +200,9 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
     wpeTurnInterval,
     onWpeTurnIntervalChange,
     wpeOnSceneBreak,
-    onWpeOnSceneBreakChange
+    onWpeOnSceneBreakChange,
+    wpeOnTurnInterval,
+    onWpeOnTurnIntervalChange
 }) => {
     const [isLustPanelVisible, setLustPanelVisible] = useState(false);
 
@@ -321,34 +325,46 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
 
                  {/* World Progression Engine Settings */}
                  <div className="bg-black/20 p-3 rounded-lg space-y-4">
-                    <label className="block text-sm font-medium text-center text-white mb-2 font-rajdhani uppercase tracking-wider">Dòng Sông Vận Mệnh</label>
+                    <label className="block text-sm font-medium text-center text-white mb-2 font-rajdhani uppercase tracking-wider">Động Cơ Tiến Triển Thế Giới</label>
                     <ToggleSwitch
                         id="wpe-toggle"
-                        label="Kích hoạt"
+                        label="Kích hoạt Động Cơ"
                         description="Tự động cập nhật các NPC và địa danh không có mặt trong cảnh."
                         enabled={isWpeEnabled}
                         setEnabled={onWpeEnabledChange}
                     />
                     
-                    <div className={`space-y-3 pl-4 border-l-2 ${isWpeEnabled ? 'border-pink-500/30' : 'border-gray-600/30'} transition-all`}>
-                        <div className={`flex items-center gap-3 transition-opacity ${isWpeEnabled ? 'opacity-100' : 'opacity-50'}`}>
-                            <label htmlFor="wpe-interval" className="text-xs font-semibold text-gray-400 flex-shrink-0">Kích hoạt mỗi</label>
-                            <input
-                                type="number"
-                                id="wpe-interval"
-                                value={wpeTurnInterval}
-                                onChange={(e) => onWpeTurnIntervalChange(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    <div className={`space-y-4 pt-3 pl-4 border-l-2 ${isWpeEnabled ? 'border-pink-500/30' : 'border-gray-600/30'} transition-all`}>
+                        {/* Option 1: By Turn Interval */}
+                        <div className={`transition-opacity ${isWpeEnabled ? 'opacity-100' : 'opacity-50'}`}>
+                            <ToggleSwitch
+                                id="wpe-turn-toggle"
+                                label="Kích hoạt theo số lượt"
+                                description="Kích hoạt WPE sau một khoảng số lượt nhất định."
+                                enabled={wpeOnTurnInterval}
+                                setEnabled={onWpeOnTurnIntervalChange}
                                 disabled={isLoading || !isWpeEnabled}
-                                className="w-20 bg-[#120c18] border-2 border-[#3a2d47] rounded-md text-white text-center py-1 text-sm focus:ring-2 focus:ring-[#e02585] focus:border-[#e02585] transition-all disabled:opacity-50"
-                                min="1"
                             />
-                             <span className="text-xs font-semibold text-gray-400">lượt</span>
+                            <div className={`flex items-center gap-3 mt-2 pl-4 transition-opacity ${isWpeEnabled && wpeOnTurnInterval ? 'opacity-100' : 'opacity-50'}`}>
+                                <label htmlFor="wpe-interval" className="text-xs font-semibold text-gray-400 flex-shrink-0">Mỗi</label>
+                                <input
+                                    type="number"
+                                    id="wpe-interval"
+                                    value={wpeTurnInterval}
+                                    onChange={(e) => onWpeTurnIntervalChange(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                                    disabled={isLoading || !isWpeEnabled || !wpeOnTurnInterval}
+                                    className="w-20 bg-[#120c18] border-2 border-[#3a2d47] rounded-md text-white text-center py-1 text-sm focus:ring-2 focus:ring-[#e02585] focus:border-[#e02585] transition-all disabled:opacity-50"
+                                    min="1"
+                                />
+                                <span className="text-xs font-semibold text-gray-400">lượt</span>
+                            </div>
                         </div>
 
+                        {/* Option 2: On Scene Break */}
                         <ToggleSwitch
                             id="wpe-scene-break-toggle"
                             label="Kích hoạt khi chuyển cảnh"
-                            description="Kích hoạt khi một phân cảnh truyện kết thúc."
+                            description="Kích hoạt WPE ngay lập tức khi một phân cảnh truyện kết thúc."
                             enabled={wpeOnSceneBreak}
                             setEnabled={onWpeOnSceneBreakChange}
                             disabled={isLoading || !isWpeEnabled}
