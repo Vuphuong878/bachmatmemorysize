@@ -243,7 +243,7 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Bảng Điều Khiển AI">
-            <div className="space-y-6">
+            <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                 <div>
                     <label className="block text-sm font-medium text-center text-white mb-2 font-rajdhani uppercase tracking-wider">La Bàn Định Mệnh</label>
                     <div className="grid grid-cols-3 gap-2 bg-black/20 p-1 rounded-lg">
@@ -433,6 +433,18 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
                 .animate-fade-in-fast {
                     animation: fade-in-fast 0.2s ease-out forwards;
                 }
+                 .custom-scrollbar::-webkit-scrollbar {
+                    width: 8px;
+                    background: transparent;
+                  }
+                  .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #a08cb6;
+                    border-radius: 6px;
+                  }
+                  .custom-scrollbar {
+                    scrollbar-width: thin;
+                    scrollbar-color: #a08cb6 #1d1526;
+                  }
             `}</style>
         </Modal>
     );
