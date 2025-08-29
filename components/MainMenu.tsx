@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import Button from './ui/Button';
 import ChangelogModal from './ChangelogModal';
@@ -149,15 +148,15 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStart, onContinueManualSave, onCo
             Tải game từ file...
           </Button>
           <div className="flex flex-row gap-3">
-            <Button onClick={onSettings} variant="secondary" className="!text-xs !py-2 !px-3 flex-1">
+            <Button onClick={onSettings} variant="secondary" style={{ minWidth: 120, fontSize: 16, padding: '10px 0' }}>
               Thiết lập
             </Button>
-            <Button onClick={() => setChangelogOpen(true)} variant="secondary" className="!text-xs !py-2 !px-3 flex-1">
+            <Button onClick={() => setChangelogOpen(true)} variant="secondary" style={{ minWidth: 120, fontSize: 16, padding: '10px 0' }}>
               Thông Tin
             </Button>
             <Button
               variant="secondary"
-              className="!text-xs !py-2 !px-3 flex-1"
+              style={{ minWidth: 90, fontSize: 15, padding: '10px 0' }}
               onClick={() => window.open('https://docs.google.com/document/d/1xqN7Qmy7XV3X7P0wNjHsZcN-6kxHnPXi-c-FXT5cfuM/edit?usp=sharing', '_blank', 'noopener,noreferrer')}
             >
               Wiki
@@ -173,48 +172,55 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStart, onContinueManualSave, onCo
         .menu-bg {
           background-color: #0d0612;
           background-image: 
-            radial-gradient(circle at 15% 20%, rgba(224, 37, 133, 0.15), transparent 50%),
-            radial-gradient(circle at 85% 30%, rgba(99, 58, 171, 0.15), transparent 50%),
-            radial-gradient(circle at 50% 80%, rgba(58, 107, 171, 0.1), transparent 50%);
-          animation: subtle-pulse 15s ease-in-out infinite;
+            radial-gradient(circle at 15% 20%, rgba(224, 37, 133, 0.25), transparent 40%),
+            radial-gradient(circle at 85% 70%, rgba(127, 59, 155, 0.25), transparent 40%);
+          animation: background-pan 45s linear infinite;
         }
-        @keyframes subtle-pulse {
-          0%, 100% { background-color: #0d0612; }
-          50% { background-color: #120c18; }
+        @keyframes background-pan {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
+
         .title-glow {
-            text-shadow: 0 0 8px rgba(255, 255, 255, 0.2), 0 0 20px rgba(224, 37, 133, 0.6), 0 0 35px rgba(224, 37, 133, 0.4);
-            animation: title-flicker 4s ease-in-out infinite;
+            animation: title-pulse 5s ease-in-out infinite;
         }
-        @keyframes title-flicker {
-          0%, 18%, 22%, 25%, 53%, 57%, 100% {
-            text-shadow:
-              0 0 8px rgba(255, 255, 255, 0.2),
-              0 0 20px rgba(224, 37, 133, 0.6),
-              0 0 35px rgba(224, 37, 133, 0.4);
-          }
-          20%, 24%, 55% {
-            text-shadow: none;
-          }
+        
+        @keyframes title-pulse {
+            0%, 100% {
+                text-shadow: 
+                    0 0 5px rgba(255, 255, 255, 0.7), 
+                    0 0 10px rgba(224, 37, 133, 0.8), 
+                    0 0 20px rgba(224, 37, 133, 0.6), 
+                    0 0 40px rgba(224, 37, 133, 0.4);
+            }
+            50% {
+                text-shadow: 
+                    0 0 8px rgba(255, 255, 255, 0.9), 
+                    0 0 18px rgba(224, 37, 133, 1), 
+                    0 0 30px rgba(224, 37, 133, 0.8), 
+                    0 0 55px rgba(224, 37, 133, 0.6);
+            }
         }
+        
         .subtitle-style {
-          text-shadow: 0 0 5px rgba(160, 140, 182, 0.7);
+            font-family: 'Rajdhani', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #a08cb6;
+            text-shadow: 0 0 5px rgba(160, 140, 182, 0.5);
         }
+
         @keyframes fade-in-down {
           from { opacity: 0; transform: translateY(-20px); }
           to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-down {
-          animation: fade-in-down 1s ease-out forwards;
         }
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in-up {
-          animation: fade-in-up 1s ease-out 0.3s forwards;
-          opacity: 0;
-        }
+        .animate-fade-in-down { animation: fade-in-down 0.8s ease-out forwards; }
+        .animate-fade-in-up { animation: fade-in-up 0.8s ease-out 0.2s forwards; opacity: 0; }
       `}</style>
     </div>
   );
