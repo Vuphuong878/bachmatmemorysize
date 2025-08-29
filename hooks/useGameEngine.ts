@@ -329,7 +329,6 @@ export function useGameEngine(
                 playerSkills: initialPlayerSkills,
                 plotChronicle: [],
                 turnsSinceLastChronicle: [initialTurn],
-                turnsSinceLastProgression: 0,
             };
             setGameState(newState);
             GameSaveService.saveAutoSave(newState); // Auto-save after initialization
@@ -353,7 +352,7 @@ export function useGameEngine(
     }, [initialData, initializeGame]);
 
 
-    const handlePlayerChoice = async (choice: string, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode, isImageGenerationEnabled: boolean, isWpeEnabled: boolean, wpeTurnInterval: number, wpeOnSceneBreak: boolean, wpeOnTurnInterval: boolean) => {
+    const handlePlayerChoice = async (choice: string, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode, isImageGenerationEnabled: boolean) => {
         if (!gameState || !geminiService) return;
         setPreviousGameState(gameState); // Save state before making the move
         setIsLoading(true);
@@ -382,6 +381,9 @@ export function useGameEngine(
             });
             setRecentlyUpdatedNpcStats(npcChanges);
 
+
+            const updatedNpcs = applyNpcUpdates(processedNpcs, npcUpdates);
+            const updatedLocations = applyWorldLocationUpdates(gameState.worldLocations, worldLocationUpdates);
             const playerStatChanges = convertStatUpdatesArrayToObject(playerStatUpdates);
             const newPlayerStats = smartMergeStats(processedPlayerStats, playerStatChanges);
             
@@ -400,60 +402,6 @@ export function useGameEngine(
                 }
             }
             
-            // --- WORLD PROGRESSION ENGINE ---
-            let turnsSinceProgression = (gameState.turnsSinceLastProgression || 0) + 1;
-            let worldProgressNpcUpdates: NPCUpdate[] = [];
-            let worldProgressLocationUpdates: WorldLocationUpdate[] = [];
-            let worldProgressChronicleEntry: ChronicleEntry | undefined = undefined;
-
-            if (isWpeEnabled) {
-                const triggerByTurnInterval = wpeOnTurnInterval && turnsSinceProgression >= wpeTurnInterval;
-                const triggerBySceneBreak = isSceneBreak && wpeOnSceneBreak;
-            
-                if (triggerByTurnInterval || triggerBySceneBreak) {
-                    const reason = triggerBySceneBreak 
-                        ? (triggerByTurnInterval ? `Scene Break & Turn Interval (${wpeTurnInterval})` : 'Scene Break')
-                        : `Turn Interval (${wpeTurnInterval})`;
-                    console.log(`Triggering World Progression Engine. Reason: ${reason}`);
-                    
-                    const stateForProgression: GameState = {
-                        ...gameState,
-                        plotChronicle: newPlotChronicle,
-                        turnsSinceLastChronicle: isSceneBreak ? [] : [...(gameState.turnsSinceLastChronicle || []), newTurn],
-                    };
-
-                    const progressionResult = await storytellerService.runWorldProgression(stateForProgression, newPresentNpcIds, geminiService);
-
-                    worldProgressNpcUpdates = progressionResult.npcUpdates;
-                    worldProgressLocationUpdates = progressionResult.worldLocationUpdates;
-                    worldProgressChronicleEntry = progressionResult.chronicleEntry;
-                    
-                    turnsSinceProgression = 0; // Reset counter
-                }
-            }
-            // --- END WORLD PROGRESSION ENGINE ---
-            
-            const allNpcUpdates = [...npcUpdates, ...worldProgressNpcUpdates];
-            const allLocationUpdates = [...worldLocationUpdates, ...worldProgressLocationUpdates];
-            
-            const updatedNpcs = applyNpcUpdates(processedNpcs, allNpcUpdates);
-            const updatedLocations = applyWorldLocationUpdates(gameState.worldLocations, allLocationUpdates);
-
-            if (worldProgressChronicleEntry) {
-                // Significance Threshold: Only add WPE chronicles if they are important enough.
-                const WPE_SIGNIFICANCE_THRESHOLD = 2;
-                if (worldProgressChronicleEntry.plotSignificanceScore > WPE_SIGNIFICANCE_THRESHOLD) {
-                    if (!storytellerService.isDuplicateChronicleEntry(worldProgressChronicleEntry, newPlotChronicle)) {
-                        newPlotChronicle.push(worldProgressChronicleEntry);
-                        console.log(`WPE Chronicle added (Score: ${worldProgressChronicleEntry.plotSignificanceScore}): "${worldProgressChronicleEntry.summary}"`);
-                    } else {
-                        console.log(`WPE Chronicle skipped (Duplicate): "${worldProgressChronicleEntry.summary}"`);
-                    }
-                } else {
-                    console.log(`WPE Chronicle skipped due to low significance (Score: ${worldProgressChronicleEntry.plotSignificanceScore}): "${worldProgressChronicleEntry.summary}"`);
-                }
-            }
-
             const newState: GameState = {
                 ...gameState,
                 history: [...gameState.history, newTurn],
@@ -464,7 +412,6 @@ export function useGameEngine(
                 plotChronicle: newPlotChronicle,
                 // If a scene break happened, reset the turns buffer. Otherwise, add the new turn.
                 turnsSinceLastChronicle: isSceneBreak ? [] : [...(gameState.turnsSinceLastChronicle || []), newTurn],
-                turnsSinceLastProgression: turnsSinceProgression,
             };
 
             setGameState(newState);

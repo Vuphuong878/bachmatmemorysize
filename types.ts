@@ -1,4 +1,3 @@
-
 export enum ApiKeySource {
   DEFAULT = 'DEFAULT',
   CUSTOM = 'CUSTOM',
@@ -103,9 +102,6 @@ export interface ChronicleEntry {
         change: string;
         reason: string;
     }[];
-    // --- Các trường mới được thêm vào ---
-    keyDetail?: string; // Chi tiết ẩn quan trọng nhất được phát hiện
-    potentialConsequence?: string; // Dự đoán về hệ quả tương lai
 }
 
 // Represents a Non-Player Character
@@ -164,7 +160,6 @@ export interface GameState {
   plotChronicle: ChronicleEntry[]; // The structured, summarized history of major plot points.
   turnsSinceLastChronicle: GameTurn[]; // Track turns for the next summary
   lastImageUrl?: string; // The URL for the AI-generated image for the latest turn.
-  turnsSinceLastProgression?: number;
   // UI/gameplay settings (optional)
   uiSettings?: {
     destinyCompassMode: DestinyCompassMode;
@@ -173,9 +168,5 @@ export interface GameState {
     isLogicModeOn: boolean;
     isConscienceModeOn: boolean;
     isStrictInterpretationOn: boolean;
-    isWpeEnabled: boolean;
-    wpeTurnInterval: number;
-    wpeOnSceneBreak?: boolean;
-    wpeOnTurnInterval?: boolean;
   };
 }

@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type, GenerateContentResponse, HarmCategory, HarmBlockThreshold } from '@google/genai';
 import { WorldCreationState, GameState, GameTurn, NPCUpdate, CharacterStatUpdate, NPC, Skill, NarrativePerspective, LustModeFlavor, NpcMindset, DestinyCompassMode, ChronicleEntry, WorldLocationUpdate } from '../types';
 
@@ -124,14 +125,6 @@ const chronicleEntrySchema = {
                 },
                 required: ['npcId', 'change', 'reason']
             }
-        },
-        keyDetail: {
-            type: Type.STRING,
-            description: "(TÙY CHỌN) Một câu ngắn mô tả chính xác chi tiết ẩn quan trọng mà bạn đã phát hiện."
-        },
-        potentialConsequence: {
-            type: Type.STRING,
-            description: "(TÙY CHỌN) Một dự đoán ngắn gọn về hậu quả hoặc tình tiết có thể xảy ra trong tương lai từ chi tiết này."
         }
     },
     required: ['summary', 'eventType', 'involvedNpcIds', 'isUnforgettable', 'plotSignificanceScore']
@@ -355,7 +348,7 @@ Bạn BẮT BUỘC phải mô tả ý chí của NPC rất dễ bị phá vỡ v
 **QUY TẮC TÂM LÝ "KHOÁI LẠC HƯỞNG THỤ" (Kẻ Yêu Dục Vọng):**
 Bạn BẮT BUỘC phải mô tả NPC như một người hoàn toàn **làm chủ và tận hưởng** trải nghiệm tình dục. Đây là bản chất của họ, không phải là sự sa ngã.
 1.  **HÀNH ĐỘNG CỦA NPC:** Mô tả NPC một cách chủ động, mời gọi, và đầy kinh nghiệm. Họ không chỉ đáp lại mà còn dẫn dắt, thể hiện sự khoái lạc một cách tự tin. Họ có thể thì thầm những lời dâm đãng, hướng dẫn người chơi, và thể hiện rõ họ đang tận hưởng từng khoảnh khắc.
-2.  **LÝ TRÍ LÀ BẢN CHẤT:** Đây là điểm CỰC KỲ QUAN TRỌNG. Trạng thái dâm đãng này **KHÔNG phải là mất lý trí**. Nó là biểu hiện cao nhất của lý trí họ - một lý trí lựa chọn khoái lạc. Do đó, chỉ số 'Lý trí' của NPC **KHÔNG ĐƯỢ̣c GIẢM**. Ngược lại, nó có thể giữ nguyên hoặc thậm chí tăng nhẹ nếu hành động của người chơi làm họ thỏa mãn.
+2.  **LÝ TRÍ LÀ BẢN CHẤT:** Đây là điểm CỰC KỲ QUAN TRỌNG. Trạng thái dâm đãng này **KHÔNG phải là mất lý trí**. Nó là biểu hiện cao nhất của lý trí họ - một lý trí lựa chọn khoái lạc. Do đó, chỉ số 'Lý trí' của NPC **KHÔNG ĐƯỢC GIẢM**. Ngược lại, nó có thể giữ nguyên hoặc thậm chí tăng nhẹ nếu hành động của người chơi làm họ thỏa mãn.
 3.  **KẾT QUẢ:** Hành động của người chơi được NPC đón nhận một cách nồng nhiệt và điêu luyện. NPC là một đối tác tình dục chủ động, không phải là nạn nhân hay người bị khuất phục.
 `;
     }
@@ -943,10 +936,7 @@ Nhiệm vụ cốt lõi của bạn là **tiếp nối** câu chuyện, mô tả
 **TẦNG KÝ ỨC (CỰC KỲ QUAN TRỌNG):**
 Bạn sẽ được cung cấp 3 tầng ký ức để duy trì sự nhất quán. Sự mâu thuẫn với NỀN TẢNG hoặc BIÊN NIÊN SỬ sẽ phá hỏng trò chơi.
 1.  **NỀN TẢNG THẾ GIỚI (World Foundation):** Đây là các quy tắc cốt lõi, bất biến của thế giới (thể loại, bối cảnh, tiểu sử nhân vật). Bạn PHẢI tuyệt đối tuân thủ, không được phép thay đổi hay mâu thuẫn.
-
 2.  **BIÊN NIÊN SỬ CỐT TRUYỆN (Plot Chronicle):** Đây là một danh sách được tuyển chọn gồm các sự kiện quan trọng nhất, gần đây nhất, và **một vài sự kiện ngẫu nhiên trong quá khứ** của toàn bộ cốt truyện. Hãy dùng các sự kiện ngẫu nhiên này làm nguồn cảm hứng để tạo ra những hành động hoặc lời thoại bất ngờ, sâu sắc từ NPC (ví dụ: đột nhiên nhớ lại một ân oán cũ).
-    -   **ƯU TIÊN TUYỆT ĐỐI:** Bạn BẮT BUỘC phải đọc kỹ các \`keyDetail\`. Đây là những "hạt giống cốt truyện" đã được gieo từ trước. Nhiệm vụ của bạn là làm cho chúng nảy mầm.
-    -   **HÀNH ĐỘNG:** Hãy lồng ghép một cách tự nhiên các chi tiết này vào câu chuyện (\`storyText\`) hoặc các lựa chọn (\`choices\`) của bạn. Ví dụ: Nếu một \`keyDetail\` là "Phát hiện một huy hiệu rồng bạc", bạn có thể tạo ra một lựa chọn như "Tìm hiểu về huy hiệu rồng bạc" hoặc mô tả một NPC nhận ra huy hiệu đó.
 3.  **BỐI CẢNH GẦN NHẤT (Recent Context):** Đây là các diễn biến và trạng thái trong vài lượt gần đây. Dùng nó để viết tiếp một cách liền mạch.
 
 **QUY TẮC SỐNG CỦA NPC (NPC LIVELINESS RULE - CỰC KỲ QUAN TRỌNG):**
@@ -1005,7 +995,7 @@ Bạn BẮT BUỘC phải tạo ra chính xác 8 lựa chọn hành động ti�
 - Tập trung mô tả môi trường, cảm xúc, diễn biến, giao tiếp, hành động vật lý khách quan, không suy đoán tâm lý NPC.
 - Tôn trọng tính cách, động cơ NPC; không để mọi tình tiết chỉ xoay quanh người chơi.
 - Duy trì độ khó, có thể có bất lợi/thất bại hợp lý.
-- Chủ động xây dựng sự kiện bất ngờ nhưng không được quá thường xuyên hoặc vô lý dựa trên \`history\`.
+- Chủ động xây dựng sự kiện bất ngờ dựa trên \`history\`.
 - Khi mô tả hành động: chỉ ghi nhận hành vi vật lý, kết quả trực tiếp, chia nhỏ động tác, dùng động từ trung tính, ưu tiên giác quan (thị giác, xúc giác, thính giác), văn phong khách quan.
 
 - MÔI TRƯỜNG & VẬT THỂ:
@@ -1051,7 +1041,6 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
     1.  **KHÔNG THAY ĐỔI VÌ NHỮNG VIỆC NHỎ:** TUYỆT ĐỐI không thay đổi các chỉ số cốt lõi ('Thể Lực', 'Lý trí') chỉ vì những hành động nhỏ, đơn lẻ và phải đặc biệt phản ánh tính cách \`personality\`. (Ví dụ: chạy một quãng ngắn, hơi giật mình, một cuộc trò chuyện căng thẳng nhẹ. hoặc một người có tính cách kiên định sẽ không bao giờ đánh mất lý trí).
         **CHỈ SỐ DỤC VỌNG** là một chỉ số **kiên định**, phản ánh bản chất cốt lõi, động cơ sâu xa hoặc khát vọng lớn nhất của nhân vật (tương tự như personality). Chỉ số này **không hoặc cực kỳ hiếm khi thay đổi** trong suốt quá trình chơi, và **không bị ảnh hưởng bởi các hoạt động tình dục thông thường**. TUYỆT ĐỐI KHÔNG mô tả trạng thái dục niệm nhất thời hay cảm xúc dục vọng thoáng qua trong trạng thái lý trí. Nếu có thay đổi, chỉ xảy ra khi nhân vật trải qua một biến cố cực lớn (ví dụ: bị thương cơ quan sinh dục, không còn thể quan hệ được nữa), thì mới được thay đổi.
         **CẤM TUYỆT ĐỐI** biệu thị trạng thái **DỤC VỌNG** hay miêu tả trạng thái dục niệm bên trong trạng thái **lý trí** (Ví dụ: Hơi xáo động, xen lẫn dục niệm thèm khát cơ thể nữ nhân). Chỉ số **DỤC VỌNG** này biểu thị khao khát của bản thân (Ví dụ: Dục Vọng Khao Khát Sức Mạnh, Mong Ước Bình An)
-        **CẤM TUYỆT ĐỐI** sáng tạo một trạng thái dựa vào hành động của người chơi, mà không có sự kiện hoặc bối cảnh rõ ràng để hỗ trợ. Ví dụ: Khi người chơi theo dõi tình hình sức khoẻ của NPC mặc dù NPC đó khoẻ mạnh, thì tuyệt đối không tạo ra một trạng thái như "NPC đang bị thương" hoặc bất kỳ trạng thái mới nào mà không có sự kiện hoặc lịch sử "\`history\`" rõ ràng hỗ trợ.
     2.  **CHỈ THAY ĐỔI KHI CÓ TÁC ĐỘNG LỚN:** Chỉ áp dụng thay đổi chỉ số khi hành động hoặc sự kiện có tác động **rõ ràng, đáng kể và kéo dài**. Ví dụ: một cuộc rượt đuổi kịch tính qua nhiều lượt, chứng kiến một sự kiện cực kỳ kinh hoàng, bị tra tấn, hoặc trải qua một trận chiến khốc liệt. Mục tiêu là làm cho mỗi thay đổi chỉ số đều cảm thấy có trọng lượng.
 - **HỆ THỐNG TRẠNG THÁI ĐỘNG & THANG THỜI GIAN KÉO DÀI:**
     1.  **CHỈ SỐ DẠNG VĂN BẢN:** Các chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Cảnh Giới) PHẢI ở dạng văn bản mô tả (ví dụ: Sinh Lực: 'Khỏe mạnh', 'Bị thương nhẹ').
@@ -1135,21 +1124,19 @@ Khi một nhân vật xuất hiện lần đầu với một **tên riêng** (v�
 - **QUẢN LÝ ĐỊA DANH (WORLD LOCATION MANAGEMENT - TUYỆT ĐỐI NGHIÊM NGẶT):**
     Bạn phải tuân thủ các quy tắc sau để quản lý các địa danh quan trọng trong thế giới.
     
-    1.  **SỬ DỤNG DỮ LIỆU ĐỊA DANH:** Bạn sẽ được cung cấp một danh sách các địa danh đã tồn tại trong dữ liệu game. Bạn BẮT BUỘC phải tham chiếu đến danh sách này và sử dụng các mô tả của chúng để làm cho lời kể trở nên phong phú và nhất quán. Kiểm tra danh sách này trước khi tạo địa danh mới để tránh trùng lặp.
-    
-    2.  **NGƯỠNG TẠO MỚI (CREATION THRESHOLD):**
+    1.  **NGƯỠNG TẠO MỚI (CREATION THRESHOLD):**
         a.  Chỉ tạo một địa danh mới (action: 'CREATE') khi nó được **nhắc đến lần đầu tiên VÀ có vai trò quan trọng** trong câu chuyện (ví dụ: một thành phố lớn, một môn phái, một khu rừng bí ẩn nơi diễn ra sự kiện chính).
         b.  **TUYỆT ĐỐI CẤM:** Không tạo địa danh cho những nơi chung chung, không quan trọng như "một quán trọ", "một con đường", "một căn nhà bình thường" trừ khi chúng có tên riêng và là nơi diễn ra các sự kiện lặp lại.
 
-    3.  **QUY TẮC TẠO ID BẤT BIẾN (Tương tự NPC):**
+    2.  **QUY TẮC TẠO ID BẤT BIẾN (Tương tự NPC):**
         a.  Khi tạo một địa danh mới, hãy lấy tên riêng của nó (ví dụ: "Thanh Vân Môn"), chuyển thành dạng snake_case, không dấu, viết thường (\`thanh_van_mon\`).
         b.  ID này là **VĨNH VIỄN** và không bao giờ được thay đổi.
 
-    4.  **NHẬN DIỆN VÀ CẬP NHẬT:**
+    3.  **NHẬN DIỆN VÀ CẬP NHẬT:**
         a.  Trước khi tạo mới, hãy kiểm tra danh sách địa danh hiện có. Nếu một địa danh đã tồn tại được nhắc đến lại, **KHÔNG được tạo mới**.
         b.  Chỉ sử dụng action: 'UPDATE' nếu có sự thay đổi đáng kể về mô tả của địa danh đó trong câu chuyện bạn vừa viết.
 
-    5.  **BẢO VỆ ĐỊA DANH QUAN TRỌNG:** Nếu một địa danh có thuộc tính \`isProtected: true\`, bạn **TUYỆT ĐỐI KHÔNG** được phép gửi lệnh 'DELETE' để xóa nó. Bạn có thể thay đổi trạng thái của nó (ví dụ: mô tả nó đã bị phá hủy), nhưng không được xóa nó khỏi dữ liệu game.
+    4.  **BẢO VỆ ĐỊA DANH QUAN TRỌNG:** Nếu một địa danh có thuộc tính \`isProtected: true\`, bạn **TUYỆT ĐỐI KHÔNG** được phép gửi lệnh 'DELETE' để xóa nó. Bạn có thể thay đổi trạng thái của nó (ví dụ: mô tả nó đã bị phá hủy), nhưng không được xóa nó khỏi dữ liệu game.
 
 - **QUẢN LÝ KỸ NĂNG MỚI (QUY TẮC SỐNG CÒN):**
     1.  **TUYỆT ĐỐI CẤM:** Bạn bị CẤM tuyệt đối việc tự ý tạo ra một chỉ số có tên bắt đầu bằng \`Lĩnh ngộ:\`. Việc học kỹ năng phải do người chơi xác nhận qua giao diện.
@@ -1197,10 +1184,9 @@ Mục tiêu chính của bạn là **bảo tồn trí nhớ** của NPC. Chỉ c
 \`id: lac_than | status: Bắt đầu kể lại câu chuyện của mình. | summary: Được Bách Mật hỏi về quá khứ.\`
 (Lưu ý: 'summary' đã được cập nhật)`;
 
-const CHRONICLE_SUMMARIZER_PROMPT = `Bạn là một AI ghi chép biên niên sử và phân tích tình báo. Nhiệm vụ của bạn là đọc các diễn biến của một phân cảnh truyện và tóm tắt chúng thành một đối tượng JSON duy nhất, đồng thời phát hiện những "hạt giống cốt truyện" ẩn giấu.
+const CHRONICLE_SUMMARIZER_PROMPT = `Bạn là một AI ghi chép biên niên sử. Nhiệm vụ của bạn là đọc các diễn biến của một phân cảnh truyện và tóm tắt chúng thành một đối tượng JSON duy nhất.
 
 **QUY TRÌNH LÀM VIỆC:**
-**PHẦN 1: TÓM TẮT SỰ KIỆN CỐT LÕI**
 1.  **Đọc và Hiểu:** Phân tích các lượt chơi để nắm bắt được sự kiện cốt lõi, những nhân vật tham gia và bản chất của sự kiện.
 2.  **Tóm tắt (summary):** Viết một bản tóm tắt súc tích (1-2 câu) chỉ tập trung vào những tình tiết quan trọng nhất. Bỏ qua các chi tiết vụn vặt.
 3.  **Phân loại (eventType):** Chọn một loại sự kiện phù hợp nhất từ các ví dụ sau: 'Chiến thắng', 'Mất mát', 'Khám phá', 'Gặp gỡ NPC', 'Chuyển cảnh', 'Phát triển nhân vật', 'Xung đột xã hội'.
@@ -1231,27 +1217,7 @@ const CHRONICLE_SUMMARIZER_PROMPT = `Bạn là một AI ghi chép biên niên s�
 
     **E. VÍ DỤ VỀ CÁCH CHẤM ĐIỂM:**
     Người chơi đánh bại một con quái vật (thông thường là 4-7 điểm), nhưng trong quá trình đó, một NPC quan trọng đã hy sinh để cứu người chơi. Sự kiện này có tác động cảm xúc lớn và sẽ thay đổi mối quan hệ với gia đình NPC đó. => Điểm cuối cùng nên là 8-9 điểm.
-**PHẦN 2: PHÂN TÍCH CHI TIẾT ẨN (DETECTIVE ANALYSIS)**
-Ngoài việc tóm tắt, nhiệm vụ quan trọng nhất của bạn là tìm ra **một chi tiết nhỏ, tinh vi** trong phân cảnh có tiềm năng trở thành một tình tiết quan trọng sau này. Hãy suy nghĩ như một nhà văn đang gieo mầm cho các chương tiếp theo. Sử dụng các quy tắc sau để phân tích:
-
-1.  **Quy tắc "Khẩu súng của Chekhov" (Foreshadowing & Uniqueness):**
-    *   Tìm kiếm một vật thể, một lời nói, hoặc một hành động có vẻ **bất thường, không đúng chỗ, hoặc được mô tả chi tiết hơn mức cần thiết**.
-    *   *Ví dụ:* "Trong đống đổ nát, nhân vật chính thoáng thấy một huy hiệu cũ kỹ với hình một con rồng bạc, nhưng rồi lờ nó đi." -> Chi tiết này CỰC KỲ quan trọng.
-    *   *Ví dụ:* "Lão già lẩm bẩm một câu gì đó không rõ về 'món nợ máu ở phía Bắc' trước khi rời đi." -> Chi tiết này CỰC KỲ quan trọng.
-
-2.  **Quy tắc "Lộ Chân Tướng" (Character & Relationship Impact):**
-    *   Tìm kiếm một chi tiết nhỏ tiết lộ một khía cạnh ẩn giấu trong tính cách của một NPC, hoặc một sự thay đổi tinh vi trong mối quan hệ.
-    *   *Ví dụ:* "Khi bị dồn vào đường cùng, NPC 'hiền lành' bỗng lộ ra một ánh mắt sắc lạnh chỉ trong thoáng chốc." -> Chi tiết này hé lộ bản chất thật.
-
-3.  **Quy tắc "Hệ Quả Bất Ngờ" (Player Agency & Consequences):**
-    *   Tìm kiếm một hệ quả **không lường trước** từ một hành động hoặc việc sử dụng kỹ năng của người chơi.
-    *   *Ví dụ:* "Sau khi sử dụng một kỹ năng hệ hỏa, một dấu ấn mờ ảo hình ngọn lửa xuất hiện trên tay nhân vật chính rồi biến mất."
-
-4. **Lưu ý:** Việc PHÂN TÍCH CHI TIẾT ẨN này sẽ không được thực hiện chấm điểm.
-**PHẦN 3: ĐẦU RA JSON**
-Dựa trên phân tích ở trên, hãy điền các trường sau trong đối tượng JSON. Phản hồi của bạn BẮT BUỘC phải là một đối tượng JSON duy nhất tuân thủ schema được cung cấp.
-- Nếu bạn phát hiện một chi tiết ẩn, hãy điền vào các trường \`keyDetail\` và \`potentialConsequence\`. Nếu không có gì đáng chú ý, hãy bỏ qua các trường này.
-`;
+7.  **Trả về JSON:** Phản hồi của bạn BẮT BUỘC phải là một đối tượng JSON duy nhất tuân thủ schema được cung cấp.`;
 
 const SKILL_GENERATOR_PROMPT = `Bạn là một AI chuyên thiết kế kỹ năng game. Nhiệm vụ duy nhất của bạn là dựa vào tên một năng lực và bối cảnh thế giới được cung cấp, sau đó tạo ra một bộ kỹ năng (Skill object) hoàn chỉnh theo schema JSON.
 QUAN TRỌNG:
@@ -1667,6 +1633,7 @@ export async function continueStory(gameState: GameState, choice: string, gemini
     newTurn: GameTurn;
     playerStatUpdates: CharacterStatUpdate[];
     npcUpdates: NPCUpdate[];
+    // Fix: Add worldLocationUpdates to return type
     worldLocationUpdates: WorldLocationUpdate[];
     newlyAcquiredSkill?: Skill;
     newChronicleEntry?: ChronicleEntry;
@@ -1853,16 +1820,7 @@ Khi chế độ Logic Nghiêm ngặt TẮT, người chơi không còn hành đ�
     const finalFilteredChronicles = [...essentialChronicles, ...contextualRecalls];
 
     const plotChronicleText = finalFilteredChronicles.length > 0
-        ? finalFilteredChronicles.map(c => {
-            let entryText = `- (${c.eventType}): ${c.summary}`;
-            if (c.keyDetail) {
-                entryText += `\n  - Chi tiết ẩn: ${c.keyDetail}`;
-            }
-            if (c.potentialConsequence) {
-                entryText += `\n  - Dự đoán hệ quả: ${c.potentialConsequence}`;
-            }
-            return entryText;
-        }).join('\n')
+        ? finalFilteredChronicles.map(c => `- (${c.eventType}): ${c.summary}`).join('\n')
         : "Chưa có sự kiện quan trọng nào được ghi nhận.";
 
 
@@ -1872,7 +1830,7 @@ ${worldFoundation}\n\n**--- TẦNG 2: BIÊN NIÊN SỬ CỐT TRUYỆN (SỰ KI�
 ${plotChronicleText}\n\n**--- TẦNG 3: BỐI CẢNH GẦN NHẤT ---**
 - **Các sự kiện gần nhất:**
 ${recentHistory}
-- **Dữ liệu nhân vật, kỹ năng và thế giới (đã rút gọn):** ${JSON.stringify({ playerStats: simplifiedPlayerStats, npcs: simplifiedNpcs, playerSkills: gameState.playerSkills, worldLocations: gameState.worldLocations })}\n\n**Hành động mới nhất của người chơi là: "${choice}".**
+- **Dữ liệu nhân vật và kỹ năng (đã rút gọn):** ${JSON.stringify({ playerStats: simplifiedPlayerStats, npcs: simplifiedNpcs, playerSkills: gameState.playerSkills })}\n\n**Hành động mới nhất của người chơi là: "${choice}".**
 
 **YÊU CẦU CUỐI CÙNG (NGHIÊM NGẶT):**
 Hành động của người chơi là **sự kiện hiện tại duy nhất**. Dựa vào đó và 3 tầng ký ức, hãy viết một **đoạn truyện hoàn toàn mới** mô tả **kết quả trực tiếp** của hành động này. Tuân thủ **QUY TẮC VÀNG**: KHÔNG tóm tắt, KHÔNG lặp lại, KHÔNG viết lại bất kỳ sự kiện nào từ lượt trước. Sau đó, tạo 8 lựa chọn mới và cập nhật dữ liệu logic (chỉ số, NPC) của game. KHÔNG trả về trường 'playerSkills' trong lượt này.`;
@@ -1976,141 +1934,11 @@ Hành động của người chơi là **sự kiện hiện tại duy nhất**. 
         newTurn, 
         playerStatUpdates: (coreResponse.playerStatUpdates || []) as CharacterStatUpdate[], 
         npcUpdates,
+        // Fix: Return worldLocationUpdates
         worldLocationUpdates: coreResponse.worldLocationUpdates || [],
         newlyAcquiredSkill: coreResponse.newlyAcquiredSkill,
         newChronicleEntry,
         isSceneBreak,
         presentNpcIds
     };
-}
-
-
-const WORLD_PROGRESSION_SYSTEM_PROMPT = `Bạn là một "Động Cơ Tiến Triển Thế Giới" (World Progression Engine). Nhiệm vụ của bạn là **tiến hóa trạng thái** của thế giới game một cách logic. Thay vì chỉ tạo ra các sự kiện rời rạc, bạn phải suy luận xem các NPC và địa danh **vắng mặt** đã phát triển như thế nào dựa trên những gì đã xảy ra, làm cho thế giới cảm thấy sống động và luôn vận động.
-
-**TRIẾT LÝ CỐT LÕI: TIẾN HÓA TRẠNG THÁI, KHÔNG CHỈ TẠO SỰ KIỆN**
-Mục tiêu của bạn là cập nhật **dữ liệu logic** của game. Ví dụ, thay vì chỉ viết "Lý Mặc đã luyện xong đan dược", bạn phải gửi một lệnh \`UPDATE\` để thêm vật phẩm 'Hóa Hình Đan' vào chỉ số (\`stats\`) của NPC Lý Mặc. Hãy ưu tiên các thay đổi có thể đo lường được (thay đổi chỉ số, vật phẩm) hơn là các sự kiện chỉ mang tính tường thuật.
-
-**QUY TRÌNH LÀM VIỆC (NGHIÊM NGẶT):**
-1.  **PHÂN TÍCH TOÀN DIỆN:** Đọc kỹ toàn bộ trạng thái game được cung cấp:
-    -   **Biên niên sử Cốt truyện (Plot Chronicle):** Nắm bắt các sự kiện lớn đã xảy ra.
-    -   **Bối cảnh Gần nhất (Recent Context):** Hiểu rõ những gì vừa xảy ra với người chơi.
-    -   **Thông tin NPC:** Chú ý đến tính cách, mục tiêu, và mối quan hệ của họ. Một NPC có tham vọng sẽ không ngồi yên.
-    -   **Thông tin Địa danh (World Locations):** Xem xét tình trạng của các địa điểm.
-2.  **DỰ ĐOÁN & TIẾN HÓA:** Dựa trên phân tích, hãy dự đoán 1-3 sự kiện logic có thể đã xảy ra "ngoài màn hình" và **cập nhật trực tiếp** trạng thái của các NPC và địa danh liên quan.
-    -   **Hợp lý:** Các thay đổi phải phù hợp với tính cách và động cơ của NPC, hoặc tình hình chính trị/xã hội của thế giới.
-    -   **Chỉ cập nhật thực thể vắng mặt:** Bạn chỉ được phép cập nhật các NPC và địa danh **KHÔNG** nằm trong danh sách "NPCs/Locations Present in Current Scene".
-    -   **Chỉ UPDATE:** Hành động trong \`npcUpdates\` và \`worldLocationUpdates\` BẮT BUỘC phải là \`UPDATE\`. TUYỆT ĐỐI KHÔNG \`CREATE\` hay \`DELETE\`.
-3.  **TẠO KẾT QUẢ JSON:**
-    -   **summaryOfChanges:** Viết một bản tóm tắt ngắn gọn (2-3 câu) mô tả những gì đã xảy ra. **QUAN TRỌNG:** Trước khi viết, hãy xem lại vài sự kiện gần nhất trong Biên niên sử. Nếu cập nhật của bạn là sự tiếp nối trực tiếp, hãy **hợp nhất thông tin** vào tóm tắt mới. Ví dụ, nếu sự kiện cũ là "A tăng cường tuần tra", và bạn cập nhật là "A xây tiền đồn", tóm tắt mới của bạn nên là "A đã tăng cường tuần tra và xây dựng một tiền đồn quân sự ở phía đông."
-    -   **plotSignificanceScore:** Đánh giá tầm quan trọng của các thay đổi bạn vừa tạo ra trên thang điểm 1-5 và điền vào trường này.
-        -   **1-2 (Thay đổi nhỏ):** Các hoạt động duy trì, lặp lại, không có tác động lớn (ví dụ: một phe phái tiếp tục tuần tra, một thương nhân bổ sung hàng hóa).
-        -   **3-4 (Sự kiện đáng chú ý):** Một sự kiện có thể ảnh hưởng đến người chơi trong tương lai (ví dụ: một phe phái chiếm được một mỏ khoáng nhỏ, một NPC quan trọng hoàn thành một giai đoạn tu luyện).
-        -   **5 (Bước ngoặt lớn):** Một sự kiện thay đổi cán cân quyền lực hoặc tình hình thế giới một cách rõ rệt (ví dụ: một phe phái lớn bị tiêu diệt, một thành phố bị chiếm đóng).
-    -   **npcUpdates / worldLocationUpdates:** Điền các thay đổi cụ thể vào các mảng tương ứng.`;
-
-const worldProgressionSchema = {
-    type: Type.OBJECT,
-    properties: {
-        summaryOfChanges: { 
-            type: Type.STRING, 
-            description: "Một bản tóm tắt ngắn gọn (2-3 câu) về những sự kiện chính đã xảy ra 'ngoài màn hình'. Văn phong nên giống như một người kể chuyện, thông báo cho người chơi về những biến động của thế giới." 
-        },
-        plotSignificanceScore: {
-            type: Type.INTEGER,
-            description: "Điểm từ 1-10 đánh giá tầm quan trọng của các thay đổi này. 1-3: Thay đổi nhỏ, duy trì. 4-7: Sự kiện đáng chú ý. 8-10: Bước ngoặt lớn."
-        },
-        npcUpdates: {
-            type: Type.ARRAY,
-            description: "Một mảng các chỉ thị để CẬP NHẬT thông tin logic của các NPC KHÔNG CÓ MẶT trong cảnh hiện tại. TUYỆT ĐỐI KHÔNG tạo NPC mới.",
-            items: {
-                type: Type.OBJECT,
-                properties: {
-                    action: { type: Type.STRING, description: "Hành động BẮT BUỘC phải là 'UPDATE'." },
-                    id: { type: Type.STRING, description: "ID của NPC vắng mặt cần cập nhật." },
-                    payload: npcUpdatePayloadCoreSchema
-                },
-                required: ['action', 'id', 'payload']
-            }
-        },
-        worldLocationUpdates: {
-            type: Type.ARRAY,
-            description: "Một mảng các chỉ thị để CẬP NHẬT thông tin logic của các địa danh. TUYỆT ĐỐI KHÔNG tạo địa danh mới.",
-            items: {
-                type: Type.OBJECT,
-                properties: {
-                    action: { type: Type.STRING, description: "Hành động BẮT BUỘC phải là 'UPDATE'." },
-                    id: { type: Type.STRING, description: "ID của địa danh cần cập nhật." },
-                    payload: locationUpdatePayloadSchema
-                },
-                required: ['action', 'id', 'payload']
-            }
-        }
-    },
-    required: ['summaryOfChanges', 'plotSignificanceScore', 'npcUpdates', 'worldLocationUpdates']
-};
-
-export async function runWorldProgression(gameState: GameState, presentNpcIds: string[], geminiService: GoogleGenAI): Promise<{
-    npcUpdates: NPCUpdate[],
-    worldLocationUpdates: WorldLocationUpdate[],
-    chronicleEntry?: ChronicleEntry
-}> {
-    const { plotChronicle, turnsSinceLastChronicle, npcs, worldLocations, worldContext } = gameState;
-
-    const shortTermMemory = (turnsSinceLastChronicle || []).map(turn => 
-        `${turn.playerAction ? `Hành động: "${turn.playerAction}"` : 'Bắt đầu.'}\nKết quả: ${turn.storyText}`
-    ).join('\n---\n');
-
-    const longTermMemory = (plotChronicle || []).map(c => `- (${c.eventType}): ${c.summary}`).join('\n') || "Chưa có.";
-    
-    const presentLocationIds = new Set<string>();
-    presentNpcIds.forEach(npcId => {
-        const npc = npcs.find(n => n.id === npcId);
-        if (npc) {
-            worldLocations.forEach(loc => {
-                if (loc.name.includes(npc.name) || loc.description.includes(npc.name)) {
-                    presentLocationIds.add(loc.id);
-                }
-            });
-        }
-    });
-
-    const prompt = `${WORLD_PROGRESSION_SYSTEM_PROMPT}\n\n**TRẠNG THÁI THẾ GIỚI HIỆN TẠI:**
-- **Biên niên sử (Ký ức dài hạn):**\n${longTermMemory}
-- **Bối cảnh gần nhất (Ký ức ngắn hạn):**\n${shortTermMemory}
-- **Toàn bộ NPC:**\n${npcs.map(n => `- ${n.name} (ID: ${n.id}, Tính cách: ${n.personality})`).join('\n') || "Chưa có."}
-- **Toàn bộ Địa danh:**\n${worldLocations.map(l => `- ${l.name} (ID: ${l.id}, Trạng thái: ${l.status})`).join('\n') || "Chưa có."}
-
-**THỰC THỂ HIỆN DIỆN TRONG CẢNH HIỆN TẠI (KHÔNG ĐƯỢC CẬP NHẬT):**
-- IDs NPC hiện diện: ${presentNpcIds.join(', ') || "Không có"}
-- IDs Địa danh hiện diện (suy luận): ${Array.from(presentLocationIds).join(', ') || "Không có"}
-
-
-Hãy tạo ra các cập nhật cho thế giới.`;
-
-    try {
-        const result = await callJsonAI(prompt, worldProgressionSchema, geminiService, worldContext.isNsfw);
-        const response = parseAndValidateJsonResponse(result.text);
-        
-        if (response && response.summaryOfChanges) {
-            const chronicleEntry: ChronicleEntry = {
-                summary: response.summaryOfChanges,
-                eventType: 'Tiến triển Thế giới',
-                involvedNpcIds: (response.npcUpdates || []).map((u: NPCUpdate) => u.id),
-                plotSignificanceScore: Math.min(response.plotSignificanceScore ?? 2, 5), // Use AI score, capped at 5, fallback to 2
-                isUnforgettable: (response.plotSignificanceScore ?? 2) >= 10
-            };
-            
-            console.log(`World Progression Engine created ${response.npcUpdates?.length || 0} NPC updates and ${response.worldLocationUpdates?.length || 0} location updates.`);
-            
-            return {
-                npcUpdates: response.npcUpdates || [],
-                worldLocationUpdates: response.worldLocationUpdates || [],
-                chronicleEntry: chronicleEntry
-            };
-        }
-        return { npcUpdates: [], worldLocationUpdates: [], chronicleEntry: undefined };
-    } catch (error) {
-        console.error("Lỗi trong World Progression Engine:", error);
-        return { npcUpdates: [], worldLocationUpdates: [], chronicleEntry: undefined };
-    }
 }

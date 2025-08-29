@@ -4,8 +4,6 @@ import Modal from '../ui/Modal';
 import { LustModeFlavor, NpcMindset, DestinyCompassMode } from '../../types';
 import { CrownIcon, IntertwinedHeartsIcon, CollarIcon, MaskIcon, LightningIcon, IronWillIcon, TornMindIcon, PrimalInstinctIcon, SeductionIcon, HedonisticIcon } from '../icons/LustIcons';
 import { ConscienceIcon } from '../icons/ConscienceIcon';
-import ToggleSwitch from '../ui/ToggleSwitch';
-import InputField from '../ui/InputField';
 
 interface AiControlPanelModalProps {
     isOpen: boolean;
@@ -23,14 +21,6 @@ interface AiControlPanelModalProps {
     onStrictInterpretationChange: (isOn: boolean) => void;
     destinyCompassMode: DestinyCompassMode;
     onDestinyCompassModeChange: (mode: DestinyCompassMode) => void;
-    isWpeEnabled: boolean;
-    onWpeEnabledChange: (isOn: boolean) => void;
-    wpeTurnInterval: number;
-    onWpeTurnIntervalChange: (interval: number) => void;
-    wpeOnSceneBreak: boolean;
-    onWpeOnSceneBreakChange: (isOn: boolean) => void;
-    wpeOnTurnInterval: boolean;
-    onWpeOnTurnIntervalChange: (isOn: boolean) => void;
 }
 
 const LUST_FLAVOR_TEXT: Record<LustModeFlavor, string> = {
@@ -195,14 +185,6 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
     onStrictInterpretationChange,
     destinyCompassMode,
     onDestinyCompassModeChange,
-    isWpeEnabled,
-    onWpeEnabledChange,
-    wpeTurnInterval,
-    onWpeTurnIntervalChange,
-    wpeOnSceneBreak,
-    onWpeOnSceneBreakChange,
-    wpeOnTurnInterval,
-    onWpeOnTurnIntervalChange
 }) => {
     const [isLustPanelVisible, setLustPanelVisible] = useState(false);
 
@@ -243,7 +225,7 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Bảng Điều Khiển AI">
-            <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-6">
                 <div>
                     <label className="block text-sm font-medium text-center text-white mb-2 font-rajdhani uppercase tracking-wider">La Bàn Định Mệnh</label>
                     <div className="grid grid-cols-3 gap-2 bg-black/20 p-1 rounded-lg">
@@ -323,55 +305,6 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
                     <span>Tâm Trí NPC: {currentMindsetConfig.displayName}</span>
                 </button>
 
-                 {/* World Progression Engine Settings */}
-                 <div className="bg-black/20 p-3 rounded-lg space-y-4">
-                    <label className="block text-sm font-medium text-center text-white mb-2 font-rajdhani uppercase tracking-wider">Dòng sông vận mệnh</label>
-                    <ToggleSwitch
-                        id="wpe-toggle"
-                        label="Kích hoạt Động Cơ"
-                        description="Tự động cập nhật các NPC và địa danh không có mặt trong cảnh."
-                        enabled={isWpeEnabled}
-                        setEnabled={onWpeEnabledChange}
-                    />
-                    
-                    <div className={`space-y-4 pt-3 pl-4 border-l-2 ${isWpeEnabled ? 'border-pink-500/30' : 'border-gray-600/30'} transition-all`}>
-                        {/* Option 1: By Turn Interval */}
-                        <div className={`transition-opacity ${isWpeEnabled ? 'opacity-100' : 'opacity-50'}`}>
-                            <ToggleSwitch
-                                id="wpe-turn-toggle"
-                                label="Kích hoạt theo số lượt"
-                                description="Kích hoạt sau một khoảng số lượt nhất định."
-                                enabled={wpeOnTurnInterval}
-                                setEnabled={onWpeOnTurnIntervalChange}
-                                disabled={isLoading || !isWpeEnabled}
-                            />
-                            <div className={`flex items-center gap-3 mt-2 pl-4 transition-opacity ${isWpeEnabled && wpeOnTurnInterval ? 'opacity-100' : 'opacity-50'}`}>
-                                <label htmlFor="wpe-interval" className="text-xs font-semibold text-gray-400 flex-shrink-0">Mỗi</label>
-                                <input
-                                    type="number"
-                                    id="wpe-interval"
-                                    value={wpeTurnInterval}
-                                    onChange={(e) => onWpeTurnIntervalChange(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                                    disabled={isLoading || !isWpeEnabled || !wpeOnTurnInterval}
-                                    className="w-20 bg-[#120c18] border-2 border-[#3a2d47] rounded-md text-white text-center py-1 text-sm focus:ring-2 focus:ring-[#e02585] focus:border-[#e02585] transition-all disabled:opacity-50"
-                                    min="1"
-                                />
-                                <span className="text-xs font-semibold text-gray-400">lượt</span>
-                            </div>
-                        </div>
-
-                        {/* Option 2: On Scene Break */}
-                        <ToggleSwitch
-                            id="wpe-scene-break-toggle"
-                            label="Kích hoạt khi chuyển cảnh"
-                            description="Kích hoạt khi một phân cảnh truyện kết thúc."
-                            enabled={wpeOnSceneBreak}
-                            setEnabled={onWpeOnSceneBreakChange}
-                            disabled={isLoading || !isWpeEnabled}
-                        />
-                    </div>
-                </div>
-
                 <div className="grid grid-cols-2 gap-4 bg-black/20 p-3 rounded-lg">
                      {/* Strict Interpretation Toggle */}
                     <div className="flex items-center justify-between" title="Khi bật, AI sẽ diễn giải hành động của bạn theo hướng trong sáng nhất. Sẽ bị vô hiệu hóa khi bật Dục Vọng.">
@@ -433,18 +366,6 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
                 .animate-fade-in-fast {
                     animation: fade-in-fast 0.2s ease-out forwards;
                 }
-                 .custom-scrollbar::-webkit-scrollbar {
-                    width: 8px;
-                    background: transparent;
-                  }
-                  .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: #a08cb6;
-                    border-radius: 6px;
-                  }
-                  .custom-scrollbar {
-                    scrollbar-width: thin;
-                    scrollbar-color: #a08cb6 #1d1526;
-                  }
             `}</style>
         </Modal>
     );

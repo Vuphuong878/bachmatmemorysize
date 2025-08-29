@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSettings } from '../../hooks/useSettings';
@@ -70,11 +69,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   const [detailModal, setDetailModal] = useState<{ type: 'long' | 'short'; idx: number; content: string } | null>(null);
 
   // --- UI/gameplay settings state ---
-  const [isWpeEnabled, setIsWpeEnabled] = useState(true);
-  const [wpeTurnInterval, setWpeTurnInterval] = useState(10);
-  const [wpeOnSceneBreak, setWpeOnSceneBreak] = useState(true);
-  const [wpeOnTurnInterval, setWpeOnTurnInterval] = useState(true);
-  
+  // ...existing useState hooks...
+
   // Restore UI settings from save (if any)
   useEffect(() => {
     if (gameState && gameState.uiSettings) {
@@ -84,10 +80,6 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
       setIsLogicModeOn(gameState.uiSettings.isLogicModeOn);
       setIsConscienceModeOn(gameState.uiSettings.isConscienceModeOn);
       setIsStrictInterpretationOn(gameState.uiSettings.isStrictInterpretationOn);
-      setIsWpeEnabled(gameState.uiSettings.isWpeEnabled ?? true);
-      setWpeTurnInterval(gameState.uiSettings.wpeTurnInterval ?? 10);
-      setWpeOnSceneBreak(gameState.uiSettings.wpeOnSceneBreak ?? true);
-      setWpeOnTurnInterval(gameState.uiSettings.wpeOnTurnInterval ?? true);
     }
   }, [gameState]);
   
@@ -197,10 +189,6 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
           isLogicModeOn,
           isConscienceModeOn,
           isStrictInterpretationOn,
-          isWpeEnabled,
-          wpeTurnInterval,
-          wpeOnSceneBreak,
-          wpeOnTurnInterval,
         }
       };
       GameSaveService.saveManualSave(gameStateWithSettings);
@@ -209,7 +197,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   };
   
   const doPlayerChoice = async (choice: string) => {
-    await handlePlayerChoice(choice, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode, isImageGenerationEnabled, isWpeEnabled, wpeTurnInterval, wpeOnSceneBreak, wpeOnTurnInterval);
+    await handlePlayerChoice(choice, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode, isImageGenerationEnabled);
     setCustomAction(''); // Clear input after any action
     if (autoHideActionPanel) {
       setIsActionsPanelCollapsed(true);
@@ -658,14 +646,6 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
         onStrictInterpretationChange={setIsStrictInterpretationOn}
         destinyCompassMode={destinyCompassMode}
         onDestinyCompassModeChange={setDestinyCompassMode}
-        isWpeEnabled={isWpeEnabled}
-        onWpeEnabledChange={setIsWpeEnabled}
-        wpeTurnInterval={wpeTurnInterval}
-        onWpeTurnIntervalChange={setWpeTurnInterval}
-        wpeOnSceneBreak={wpeOnSceneBreak}
-        onWpeOnSceneBreakChange={setWpeOnSceneBreak}
-        wpeOnTurnInterval={wpeOnTurnInterval}
-        onWpeOnTurnIntervalChange={setWpeOnTurnInterval}
       />
       <ExitConfirmationModal
         isOpen={isExitModalOpen}

@@ -18,17 +18,6 @@ interface MainMenuProps {
 
 const changelogs = [
   {
-    version: '1.7.0',
-    date: '2025-08-29',
-    content: [
-      '- Thêm tính năng "Động Cơ Tiến Triển Thế Giới": Hệ thống tự động cập nhật, thay đổi và phát triển thế giới dựa trên các sự kiện, hành động của người chơi và NPC.',
-      '- Địa danh (worldLocation) giờ được quản lý logic chặt chẽ, có thể tạo mới, cập nhật, hợp nhất hoặc xóa theo diễn biến truyện.',
-      '- AI có thể chủ động thay đổi trạng thái, mô tả, hoặc sự tồn tại của các địa danh trong thế giới.',
-      '- Đảm bảo sự tiến triển hợp lý, nhất quán của thế giới qua các lượt chơi, giúp trải nghiệm nhập vai trở nên sống động và thực tế hơn.',
-      '- Tối ưu hóa prompt và logic lưu/đọc thông tin địa danh, đồng bộ với hệ thống NPC và sự kiện.'
-    ].join('\n'),
-  },
-  {
     version: '1.6.0',
     date: '2025-08-27',
     content: [
