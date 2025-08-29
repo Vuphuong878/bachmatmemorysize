@@ -325,7 +325,7 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
 
                  {/* World Progression Engine Settings */}
                  <div className="bg-black/20 p-3 rounded-lg space-y-4">
-                    <label className="block text-sm font-medium text-center text-white mb-2 font-rajdhani uppercase tracking-wider">Động Cơ Tiến Triển Thế Giới</label>
+                    <label className="block text-sm font-medium text-center text-white mb-2 font-rajdhani uppercase tracking-wider">Dòng sông vận mệnh</label>
                     <ToggleSwitch
                         id="wpe-toggle"
                         label="Kích hoạt Động Cơ"
@@ -340,7 +340,7 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
                             <ToggleSwitch
                                 id="wpe-turn-toggle"
                                 label="Kích hoạt theo số lượt"
-                                description="Kích hoạt WPE sau một khoảng số lượt nhất định."
+                                description="Kích hoạt sau một khoảng số lượt nhất định."
                                 enabled={wpeOnTurnInterval}
                                 setEnabled={onWpeOnTurnIntervalChange}
                                 disabled={isLoading || !isWpeEnabled}
@@ -364,7 +364,7 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
                         <ToggleSwitch
                             id="wpe-scene-break-toggle"
                             label="Kích hoạt khi chuyển cảnh"
-                            description="Kích hoạt WPE ngay lập tức khi một phân cảnh truyện kết thúc."
+                            description="Kích hoạt khi một phân cảnh truyện kết thúc."
                             enabled={wpeOnSceneBreak}
                             setEnabled={onWpeOnSceneBreakChange}
                             disabled={isLoading || !isWpeEnabled}
