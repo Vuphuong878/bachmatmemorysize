@@ -270,15 +270,46 @@ export function useGameEngine(
     const { geminiService, settings, rotateApiKey } = settingsHook;
 
     const handleApiError = (e: any, contextAction: string) => {
-        console.error(`Lỗi trong '${contextAction}':`, e);
-        if (settings.apiKeySource === ApiKeySource.CUSTOM && settings.customApiKeys.filter(k => k.trim() !== '').length > 1) {
-            const oldKeyIndex = settings.currentApiKeyIndex;
-            rotateApiKey();
-            setError(`Khóa API (vị trí ${oldKeyIndex + 1}) đã gặp lỗi hoặc hết hạn mức. Đã tự động chuyển sang khóa tiếp theo. Vui lòng thử lại hành động của bạn.\n\nChi tiết lỗi: ${e.message}`);
-        } else {
-            setError(e.message || `AI gặp lỗi không xác định khi ${contextAction}.`);
-        }
+        console.error(`Lỗi cuối cùng trong '${contextAction}' sau khi thử lại:`, e);
+        setError(e.message || `AI gặp lỗi không xác định khi ${contextAction}.`);
     };
+
+    /**
+     * A wrapper function to handle API calls with automatic key rotation and retries.
+     * @param apiCall The function that performs the actual API call. It receives the geminiService instance.
+     * @returns The result of the API call.
+     */
+    const callApiWithRetry = async <T>(apiCall: (service: any) => Promise<T>): Promise<T> => {
+        const canRetry = settings.apiKeySource === ApiKeySource.CUSTOM;
+        const maxRetries = canRetry ? settings.customApiKeys.filter(k => k.trim() !== '').length : 1;
+        let lastError: any = null;
+
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                if (!geminiService) {
+                    throw new Error("Dịch vụ Gemini chưa được khởi tạo.");
+                }
+                return await apiCall(geminiService);
+            } catch (e) {
+                lastError = e;
+                console.error(`Lỗi API ở lần thử ${attempt + 1}/${maxRetries} với key index ${settings.currentApiKeyIndex}:`, e);
+                
+                // If it's the last attempt or we can't retry, break the loop
+                if (!canRetry || attempt === maxRetries - 1) {
+                    break;
+                }
+                
+                // Rotate key and wait briefly for state to update
+                console.log(`Đang xoay vòng key API...`);
+                rotateApiKey();
+                await new Promise(resolve => setTimeout(resolve, 200)); // Short delay for React state update
+            }
+        }
+        
+        // If the loop finishes without returning, it means all attempts failed.
+        throw lastError;
+    };
+
 
     const initializeGame = useCallback(async () => {
         if (gameState && 'history' in gameState) return;
@@ -294,7 +325,6 @@ export function useGameEngine(
         setRecentlyUpdatedNpcStats(new Map());
         
         if ('history' in initialData) {
-            // Migration logic is now handled in GameSaveService.ts, so initialData is pre-hydrated.
             setGameState(initialData);
             const totalTokens = initialData.history.reduce((sum, turn) => sum + (turn.tokenCount || 0), 0);
             setTotalTokenCount(totalTokens);
@@ -303,13 +333,11 @@ export function useGameEngine(
             return;
         }
         const worldState = initialData;
-        if (!geminiService) {
-            setError("Dịch vụ Gemini chưa được khởi tạo. Vui lòng kiểm tra lại thiết lập.");
-            setIsLoading(false);
-            return;
-        }
+        
         try {
-            const { initialTurn, initialPlayerStatUpdates, initialNpcUpdates, initialPlayerSkills, presentNpcIds: initialPresentNpcs, initialWorldLocationUpdates } = await storytellerService.initializeStory(worldState, geminiService);
+            const { initialTurn, initialPlayerStatUpdates, initialNpcUpdates, initialPlayerSkills, presentNpcIds: initialPresentNpcs, initialWorldLocationUpdates } = 
+                await callApiWithRetry(service => storytellerService.initializeStory(worldState, service));
+            
             const initialPlayerStats = convertStatUpdatesArrayToObject(initialPlayerStatUpdates);
             const initialNpcs = applyNpcUpdates([], initialNpcUpdates);
             const initialLocations = applyWorldLocationUpdates([], initialWorldLocationUpdates);
@@ -353,11 +381,12 @@ export function useGameEngine(
 
 
     const handlePlayerChoice = async (choice: string, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode, isImageGenerationEnabled: boolean) => {
-        if (!gameState || !geminiService) return;
+        if (!gameState) return;
         setPreviousGameState(gameState); // Save state before making the move
         setIsLoading(true);
         setError(null);
         const { newPlayerStats: processedPlayerStats, newNpcs: processedNpcs } = processEndOfTurnStatChanges(gameState.playerStats, gameState.npcs);
+        
         try {
             const npcsForAI = presentNpcIds
                 ? processedNpcs.filter(npc => presentNpcIds.includes(npc.id))
@@ -365,7 +394,8 @@ export function useGameEngine(
 
             const stateForAI: GameState = { ...gameState, playerStats: processedPlayerStats, npcs: npcsForAI };
             
-            const { newTurn, playerStatUpdates, npcUpdates, worldLocationUpdates, newlyAcquiredSkill, newChronicleEntry, presentNpcIds: newPresentNpcIds, isSceneBreak } = await storytellerService.continueStory(stateForAI, choice, geminiService, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode);
+            const { newTurn, playerStatUpdates, npcUpdates, worldLocationUpdates, newlyAcquiredSkill, newChronicleEntry, presentNpcIds: newPresentNpcIds, isSceneBreak } = 
+                await callApiWithRetry(service => storytellerService.continueStory(stateForAI, choice, service, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode));
             
             const playerChanges = new Set(playerStatUpdates.map(u => u.statName));
             setRecentlyUpdatedPlayerStats(playerChanges);
@@ -395,18 +425,15 @@ export function useGameEngine(
             let currentShortTermMemory = [...(gameState.turnsSinceLastChronicle || []), newTurn];
             let additionalTokensFromCondensation = 0;
 
-            // --- Intermediate Memory Condensation ---
             const rawTurns = currentShortTermMemory.filter(turn => !turn.isCondensedMemory);
             const CONDENSATION_THRESHOLD = 15;
 
             if (rawTurns.length >= CONDENSATION_THRESHOLD) {
                 console.log(`Short-term memory condensation triggered. Summarizing ${rawTurns.length} turns.`);
                 try {
-                    const condensedTurn = await storytellerService.summarizeShortTermMemory(
-                        rawTurns,
-                        geminiService,
-                        gameState.worldContext.isNsfw
-                    );
+                    const condensedTurn = await callApiWithRetry(service => storytellerService.summarizeShortTermMemory(
+                        rawTurns, service, gameState.worldContext.isNsfw
+                    ));
                     const previouslyCondensedTurns = currentShortTermMemory.filter(turn => turn.isCondensedMemory);
                     currentShortTermMemory = [...previouslyCondensedTurns, condensedTurn];
                     additionalTokensFromCondensation = condensedTurn.tokenCount || 0;
@@ -446,25 +473,19 @@ export function useGameEngine(
             setTotalTokenCount(prev => prev + tokenCount + additionalTokensFromCondensation);
             if (newlyAcquiredSkill) setSkillToLearn(newlyAcquiredSkill);
 
-            // Trigger image generation only if the feature is enabled.
             if (isImageGenerationEnabled) {
                 setIsGeneratingImage(true);
                 setImageGenerationError(null);
-                setGeneratedImageUrl(null); // Clear previous image
+                setGeneratedImageUrl(null);
                 try {
-                    const imageUrl = await storytellerService.generateImageFromStory(
-                        newTurn.storyText,
-                        newState.worldContext,
-                        geminiService
-                    );
+                    const imageUrl = await callApiWithRetry(service => storytellerService.generateImageFromStory(
+                        newTurn.storyText, newState.worldContext, service
+                    ));
                     setGeneratedImageUrl(imageUrl);
                     if (imageUrl) {
-                        const updatedState: GameState = {
-                            ...newState,
-                            lastImageUrl: imageUrl,
-                        };
+                        const updatedState: GameState = { ...newState, lastImageUrl: imageUrl };
                         setGameState(updatedState);
-                        GameSaveService.saveAutoSave(updatedState); // Save with image URL
+                        GameSaveService.saveAutoSave(updatedState);
                     }
                 } catch (imgErr: any) {
                     console.error("Image generation failed:", imgErr);
@@ -473,7 +494,6 @@ export function useGameEngine(
                     setIsGeneratingImage(false);
                 }
             } else {
-                 // If the feature is off, ensure all image-related states are cleared.
                 setGeneratedImageUrl(null);
                 setIsGeneratingImage(false);
                 setImageGenerationError(null);
@@ -490,7 +510,6 @@ export function useGameEngine(
         if (previousGameState) {
             setGameState(previousGameState);
 
-            // Reset related states to match the undone state
             const lastValidTurn = previousGameState.history[previousGameState.history.length - 1];
             const totalTokens = previousGameState.history.reduce((sum, turn) => sum + (turn.tokenCount || 0), 0);
             setLastTurnTokenCount(lastValidTurn?.tokenCount || 0);
@@ -500,9 +519,9 @@ export function useGameEngine(
             setImageGenerationError(null);
             setRecentlyUpdatedPlayerStats(new Set());
             setRecentlyUpdatedNpcStats(new Map());
-            setPresentNpcIds(null); // Will be recalculated on the next turn
+            setPresentNpcIds(null); 
 
-            setPreviousGameState(null); // Prevent multiple undos in a row
+            setPreviousGameState(null); 
         } else {
             console.warn("No previous game state to undo to.");
         }
@@ -528,7 +547,6 @@ export function useGameEngine(
             const learnedStatName = `Lĩnh ngộ: ${baseSkillName}`;
             cleanedStats[learnedStatName] = { value: 'Đã học', duration: 999 };
             
-            // Add the new learned stat to the order if it's not there
             const currentOrder = prevState.playerStatOrder || [];
             const newOrder = currentOrder.filter(name => !(name.startsWith('Bí kíp:') && name.includes(baseSkillName)) && name !== baseSkillName);
             if (!newOrder.includes(learnedStatName)) {
@@ -566,7 +584,6 @@ export function useGameEngine(
                 newStats[stashKey] = { value: 'Chưa học' };
             }
 
-            // Update order: remove base name, add stash name if not present
             const currentOrder = prevState.playerStatOrder || [];
             const newOrder = currentOrder.filter(name => name !== baseSkillName);
              if (!newOrder.includes(stashKey)) {
@@ -583,20 +600,14 @@ export function useGameEngine(
     };
 
     const manuallyAcquireSkill = async (statName: string) => {
-        if (!gameState || !geminiService) return;
-
+        if (!gameState) return;
         setIsLoading(true);
         setError(null);
-        
         try {
-            const generatedSkill = await storytellerService.generateSkillFromStat(
-                statName,
-                gameState.worldContext,
-                geminiService
-            );
-            
+            const generatedSkill = await callApiWithRetry(service => storytellerService.generateSkillFromStat(
+                statName, gameState.worldContext, service
+            ));
             setSkillToLearn(generatedSkill);
-
         } catch (e: any) {
             handleApiError(e, "lĩnh ngộ kỹ năng");
         } finally {
@@ -605,21 +616,14 @@ export function useGameEngine(
     };
     
     const createPowerFromDescription = async (name: string, description: string) => {
-        if (!gameState || !geminiService) return;
-
+        if (!gameState) return;
         setIsLoading(true);
         setError(null);
-        
         try {
-            const generatedSkill = await storytellerService.generateSkillFromUserInput(
-                name,
-                description,
-                gameState.worldContext,
-                geminiService
-            );
-            
+            const generatedSkill = await callApiWithRetry(service => storytellerService.generateSkillFromUserInput(
+                name, description, gameState.worldContext, service
+            ));
             setSkillToLearn(generatedSkill);
-
         } catch (e: any) {
             handleApiError(e, "kiến tạo năng lực");
         } finally {
@@ -662,10 +666,9 @@ export function useGameEngine(
             } else if (direction === 'down' && index < npcs.length - 1) {
                 [npcs[index], npcs[index + 1]] = [npcs[index + 1], npcs[index]];
             } else {
-                return prevState; // Already at edge
+                return prevState; 
             }
 
-            // After swapping, update sortOrder for all NPCs to persist the new order
             const updatedNpcsWithSortOrder = npcs.map((npc, i) => ({
                 ...npc,
                 sortOrder: i
@@ -675,7 +678,6 @@ export function useGameEngine(
         });
     }, []);
     
-    // --- Manual NPC Deletion ---
     const requestNpcDeletion = (npcId: string) => {
         const npc = gameState?.npcs.find(n => n.id === npcId);
         if (npc) {
@@ -696,11 +698,9 @@ export function useGameEngine(
             return { ...prevState, npcs: newNpcs };
         });
 
-        setNpcToDelete(null); // Close the modal
+        setNpcToDelete(null);
     };
     
-    // --- Stat Editing and Deletion Logic ---
-
     const requestStatEdit = (target: 'player' | 'npc', statName: string, stat: CharacterStat, npcId?: string) => {
         setEditingStat({ target, statName, stat, npcId });
     };
@@ -722,8 +722,8 @@ export function useGameEngine(
                 value: newStat.value,
                 duration: isNaN(durationValue as any) ? undefined : durationValue,
                 isItem: newStat.isItem,
-                history: editingStat.stat.history, // Preserve history on manual edit
-                evolution: editingStat.stat.evolution // Preserve evolution
+                history: editingStat.stat.history, 
+                evolution: editingStat.stat.evolution
             };
 
             if (editingStat.target === 'player') {
@@ -784,7 +784,6 @@ export function useGameEngine(
                     if (npc.id === deletingStat.npcId && npc.stats) {
                         const newNpcStats = { ...npc.stats };
                         delete newNpcStats[deletingStat.statName];
-                        // If no stats are left, set stats to undefined
                         const stats = Object.keys(newNpcStats).length > 0 ? newNpcStats : undefined;
                         return { ...npc, stats };
                     }
@@ -863,7 +862,6 @@ export function useGameEngine(
         setEditingLocation(null);
     };
     
-    // --- Skill Management ---
     const requestSkillDeletion = (skill: Skill) => {
         setSkillToDelete(skill);
     };
@@ -884,7 +882,6 @@ export function useGameEngine(
         setSkillToDelete(null);
     };
     
-    // --- Ability Management ---
     const requestAbilityEdit = (skillName: string, ability: Ability) => {
         setEditingAbility({ skillName, ability });
     };
@@ -917,7 +914,6 @@ export function useGameEngine(
         setEditingAbility(null);
     };
     
-    // --- Player Stat Reordering ---
     const reorderPlayerStat = useCallback((statName: string, direction: 'up' | 'down') => {
         setGameState(prevState => {
             if (!prevState || !prevState.playerStatOrder) return prevState;
@@ -971,9 +967,6 @@ export function useGameEngine(
         });
     }, []);
 
-    /**
-     * Cập nhật một entry trong plotChronicle (ký ức dài hạn) theo index và nội dung mới.
-     */
     function updatePlotChronicleEntry(index: number, newSummary: string, newScore?: number) {
         setGameState(prevState => {
             if (!prevState) return null;
@@ -987,9 +980,6 @@ export function useGameEngine(
         });
     }
 
-    /**
-     * Cập nhật storyText của một turn trong turnsSinceLastChronicle (ký ức ngắn hạn) theo index và nội dung mới.
-     */
     function updateShortTermMemoryTurn(index: number, newStoryText: string) {
         setGameState(prevState => {
             if (!prevState) return null;
@@ -1002,7 +992,7 @@ export function useGameEngine(
     }
 
     const regenerateLastImage = async () => {
-        if (!gameState || !geminiService) return;
+        if (!gameState) return;
         const lastTurn = gameState.history[gameState.history.length - 1];
         if (!lastTurn) return;
 
@@ -1010,19 +1000,14 @@ export function useGameEngine(
         setImageGenerationError(null);
         setGeneratedImageUrl(null);
         try {
-            const imageUrl = await storytellerService.generateImageFromStory(
-                lastTurn.storyText,
-                gameState.worldContext,
-                geminiService
-            );
+            const imageUrl = await callApiWithRetry(service => storytellerService.generateImageFromStory(
+                lastTurn.storyText, gameState.worldContext, service
+            ));
             setGeneratedImageUrl(imageUrl);
             if (imageUrl) {
-                const updatedState: GameState = {
-                    ...gameState,
-                    lastImageUrl: imageUrl,
-                };
+                const updatedState: GameState = { ...gameState, lastImageUrl: imageUrl, };
                 setGameState(updatedState);
-                GameSaveService.saveAutoSave(updatedState); // Save with regenerated image URL
+                GameSaveService.saveAutoSave(updatedState);
             }
         } catch (imgErr: any) {
             console.error("Image regeneration failed:", imgErr);
