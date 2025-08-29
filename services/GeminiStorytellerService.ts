@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, Type, GenerateContentResponse, HarmCategory, HarmBlockThreshold } from '@google/genai';
 import { WorldCreationState, GameState, GameTurn, NPCUpdate, CharacterStatUpdate, NPC, Skill, NarrativePerspective, LustModeFlavor, NpcMindset, DestinyCompassMode, ChronicleEntry, WorldLocationUpdate } from '../types';
 
@@ -1219,6 +1220,24 @@ const CHRONICLE_SUMMARIZER_PROMPT = `Bạn là một AI ghi chép biên niên s�
     Người chơi đánh bại một con quái vật (thông thường là 4-7 điểm), nhưng trong quá trình đó, một NPC quan trọng đã hy sinh để cứu người chơi. Sự kiện này có tác động cảm xúc lớn và sẽ thay đổi mối quan hệ với gia đình NPC đó. => Điểm cuối cùng nên là 8-9 điểm.
 7.  **Trả về JSON:** Phản hồi của bạn BẮT BUỘC phải là một đối tượng JSON duy nhất tuân thủ schema được cung cấp.`;
 
+const SHORT_TERM_SUMMARIZER_PROMPT = `Bạn là một AI tóm tắt viên. Nhiệm vụ của bạn là đọc một chuỗi các sự kiện ngắn hạn và cô đọng chúng thành một đoạn tóm tắt duy nhất, mạch lạc. Đoạn tóm tắt này sẽ thay thế các sự kiện gốc để tiết kiệm bộ nhớ, vì vậy nó phải nắm bắt được những diễn biến chính.
+
+**YÊU CẦU:**
+1.  **Đọc Toàn Bộ:** Đọc tất cả các lượt chơi được cung cấp để hiểu rõ mạch truyện.
+2.  **Xác định Cốt lõi:** Tìm ra những sự kiện, hành động, và thay đổi trạng thái quan trọng nhất. Bỏ qua các chi tiết phụ, các hành động không có kết quả rõ rệt.
+3.  **Viết Tóm tắt:** Viết một đoạn văn xuôi duy nhất (khoảng 3-5 câu) kể lại các sự kiện chính theo trình tự thời gian. Đoạn văn phải mạch lạc và dễ hiểu.
+4.  **Giọng văn:** Giữ giọng văn kể chuyện, tương tự như các đoạn truyện gốc.
+5.  **KHÔNG THÊM THÔNG TIN MỚI:** Tuyệt đối không được thêm các chi tiết, sự kiện, hay suy diễn không có trong các lượt chơi gốc.
+
+**CÁC LƯỢT CHƠI CẦN TÓM TẮT:**
+---
+{TURNS_TO_SUMMARIZE_PLACEHOLDER}
+---
+
+**ĐOẠN TÓM TẮT CÔ ĐỌNG:**
+`;
+
+
 const SKILL_GENERATOR_PROMPT = `Bạn là một AI chuyên thiết kế kỹ năng game. Nhiệm vụ duy nhất của bạn là dựa vào tên một năng lực và bối cảnh thế giới được cung cấp, sau đó tạo ra một bộ kỹ năng (Skill object) hoàn chỉnh theo schema JSON.
 QUAN TRỌNG:
 1.  **Tên kỹ năng (name):** Phải giống hệt với tên năng lực được cung cấp.
@@ -1408,6 +1427,32 @@ export async function generateSkillFromStat(
     skill.name = statName;
 
     return skill as Skill;
+}
+
+export async function summarizeShortTermMemory(
+    turnsToSummarize: GameTurn[],
+    geminiService: GoogleGenAI,
+    isNsfw: boolean
+): Promise<GameTurn> {
+    const contentToSummarize = turnsToSummarize
+        .map(turn => `${turn.playerAction ? `Hành động: "${turn.playerAction}"` : 'Bắt đầu.'}\nKết quả: ${turn.storyText}`)
+        .join('\n\n---\n\n');
+
+    const prompt = SHORT_TERM_SUMMARIZER_PROMPT
+        .replace('{TURNS_TO_SUMMARIZE_PLACEHOLDER}', contentToSummarize);
+
+    const result = await callCreativeTextAI(prompt, geminiService, isNsfw);
+    const summaryText = result.text.trim();
+    const tokenCount = result.usageMetadata?.totalTokenCount || 0;
+
+    return {
+        playerAction: "Tóm tắt các sự kiện gần đây.", // Internal action note
+        storyText: summaryText,
+        choices: [], // No choices for a summary turn
+        tokenCount: tokenCount,
+        isMajorEvent: false,
+        isCondensedMemory: true, // Mark this turn as condensed
+    };
 }
 
 export async function initializeStory(worldState: WorldCreationState, geminiService: GoogleGenAI): Promise<{
@@ -1655,9 +1700,12 @@ export async function continueStory(gameState: GameState, choice: string, gemini
         console.log(`Final context: ${contextTurns.length} turns, ${charCount} characters of ${MEMORY_CHAR_BUDGET} budget (${Math.round(charCount/MEMORY_CHAR_BUDGET*100)}% used)`);
     }
 
-    const recentHistory = contextTurns.map(turn => 
-        `${turn.playerAction ? `Người chơi đã chọn: "${turn.playerAction}"` : 'Bắt đầu câu chuyện.'}\nKết quả: ${turn.storyText}`
-    ).join('\n\n---\n\n');
+    const recentHistory = contextTurns.map(turn => {
+        if (turn.isCondensedMemory) {
+            return `TÓM TẮT CÁC SỰ KIỆN TRƯỚC ĐÓ: ${turn.storyText}`;
+        }
+        return `${turn.playerAction ? `Người chơi đã chọn: "${turn.playerAction}"` : 'Bắt đầu câu chuyện.'}\nKết quả: ${turn.storyText}`;
+    }).join('\n\n---\n\n');
 
     const simplifiedPlayerStats = simplifyStatsForStoryteller(gameState.playerStats);
     const simplifiedNpcs = gameState.npcs.map(npc => ({ ...npc, stats: npc.stats ? simplifyStatsForStoryteller(npc.stats) : undefined }));

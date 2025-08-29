@@ -88,6 +88,7 @@ export interface GameTurn {
   choices: string[];
   tokenCount?: number; // How many tokens this turn cost
   isMajorEvent?: boolean; // Flag for important plot points
+  isCondensedMemory?: boolean; // Flag for a turn that is a summary of previous turns
 }
 
 // Represents an entry in the structured plot chronicle.

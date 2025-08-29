@@ -392,9 +392,31 @@ export function useGameEngine(
             const newlyAddedKeys = newStatKeys.filter(key => !currentOrder.includes(key));
             const newPlayerStatOrder = [...currentOrder, ...newlyAddedKeys];
 
+            let currentShortTermMemory = [...(gameState.turnsSinceLastChronicle || []), newTurn];
+            let additionalTokensFromCondensation = 0;
+
+            // --- Intermediate Memory Condensation ---
+            const rawTurns = currentShortTermMemory.filter(turn => !turn.isCondensedMemory);
+            const CONDENSATION_THRESHOLD = 15;
+
+            if (rawTurns.length >= CONDENSATION_THRESHOLD) {
+                console.log(`Short-term memory condensation triggered. Summarizing ${rawTurns.length} turns.`);
+                try {
+                    const condensedTurn = await storytellerService.summarizeShortTermMemory(
+                        rawTurns,
+                        geminiService,
+                        gameState.worldContext.isNsfw
+                    );
+                    const previouslyCondensedTurns = currentShortTermMemory.filter(turn => turn.isCondensedMemory);
+                    currentShortTermMemory = [...previouslyCondensedTurns, condensedTurn];
+                    additionalTokensFromCondensation = condensedTurn.tokenCount || 0;
+                } catch (e: any) {
+                    console.error("Short-term memory summarization failed, continuing without condensation:", e);
+                }
+            }
+
             const newPlotChronicle = [...gameState.plotChronicle];
             if (newChronicleEntry) {
-                // Double-check for duplicates at the game engine level as well
                 if (!storytellerService.isDuplicateChronicleEntry(newChronicleEntry, gameState.plotChronicle)) {
                     newPlotChronicle.push(newChronicleEntry);
                 } else {
@@ -402,6 +424,8 @@ export function useGameEngine(
                 }
             }
             
+            const finalShortTermMemory = isSceneBreak ? [] : currentShortTermMemory;
+
             const newState: GameState = {
                 ...gameState,
                 history: [...gameState.history, newTurn],
@@ -410,8 +434,7 @@ export function useGameEngine(
                 npcs: updatedNpcs,
                 worldLocations: updatedLocations,
                 plotChronicle: newPlotChronicle,
-                // If a scene break happened, reset the turns buffer. Otherwise, add the new turn.
-                turnsSinceLastChronicle: isSceneBreak ? [] : [...(gameState.turnsSinceLastChronicle || []), newTurn],
+                turnsSinceLastChronicle: finalShortTermMemory,
             };
 
             setGameState(newState);
@@ -420,7 +443,7 @@ export function useGameEngine(
             
             const tokenCount = newTurn.tokenCount || 0;
             setLastTurnTokenCount(tokenCount);
-            setTotalTokenCount(prev => prev + tokenCount);
+            setTotalTokenCount(prev => prev + tokenCount + additionalTokensFromCondensation);
             if (newlyAcquiredSkill) setSkillToLearn(newlyAcquiredSkill);
 
             // Trigger image generation only if the feature is enabled.
