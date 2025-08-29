@@ -441,7 +441,7 @@ export function useGameEngine(
 
             if (worldProgressChronicleEntry) {
                 // Significance Threshold: Only add WPE chronicles if they are important enough.
-                const WPE_SIGNIFICANCE_THRESHOLD = 3;
+                const WPE_SIGNIFICANCE_THRESHOLD = 2;
                 if (worldProgressChronicleEntry.plotSignificanceScore > WPE_SIGNIFICANCE_THRESHOLD) {
                     if (!storytellerService.isDuplicateChronicleEntry(worldProgressChronicleEntry, newPlotChronicle)) {
                         newPlotChronicle.push(worldProgressChronicleEntry);

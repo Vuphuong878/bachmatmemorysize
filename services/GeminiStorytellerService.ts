@@ -2002,11 +2002,10 @@ Mục tiêu của bạn là cập nhật **dữ liệu logic** của game. Ví d
     -   **Chỉ UPDATE:** Hành động trong \`npcUpdates\` và \`worldLocationUpdates\` BẮT BUỘC phải là \`UPDATE\`. TUYỆT ĐỐI KHÔNG \`CREATE\` hay \`DELETE\`.
 3.  **TẠO KẾT QUẢ JSON:**
     -   **summaryOfChanges:** Viết một bản tóm tắt ngắn gọn (2-3 câu) mô tả những gì đã xảy ra. **QUAN TRỌNG:** Trước khi viết, hãy xem lại vài sự kiện gần nhất trong Biên niên sử. Nếu cập nhật của bạn là sự tiếp nối trực tiếp, hãy **hợp nhất thông tin** vào tóm tắt mới. Ví dụ, nếu sự kiện cũ là "A tăng cường tuần tra", và bạn cập nhật là "A xây tiền đồn", tóm tắt mới của bạn nên là "A đã tăng cường tuần tra và xây dựng một tiền đồn quân sự ở phía đông."
-    -   **npcUpdates / worldLocationUpdates:** Điền các thay đổi cụ thể vào các mảng tương ứng. Ví dụ: cập nhật chỉ số 'Quyền lực' cho NPC thủ lĩnh Hắc Long Hội, hoặc cập nhật trạng thái 'Phòng bị nghiêm ngặt' cho địa danh Kinh Thành.
-    -   **plotSignificanceScore:** Đánh giá tầm quan trọng của các thay đổi bạn vừa tạo ra trên thang điểm 1-10 và điền vào trường này.
-        -   **1-3 (Thay đổi nhỏ):** Các hoạt động duy trì, lặp lại, không có tác động lớn (ví dụ: một phe phái tiếp tục tuần tra, một thương nhân bổ sung hàng hóa).
-        -   **4-7 (Sự kiện đáng chú ý):** Một sự kiện có thể ảnh hưởng đến người chơi trong tương lai (ví dụ: một phe phái chiếm được một mỏ khoáng nhỏ, một NPC quan trọng hoàn thành một giai đoạn tu luyện).
-        -   **8-10 (Bước ngoặt lớn):** Một sự kiện thay đổi cán cân quyền lực hoặc tình hình thế giới một cách rõ rệt (ví dụ: một phe phái lớn bị tiêu diệt, một thành phố bị chiếm đóng).
+    -   **plotSignificanceScore:** Đánh giá tầm quan trọng của các thay đổi bạn vừa tạo ra trên thang điểm 1-5 và điền vào trường này.
+        -   **1-2 (Thay đổi nhỏ):** Các hoạt động duy trì, lặp lại, không có tác động lớn (ví dụ: một phe phái tiếp tục tuần tra, một thương nhân bổ sung hàng hóa).
+        -   **3-4 (Sự kiện đáng chú ý):** Một sự kiện có thể ảnh hưởng đến người chơi trong tương lai (ví dụ: một phe phái chiếm được một mỏ khoáng nhỏ, một NPC quan trọng hoàn thành một giai đoạn tu luyện).
+        -   **5 (Bước ngoặt lớn):** Một sự kiện thay đổi cán cân quyền lực hoặc tình hình thế giới một cách rõ rệt (ví dụ: một phe phái lớn bị tiêu diệt, một thành phố bị chiếm đóng).
     -   **npcUpdates / worldLocationUpdates:** Điền các thay đổi cụ thể vào các mảng tương ứng.`;
 
 const worldProgressionSchema = {
@@ -2097,7 +2096,7 @@ Hãy tạo ra các cập nhật cho thế giới.`;
                 summary: response.summaryOfChanges,
                 eventType: 'Tiến triển Thế giới',
                 involvedNpcIds: (response.npcUpdates || []).map((u: NPCUpdate) => u.id),
-                plotSignificanceScore: response.plotSignificanceScore ?? 2, // Use AI score, fallback to 2
+                plotSignificanceScore: Math.min(response.plotSignificanceScore ?? 2, 5), // Use AI score, capped at 5, fallback to 2
                 isUnforgettable: (response.plotSignificanceScore ?? 2) >= 10
             };
             
