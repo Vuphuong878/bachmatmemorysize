@@ -126,6 +126,14 @@ const chronicleEntrySchema = {
                 },
                 required: ['npcId', 'change', 'reason']
             }
+        },
+        keyDetail: {
+            type: Type.STRING,
+            description: "(TÙY CHỌN) Một câu ngắn mô tả chính xác chi tiết ẩn quan trọng mà bạn đã phát hiện."
+        },
+        potentialConsequence: {
+            type: Type.STRING,
+            description: "(TÙY CHỌN) Một dự đoán ngắn gọn về hậu quả hoặc tình tiết có thể xảy ra trong tương lai từ chi tiết này."
         }
     },
     required: ['summary', 'eventType', 'involvedNpcIds', 'isUnforgettable', 'plotSignificanceScore']
@@ -938,6 +946,8 @@ Nhiệm vụ cốt lõi của bạn là **tiếp nối** câu chuyện, mô tả
 Bạn sẽ được cung cấp 3 tầng ký ức để duy trì sự nhất quán. Sự mâu thuẫn với NỀN TẢNG hoặc BIÊN NIÊN SỬ sẽ phá hỏng trò chơi.
 1.  **NỀN TẢNG THẾ GIỚI (World Foundation):** Đây là các quy tắc cốt lõi, bất biến của thế giới (thể loại, bối cảnh, tiểu sử nhân vật). Bạn PHẢI tuyệt đối tuân thủ, không được phép thay đổi hay mâu thuẫn.
 2.  **BIÊN NIÊN SỬ CỐT TRUYỆN (Plot Chronicle):** Đây là một danh sách được tuyển chọn gồm các sự kiện quan trọng nhất, gần đây nhất, và **một vài sự kiện ngẫu nhiên trong quá khứ** của toàn bộ cốt truyện. Hãy dùng các sự kiện ngẫu nhiên này làm nguồn cảm hứng để tạo ra những hành động hoặc lời thoại bất ngờ, sâu sắc từ NPC (ví dụ: đột nhiên nhớ lại một ân oán cũ).
+    -   **ƯU TIÊN TUYỆT ĐỐI:** Bạn BẮT BUỘC phải đọc kỹ các \`keyDetail\`. Đây là những "hạt giống cốt truyện" đã được gieo từ trước. Nhiệm vụ của bạn là làm cho chúng nảy mầm.
+    -   **HÀNH ĐỘNG:** Hãy lồng ghép một cách tự nhiên các chi tiết này vào câu chuyện (\`storyText\`) hoặc các lựa chọn (\`choices\`) của bạn. Ví dụ: Nếu một \`keyDetail\` là "Phát hiện một huy hiệu rồng bạc", bạn có thể tạo ra một lựa chọn như "Tìm hiểu về huy hiệu rồng bạc" hoặc mô tả một NPC nhận ra huy hiệu đó.
 3.  **BỐI CẢNH GẦN NHẤT (Recent Context):** Đây là các diễn biến và trạng thái trong vài lượt gần đây. Dùng nó để viết tiếp một cách liền mạch.
 
 **QUY TẮC SỐNG CỦA NPC (NPC LIVELINESS RULE - CỰC KỲ QUAN TRỌNG):**
@@ -1193,9 +1203,10 @@ Mục tiêu chính của bạn là **bảo tồn trí nhớ** của NPC. Chỉ c
 \`id: lac_than | status: Bắt đầu kể lại câu chuyện của mình. | summary: Được Bách Mật hỏi về quá khứ.\`
 (Lưu ý: 'summary' đã được cập nhật)`;
 
-const CHRONICLE_SUMMARIZER_PROMPT = `Bạn là một AI ghi chép biên niên sử. Nhiệm vụ của bạn là đọc các diễn biến của một phân cảnh truyện và tóm tắt chúng thành một đối tượng JSON duy nhất.
+const CHRONICLE_SUMMARIZER_PROMPT = `Bạn là một AI ghi chép biên niên sử và phân tích tình báo. Nhiệm vụ của bạn là đọc các diễn biến của một phân cảnh truyện và tóm tắt chúng thành một đối tượng JSON duy nhất, đồng thời phát hiện những "hạt giống cốt truyện" ẩn giấu.
 
 **QUY TRÌNH LÀM VIỆC:**
+**PHẦN 1: TÓM TẮT SỰ KIỆN CỐT LÕI**
 1.  **Đọc và Hiểu:** Phân tích các lượt chơi để nắm bắt được sự kiện cốt lõi, những nhân vật tham gia và bản chất của sự kiện.
 2.  **Tóm tắt (summary):** Viết một bản tóm tắt súc tích (1-2 câu) chỉ tập trung vào những tình tiết quan trọng nhất. Bỏ qua các chi tiết vụn vặt.
 3.  **Phân loại (eventType):** Chọn một loại sự kiện phù hợp nhất từ các ví dụ sau: 'Chiến thắng', 'Mất mát', 'Khám phá', 'Gặp gỡ NPC', 'Chuyển cảnh', 'Phát triển nhân vật', 'Xung đột xã hội'.
@@ -1226,7 +1237,26 @@ const CHRONICLE_SUMMARIZER_PROMPT = `Bạn là một AI ghi chép biên niên s�
 
     **E. VÍ DỤ VỀ CÁCH CHẤM ĐIỂM:**
     Người chơi đánh bại một con quái vật (thông thường là 4-7 điểm), nhưng trong quá trình đó, một NPC quan trọng đã hy sinh để cứu người chơi. Sự kiện này có tác động cảm xúc lớn và sẽ thay đổi mối quan hệ với gia đình NPC đó. => Điểm cuối cùng nên là 8-9 điểm.
-7.  **Trả về JSON:** Phản hồi của bạn BẮT BUỘC phải là một đối tượng JSON duy nhất tuân thủ schema được cung cấp.`;
+**PHẦN 2: PHÂN TÍCH CHI TIẾT ẨN (DETECTIVE ANALYSIS)**
+Ngoài việc tóm tắt, nhiệm vụ quan trọng nhất của bạn là tìm ra **một chi tiết nhỏ, tinh vi** trong phân cảnh có tiềm năng trở thành một tình tiết quan trọng sau này. Hãy suy nghĩ như một nhà văn đang gieo mầm cho các chương tiếp theo. Sử dụng các quy tắc sau để phân tích:
+
+1.  **Quy tắc "Khẩu súng của Chekhov" (Foreshadowing & Uniqueness):**
+    *   Tìm kiếm một vật thể, một lời nói, hoặc một hành động có vẻ **bất thường, không đúng chỗ, hoặc được mô tả chi tiết hơn mức cần thiết**.
+    *   *Ví dụ:* "Trong đống đổ nát, nhân vật chính thoáng thấy một huy hiệu cũ kỹ với hình một con rồng bạc, nhưng rồi lờ nó đi." -> Chi tiết này CỰC KỲ quan trọng.
+    *   *Ví dụ:* "Lão già lẩm bẩm một câu gì đó không rõ về 'món nợ máu ở phía Bắc' trước khi rời đi." -> Chi tiết này CỰC KỲ quan trọng.
+
+2.  **Quy tắc "Lộ Chân Tướng" (Character & Relationship Impact):**
+    *   Tìm kiếm một chi tiết nhỏ tiết lộ một khía cạnh ẩn giấu trong tính cách của một NPC, hoặc một sự thay đổi tinh vi trong mối quan hệ.
+    *   *Ví dụ:* "Khi bị dồn vào đường cùng, NPC 'hiền lành' bỗng lộ ra một ánh mắt sắc lạnh chỉ trong thoáng chốc." -> Chi tiết này hé lộ bản chất thật.
+
+3.  **Quy tắc "Hệ Quả Bất Ngờ" (Player Agency & Consequences):**
+    *   Tìm kiếm một hệ quả **không lường trước** từ một hành động hoặc việc sử dụng kỹ năng của người chơi.
+    *   *Ví dụ:* "Sau khi sử dụng một kỹ năng hệ hỏa, một dấu ấn mờ ảo hình ngọn lửa xuất hiện trên tay nhân vật chính rồi biến mất."
+
+4. **Lưu ý:** Việc PHÂN TÍCH CHI TIẾT ẨN này sẽ không được thực hiện chấm điểm.
+**PHẦN 3: ĐẦU RA JSON**
+Dựa trên phân tích ở trên, hãy điền các trường sau trong đối tượng JSON. Phản hồi của bạn BẮT BUỘC phải là một đối tượng JSON duy nhất tuân thủ schema được cung cấp.
+- Nếu bạn phát hiện một chi tiết ẩn, hãy điền vào các trường \`keyDetail\` và \`potentialConsequence\`. Nếu không có gì đáng chú ý, hãy bỏ qua các trường này.`;
 
 const SHORT_TERM_SUMMARIZER_PROMPT = `Bạn là một AI tóm tắt viên. Nhiệm vụ của bạn là đọc một chuỗi các sự kiện ngắn hạn và cô đọng chúng thành một đoạn tóm tắt duy nhất, mạch lạc. Đoạn tóm tắt này sẽ thay thế các sự kiện gốc để tiết kiệm bộ nhớ, vì vậy nó phải nắm bắt được những diễn biến chính.
 
@@ -1876,7 +1906,16 @@ Khi chế độ Logic Nghiêm ngặt TẮT, người chơi không còn hành đ�
     const finalFilteredChronicles = [...essentialChronicles, ...contextualRecalls];
 
     const plotChronicleText = finalFilteredChronicles.length > 0
-        ? finalFilteredChronicles.map(c => `- (${c.eventType}): ${c.summary}`).join('\n')
+        ? finalFilteredChronicles.map(c => {
+            let entryText = `- (${c.eventType}): ${c.summary}`;
+            if (c.keyDetail) {
+                entryText += `\n  - Chi tiết ẩn: ${c.keyDetail}`;
+            }
+            if (c.potentialConsequence) {
+                entryText += `\n  - Dự đoán hệ quả: ${c.potentialConsequence}`;
+            }
+            return entryText;
+        }).join('\n')
         : "Chưa có sự kiện quan trọng nào được ghi nhận.";
 
 
