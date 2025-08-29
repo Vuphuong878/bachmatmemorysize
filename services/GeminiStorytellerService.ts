@@ -2000,9 +2000,6 @@ Mục tiêu của bạn là cập nhật **dữ liệu logic** của game. Ví d
     -   **Hợp lý:** Các thay đổi phải phù hợp với tính cách và động cơ của NPC, hoặc tình hình chính trị/xã hội của thế giới.
     -   **Chỉ cập nhật thực thể vắng mặt:** Bạn chỉ được phép cập nhật các NPC và địa danh **KHÔNG** nằm trong danh sách "NPCs/Locations Present in Current Scene".
     -   **Chỉ UPDATE:** Hành động trong \`npcUpdates\` và \`worldLocationUpdates\` BẮT BUỘC phải là \`UPDATE\`. TUYỆT ĐỐI KHÔNG \`CREATE\` hay \`DELETE\`.
-    **VÍ DỤ:**
-    -   Nếu một NPC là một Luyện đan sư và biên niên sử ghi rằng họ đang tìm kiếm một loại thảo dược, một cập nhật hợp lý có thể là: Gửi một \`npcUpdate\` cho NPC đó với một chỉ số mới trong payload: \`{ statName: 'Hóa Hình Đan', value: '1 viên', isItem: true }\`.
-    -   Nếu hai phe phái đang xung đột, một cập nhật hợp lý có thể là: Gửi một \`worldLocationUpdate\` cho địa danh 'Mỏ Linh Thạch' với payload \`{ description: 'Hiện đang bị Hắc Long Hội chiếm đóng và khai thác cạn kiệt.' }\`.
 3.  **TẠO KẾT QUẢ JSON:**
     -   **summaryOfChanges:** Viết một bản tóm tắt ngắn gọn (2-3 câu) mô tả những gì đã xảy ra. **QUAN TRỌNG:** Trước khi viết, hãy xem lại vài sự kiện gần nhất trong Biên niên sử. Nếu cập nhật của bạn là sự tiếp nối trực tiếp, hãy **hợp nhất thông tin** vào tóm tắt mới. Ví dụ, nếu sự kiện cũ là "A tăng cường tuần tra", và bạn cập nhật là "A xây tiền đồn", tóm tắt mới của bạn nên là "A đã tăng cường tuần tra và xây dựng một tiền đồn quân sự ở phía đông."
     -   **npcUpdates / worldLocationUpdates:** Điền các thay đổi cụ thể vào các mảng tương ứng. Ví dụ: cập nhật chỉ số 'Quyền lực' cho NPC thủ lĩnh Hắc Long Hội, hoặc cập nhật trạng thái 'Phòng bị nghiêm ngặt' cho địa danh Kinh Thành.
