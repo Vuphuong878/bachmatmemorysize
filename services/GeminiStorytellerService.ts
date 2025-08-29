@@ -999,7 +999,7 @@ Bạn BẮT BUỘC phải tạo ra chính xác 8 lựa chọn hành động ti�
 - Chủ động xây dựng sự kiện bất ngờ dựa trên \`history\`.
 - Khi mô tả hành động: chỉ ghi nhận hành vi vật lý, kết quả trực tiếp, chia nhỏ động tác, dùng động từ trung tính, ưu tiên giác quan (thị giác, xúc giác, thính giác), văn phong khách quan.
 
-- MÔI TRƯỜNG & VẬT THỂ:
+- MÔI TRƯỜDNG & VẬT THỂ:
 - Mô tả vật thể bằng chất liệu, dấu vết sử dụng, chức năng rõ ràng; tránh mơ hồ/ví von.
 - Cảnh quan: nêu chi tiết vật liệu, kiến trúc, tình trạng bề mặt.
 - Ánh sáng: mô tả khách quan tác động vật lý.
@@ -1024,6 +1024,14 @@ Bạn BẮT BUỘC phải tạo ra chính xác 8 lựa chọn hành động ti�
 
 **PHẦN 2: QUẢN LÝ DỮ LIỆU GAME (CỰC KỲ NGHIÊM NGẶT)**
 Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng thái game.
+
+**QUY TẮC PHÂN BIỆT THỰC THỂ (ENTITY DISAMBIGUATION - CỰC KỲ QUAN TRỌNG):**
+Một danh từ riêng không thể vừa là NPC vừa là Địa Danh trong cùng một lượt tạo.
+- **NẾU** một danh từ riêng được xác định rõ ràng là một địa danh (ví dụ: đi sau các từ khóa như 'đến', 'tại', 'thị trấn', 'thành phố', 'môn phái', 'làng', 'cổng'), bạn **TUYỆT ĐỐI BỊ CẤM** tạo ra một NPC có cùng tên chính xác trong cùng một lượt.
+- **NGƯỢC LẠI,** nếu một cái tên rõ ràng là một người (ví dụ: 'gặp gỡ Lão Lý', 'nói chuyện với Mộ Dung Tuyết'), bạn **TUYỆT ĐỐI BỊ CẤM** tạo một địa danh có tên 'Lão Lý' hoặc 'Mộ Dung Tuyết'.
+- **Ưu tiên:** Luôn ưu tiên ngữ cảnh để xác định loại thực thể. Nếu không chắc chắn, hãy dựa vào hành động của người chơi ('đến' -> địa danh, 'gặp' -> NPC).
+
+*Ví dụ:* Khi người chơi "đến **Thanh Vân Môn**", bạn chỉ được tạo địa danh \`thanh_van_mon\` trong \`worldLocationUpdates\`, **KHÔNG** được tạo NPC tên "Thanh Vân Môn" trong \`npcUpdates\`.
 
 **QUY TẮC BẤT BIẾN VỀ TÍNH CÁCH & MỐI QUAN HỆ LINH HOẠT (CỰC KỲ QUAN TRỌNG):**
 1.  **Bản chất Cốt lõi:** Hai thuộc tính \`personality\` (tính cách) và \`relationship\` (mối quan hệ) định nghĩa bản chất cốt lõi của một NPC.
