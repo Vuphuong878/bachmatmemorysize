@@ -1,3 +1,4 @@
+
 export enum ApiKeySource {
   DEFAULT = 'DEFAULT',
   CUSTOM = 'CUSTOM',
@@ -172,5 +173,8 @@ export interface GameState {
     isLogicModeOn: boolean;
     isConscienceModeOn: boolean;
     isStrictInterpretationOn: boolean;
+    isWpeEnabled: boolean;
+    wpeTurnInterval: number;
+    wpeOnSceneBreak?: boolean;
   };
 }

@@ -4,6 +4,8 @@ import Modal from '../ui/Modal';
 import { LustModeFlavor, NpcMindset, DestinyCompassMode } from '../../types';
 import { CrownIcon, IntertwinedHeartsIcon, CollarIcon, MaskIcon, LightningIcon, IronWillIcon, TornMindIcon, PrimalInstinctIcon, SeductionIcon, HedonisticIcon } from '../icons/LustIcons';
 import { ConscienceIcon } from '../icons/ConscienceIcon';
+import ToggleSwitch from '../ui/ToggleSwitch';
+import InputField from '../ui/InputField';
 
 interface AiControlPanelModalProps {
     isOpen: boolean;
@@ -21,6 +23,12 @@ interface AiControlPanelModalProps {
     onStrictInterpretationChange: (isOn: boolean) => void;
     destinyCompassMode: DestinyCompassMode;
     onDestinyCompassModeChange: (mode: DestinyCompassMode) => void;
+    isWpeEnabled: boolean;
+    onWpeEnabledChange: (isOn: boolean) => void;
+    wpeTurnInterval: number;
+    onWpeTurnIntervalChange: (interval: number) => void;
+    wpeOnSceneBreak: boolean;
+    onWpeOnSceneBreakChange: (isOn: boolean) => void;
 }
 
 const LUST_FLAVOR_TEXT: Record<LustModeFlavor, string> = {
@@ -185,6 +193,12 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
     onStrictInterpretationChange,
     destinyCompassMode,
     onDestinyCompassModeChange,
+    isWpeEnabled,
+    onWpeEnabledChange,
+    wpeTurnInterval,
+    onWpeTurnIntervalChange,
+    wpeOnSceneBreak,
+    onWpeOnSceneBreakChange
 }) => {
     const [isLustPanelVisible, setLustPanelVisible] = useState(false);
 
@@ -304,6 +318,43 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
                     <currentMindsetConfig.Icon />
                     <span>Tâm Trí NPC: {currentMindsetConfig.displayName}</span>
                 </button>
+
+                 {/* World Progression Engine Settings */}
+                 <div className="bg-black/20 p-3 rounded-lg space-y-4">
+                    <label className="block text-sm font-medium text-center text-white mb-2 font-rajdhani uppercase tracking-wider">Dòng Sông Vận Mệnh</label>
+                    <ToggleSwitch
+                        id="wpe-toggle"
+                        label="Kích hoạt"
+                        description="Tự động cập nhật các NPC và địa danh không có mặt trong cảnh."
+                        enabled={isWpeEnabled}
+                        setEnabled={onWpeEnabledChange}
+                    />
+                    
+                    <div className={`space-y-3 pl-4 border-l-2 ${isWpeEnabled ? 'border-pink-500/30' : 'border-gray-600/30'} transition-all`}>
+                        <div className={`flex items-center gap-3 transition-opacity ${isWpeEnabled ? 'opacity-100' : 'opacity-50'}`}>
+                            <label htmlFor="wpe-interval" className="text-xs font-semibold text-gray-400 flex-shrink-0">Kích hoạt mỗi</label>
+                            <input
+                                type="number"
+                                id="wpe-interval"
+                                value={wpeTurnInterval}
+                                onChange={(e) => onWpeTurnIntervalChange(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                                disabled={isLoading || !isWpeEnabled}
+                                className="w-20 bg-[#120c18] border-2 border-[#3a2d47] rounded-md text-white text-center py-1 text-sm focus:ring-2 focus:ring-[#e02585] focus:border-[#e02585] transition-all disabled:opacity-50"
+                                min="1"
+                            />
+                             <span className="text-xs font-semibold text-gray-400">lượt</span>
+                        </div>
+
+                        <ToggleSwitch
+                            id="wpe-scene-break-toggle"
+                            label="Kích hoạt khi chuyển cảnh"
+                            description="Kích hoạt khi một phân cảnh truyện kết thúc."
+                            enabled={wpeOnSceneBreak}
+                            setEnabled={onWpeOnSceneBreakChange}
+                            disabled={isLoading || !isWpeEnabled}
+                        />
+                    </div>
+                </div>
 
                 <div className="grid grid-cols-2 gap-4 bg-black/20 p-3 rounded-lg">
                      {/* Strict Interpretation Toggle */}

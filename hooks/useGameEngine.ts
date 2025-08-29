@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSettings } from './useSettings';
 import { WorldCreationState, GameState, GameTurn, CharacterStats, NPC, NPCUpdate, CharacterStat, CharacterStatUpdate, Skill, LustModeFlavor, ApiKeySource, NpcMindset, Ability, DestinyCompassMode, ChronicleEntry, WorldLocation, WorldLocationUpdate } from '../types';
@@ -353,7 +354,7 @@ export function useGameEngine(
     }, [initialData, initializeGame]);
 
 
-    const handlePlayerChoice = async (choice: string, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode, isImageGenerationEnabled: boolean) => {
+    const handlePlayerChoice = async (choice: string, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode, isImageGenerationEnabled: boolean, isWpeEnabled: boolean, wpeTurnInterval: number, wpeOnSceneBreak: boolean) => {
         if (!gameState || !geminiService) return;
         setPreviousGameState(gameState); // Save state before making the move
         setIsLoading(true);
@@ -401,29 +402,35 @@ export function useGameEngine(
             }
             
             // --- WORLD PROGRESSION ENGINE ---
-            const PROGRESSION_INTERVAL = 10;
             let turnsSinceProgression = (gameState.turnsSinceLastProgression || 0) + 1;
             let worldProgressNpcUpdates: NPCUpdate[] = [];
             let worldProgressLocationUpdates: WorldLocationUpdate[] = [];
             let worldProgressChronicleEntry: ChronicleEntry | undefined = undefined;
 
+            if (isWpeEnabled) {
+                const triggerByTurnInterval = turnsSinceProgression >= wpeTurnInterval;
+                const triggerBySceneBreak = isSceneBreak && wpeOnSceneBreak;
+            
+                if (triggerByTurnInterval || triggerBySceneBreak) {
+                    const reason = triggerBySceneBreak 
+                        ? (triggerByTurnInterval ? `Scene Break & Turn Interval (${wpeTurnInterval})` : 'Scene Break')
+                        : `Turn Interval (${wpeTurnInterval})`;
+                    console.log(`Triggering World Progression Engine. Reason: ${reason}`);
+                    
+                    const stateForProgression: GameState = {
+                        ...gameState,
+                        plotChronicle: newPlotChronicle,
+                        turnsSinceLastChronicle: isSceneBreak ? [] : [...(gameState.turnsSinceLastChronicle || []), newTurn],
+                    };
 
-            if (turnsSinceProgression >= PROGRESSION_INTERVAL || isSceneBreak) {
-                console.log(`Triggering World Progression Engine. Reason: ${isSceneBreak ? 'Scene Break' : 'Turn Interval'}`);
-                
-                const stateForProgression: GameState = {
-                    ...gameState,
-                    plotChronicle: newPlotChronicle,
-                    turnsSinceLastChronicle: isSceneBreak ? [] : [...(gameState.turnsSinceLastChronicle || []), newTurn],
-                };
+                    const progressionResult = await storytellerService.runWorldProgression(stateForProgression, newPresentNpcIds, geminiService);
 
-                const progressionResult = await storytellerService.runWorldProgression(stateForProgression, newPresentNpcIds, geminiService);
-
-                worldProgressNpcUpdates = progressionResult.npcUpdates;
-                worldProgressLocationUpdates = progressionResult.worldLocationUpdates;
-                worldProgressChronicleEntry = progressionResult.chronicleEntry;
-                
-                turnsSinceProgression = 0; // Reset counter
+                    worldProgressNpcUpdates = progressionResult.npcUpdates;
+                    worldProgressLocationUpdates = progressionResult.worldLocationUpdates;
+                    worldProgressChronicleEntry = progressionResult.chronicleEntry;
+                    
+                    turnsSinceProgression = 0; // Reset counter
+                }
             }
             // --- END WORLD PROGRESSION ENGINE ---
             
