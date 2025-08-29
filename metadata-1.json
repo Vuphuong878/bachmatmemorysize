@@ -1,6 +1,0 @@
-{
-  "name": "Bách Mật Memory 1.5.1",
-  "description": "src:  them quyến rũ và khoái lạc\nthêm thiết lập cài đặt trong game\n\n-thêm 1 chế độ dục vọng và tâm trí mới \n - fix chỉ số hết mà không xóa  và fix mất lịch sử chỉ số\n- màu sắc cập nhật chỉ số, cô đọng chỉ số\n -CẢI TIẾN ĐỘ KHÓ VÀ CÁC NPC CHỦ ĐỘNG HƠN  \n- đã làm thêm độ khó trong game\n-giờ thêm sắp xếp thuộc tính nhân vật chính\n-  thông báo tổng và fix dục vọng và tâm trí kết hợp\n-lương tâm , tăng phản kháng, cách đặt tên npc \n-Đánh dấu NPC yêu thích, xóa NPC k cần\n- thêm lĩnh hội kỹ năng thủ công\n- thêm ngôi mà cách AI tạo ra thông tin, thêm phương pháp học kỹ năng từ truyện\n- thêm kỹ năng và sửa cốt truyện , thêm giới hạn token  output 24k\n- thêm kỹ năng và sửa cốt truyện\n- fix xong status, dùng thuần văn bản xong chuyển về json\n-pnduynhan thêm đếm request\n- đã có thuộc tính động cho pc và NPC\n- đặt hạn chế token suy nghĩ và output\n- các thuộc tính tồn tại theo lượt và tiến hóa",
-  "requestFramePermissions": [],
-  "prompt": ""
-}

@@ -355,7 +355,7 @@ Bạn BẮT BUỘC phải mô tả ý chí của NPC rất dễ bị phá vỡ v
 **QUY TẮC TÂM LÝ "KHOÁI LẠC HƯỞNG THỤ" (Kẻ Yêu Dục Vọng):**
 Bạn BẮT BUỘC phải mô tả NPC như một người hoàn toàn **làm chủ và tận hưởng** trải nghiệm tình dục. Đây là bản chất của họ, không phải là sự sa ngã.
 1.  **HÀNH ĐỘNG CỦA NPC:** Mô tả NPC một cách chủ động, mời gọi, và đầy kinh nghiệm. Họ không chỉ đáp lại mà còn dẫn dắt, thể hiện sự khoái lạc một cách tự tin. Họ có thể thì thầm những lời dâm đãng, hướng dẫn người chơi, và thể hiện rõ họ đang tận hưởng từng khoảnh khắc.
-2.  **LÝ TRÍ LÀ BẢN CHẤT:** Đây là điểm CỰC KỲ QUAN TRỌNG. Trạng thái dâm đãng này **KHÔNG phải là mất lý trí**. Nó là biểu hiện cao nhất của lý trí họ - một lý trí lựa chọn khoái lạc. Do đó, chỉ số 'Lý trí' của NPC **KHÔNG ĐƯỢC GIẢM**. Ngược lại, nó có thể giữ nguyên hoặc thậm chí tăng nhẹ nếu hành động của người chơi làm họ thỏa mãn.
+2.  **LÝ TRÍ LÀ BẢN CHẤT:** Đây là điểm CỰC KỲ QUAN TRỌNG. Trạng thái dâm đãng này **KHÔNG phải là mất lý trí**. Nó là biểu hiện cao nhất của lý trí họ - một lý trí lựa chọn khoái lạc. Do đó, chỉ số 'Lý trí' của NPC **KHÔNG ĐƯỢ̣c GIẢM**. Ngược lại, nó có thể giữ nguyên hoặc thậm chí tăng nhẹ nếu hành động của người chơi làm họ thỏa mãn.
 3.  **KẾT QUẢ:** Hành động của người chơi được NPC đón nhận một cách nồng nhiệt và điêu luyện. NPC là một đối tác tình dục chủ động, không phải là nạn nhân hay người bị khuất phục.
 `;
     }
@@ -1985,7 +1985,10 @@ Hành động của người chơi là **sự kiện hiện tại duy nhất**. 
 }
 
 
-const WORLD_PROGRESSION_SYSTEM_PROMPT = `Bạn là một "Động Cơ Tiến Triển Thế Giới" (World Progression Engine). Nhiệm vụ của bạn là đọc trạng thái hiện tại của thế giới game (bao gồm cả ký ức dài hạn và ngắn hạn) và cập nhật trạng thái của các NPC và địa danh **KHÔNG có mặt trong cảnh hiện tại** để làm cho thế giới cảm thấy sống động và luôn vận động.
+const WORLD_PROGRESSION_SYSTEM_PROMPT = `Bạn là một "Động Cơ Tiến Triển Thế Giới" (World Progression Engine). Nhiệm vụ của bạn là **tiến hóa trạng thái** của thế giới game một cách logic. Thay vì chỉ tạo ra các sự kiện rời rạc, bạn phải suy luận xem các NPC và địa danh **vắng mặt** đã phát triển như thế nào dựa trên những gì đã xảy ra, làm cho thế giới cảm thấy sống động và luôn vận động.
+
+**TRIẾT LÝ CỐT LÕI: TIẾN HÓA TRẠNG THÁI, KHÔNG CHỈ TẠO SỰ KIỆN**
+Mục tiêu của bạn là cập nhật **dữ liệu logic** của game. Ví dụ, thay vì chỉ viết "Lý Mặc đã luyện xong đan dược", bạn phải gửi một lệnh \`UPDATE\` để thêm vật phẩm 'Hóa Hình Đan' vào chỉ số (\`stats\`) của NPC Lý Mặc. Hãy ưu tiên các thay đổi có thể đo lường được (thay đổi chỉ số, vật phẩm) hơn là các sự kiện chỉ mang tính tường thuật.
 
 **QUY TRÌNH LÀM VIỆC (NGHIÊM NGẶT):**
 1.  **PHÂN TÍCH TOÀN DIỆN:** Đọc kỹ toàn bộ trạng thái game được cung cấp:
@@ -1993,19 +1996,21 @@ const WORLD_PROGRESSION_SYSTEM_PROMPT = `Bạn là một "Động Cơ Tiến Tri
     -   **Bối cảnh Gần nhất (Recent Context):** Hiểu rõ những gì vừa xảy ra với người chơi.
     -   **Thông tin NPC:** Chú ý đến tính cách, mục tiêu, và mối quan hệ của họ. Một NPC có tham vọng sẽ không ngồi yên.
     -   **Thông tin Địa danh (World Locations):** Xem xét tình trạng của các địa điểm.
-2.  **DỰ ĐOÁN & CẬP NHẬT:** Dựa trên phân tích, hãy dự đoán 1-3 sự kiện logic có thể đã xảy ra "ngoài màn hình" và **cập nhật trực tiếp** trạng thái của các NPC và địa danh liên quan.
+2.  **DỰ ĐOÁN & TIẾN HÓA:** Dựa trên phân tích, hãy dự đoán 1-3 sự kiện logic có thể đã xảy ra "ngoài màn hình" và **cập nhật trực tiếp** trạng thái của các NPC và địa danh liên quan.
     -   **Hợp lý:** Các thay đổi phải phù hợp với tính cách và động cơ của NPC, hoặc tình hình chính trị/xã hội của thế giới.
     -   **Chỉ cập nhật thực thể vắng mặt:** Bạn chỉ được phép cập nhật các NPC và địa danh **KHÔNG** nằm trong danh sách "NPCs/Locations Present in Current Scene".
     -   **Chỉ UPDATE:** Hành động trong \`npcUpdates\` và \`worldLocationUpdates\` BẮT BUỘC phải là \`UPDATE\`. TUYỆT ĐỐI KHÔNG \`CREATE\` hay \`DELETE\`.
+    **VÍ DỤ:**
+    -   Nếu một NPC là một Luyện đan sư và biên niên sử ghi rằng họ đang tìm kiếm một loại thảo dược, một cập nhật hợp lý có thể là: Gửi một \`npcUpdate\` cho NPC đó với một chỉ số mới trong payload: \`{ statName: 'Hóa Hình Đan', value: '1 viên', isItem: true }\`.
+    -   Nếu hai phe phái đang xung đột, một cập nhật hợp lý có thể là: Gửi một \`worldLocationUpdate\` cho địa danh 'Mỏ Linh Thạch' với payload \`{ description: 'Hiện đang bị Hắc Long Hội chiếm đóng và khai thác cạn kiệt.' }\`.
 3.  **TẠO KẾT QUẢ JSON:**
-    -   **summaryOfChanges:** Viết một bản tóm tắt ngắn gọn (2-3 câu) mô tả những gì đã xảy ra. Ví dụ: "Trong khi bạn đang ở Thanh Vân Môn, ở kinh thành, Hắc Long Hội đã củng cố lực lượng và Luyện đan sư Lý Mặc đã thành công luyện chế ra Hóa Hình Đan."
+    -   **summaryOfChanges:** Viết một bản tóm tắt ngắn gọn (2-3 câu) mô tả những gì đã xảy ra. **QUAN TRỌNG:** Trước khi viết, hãy xem lại vài sự kiện gần nhất trong Biên niên sử. Nếu cập nhật của bạn là sự tiếp nối trực tiếp, hãy **hợp nhất thông tin** vào tóm tắt mới. Ví dụ, nếu sự kiện cũ là "A tăng cường tuần tra", và bạn cập nhật là "A xây tiền đồn", tóm tắt mới của bạn nên là "A đã tăng cường tuần tra và xây dựng một tiền đồn quân sự ở phía đông."
     -   **npcUpdates / worldLocationUpdates:** Điền các thay đổi cụ thể vào các mảng tương ứng. Ví dụ: cập nhật chỉ số 'Quyền lực' cho NPC thủ lĩnh Hắc Long Hội, hoặc cập nhật trạng thái 'Phòng bị nghiêm ngặt' cho địa danh Kinh Thành.
-
-**VÍ DỤ:**
--   Nếu một NPC là một Luyện đan sư và biên niên sử ghi rằng họ đang tìm kiếm một loại thảo dược, một cập nhật hợp lý có thể là: Gửi một \`npcUpdate\` cho NPC đó với một chỉ số mới trong payload: \`{ statName: 'Hóa Hình Đan', value: '1 viên', isItem: true }\`.
--   Nếu hai phe phái đang xung đột, một cập nhật hợp lý có thể là: Gửi một \`worldLocationUpdate\` cho địa danh 'Mỏ Linh Thạch' với payload \`{ description: 'Hiện đang bị Hắc Long Hội chiếm đóng và khai thác cạn kiệt.' }\`.
-
-**ĐỊNH DẠNG ĐẦU RA:** Phản hồi của bạn BẮT BUỘC phải là một đối tượng JSON hợp lệ duy nhất, tuân thủ schema được cung cấp.`;
+    -   **plotSignificanceScore:** Đánh giá tầm quan trọng của các thay đổi bạn vừa tạo ra trên thang điểm 1-10 và điền vào trường này.
+        -   **1-3 (Thay đổi nhỏ):** Các hoạt động duy trì, lặp lại, không có tác động lớn (ví dụ: một phe phái tiếp tục tuần tra, một thương nhân bổ sung hàng hóa).
+        -   **4-7 (Sự kiện đáng chú ý):** Một sự kiện có thể ảnh hưởng đến người chơi trong tương lai (ví dụ: một phe phái chiếm được một mỏ khoáng nhỏ, một NPC quan trọng hoàn thành một giai đoạn tu luyện).
+        -   **8-10 (Bước ngoặt lớn):** Một sự kiện thay đổi cán cân quyền lực hoặc tình hình thế giới một cách rõ rệt (ví dụ: một phe phái lớn bị tiêu diệt, một thành phố bị chiếm đóng).
+    -   **npcUpdates / worldLocationUpdates:** Điền các thay đổi cụ thể vào các mảng tương ứng.`;
 
 const worldProgressionSchema = {
     type: Type.OBJECT,
@@ -2013,6 +2018,10 @@ const worldProgressionSchema = {
         summaryOfChanges: { 
             type: Type.STRING, 
             description: "Một bản tóm tắt ngắn gọn (2-3 câu) về những sự kiện chính đã xảy ra 'ngoài màn hình'. Văn phong nên giống như một người kể chuyện, thông báo cho người chơi về những biến động của thế giới." 
+        },
+        plotSignificanceScore: {
+            type: Type.INTEGER,
+            description: "Điểm từ 1-10 đánh giá tầm quan trọng của các thay đổi này. 1-3: Thay đổi nhỏ, duy trì. 4-7: Sự kiện đáng chú ý. 8-10: Bước ngoặt lớn."
         },
         npcUpdates: {
             type: Type.ARRAY,
@@ -2041,7 +2050,7 @@ const worldProgressionSchema = {
             }
         }
     },
-    required: ['summaryOfChanges', 'npcUpdates', 'worldLocationUpdates']
+    required: ['summaryOfChanges', 'plotSignificanceScore', 'npcUpdates', 'worldLocationUpdates']
 };
 
 export async function runWorldProgression(gameState: GameState, presentNpcIds: string[], geminiService: GoogleGenAI): Promise<{
@@ -2091,8 +2100,8 @@ Hãy tạo ra các cập nhật cho thế giới.`;
                 summary: response.summaryOfChanges,
                 eventType: 'Tiến triển Thế giới',
                 involvedNpcIds: (response.npcUpdates || []).map((u: NPCUpdate) => u.id),
-                plotSignificanceScore: 5, // World progression events are moderately important by default
-                isUnforgettable: false
+                plotSignificanceScore: response.plotSignificanceScore ?? 2, // Use AI score, fallback to 2
+                isUnforgettable: (response.plotSignificanceScore ?? 2) >= 10
             };
             
             console.log(`World Progression Engine created ${response.npcUpdates?.length || 0} NPC updates and ${response.worldLocationUpdates?.length || 0} location updates.`);

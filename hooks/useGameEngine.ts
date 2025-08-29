@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSettings } from './useSettings';
 import { WorldCreationState, GameState, GameTurn, CharacterStats, NPC, NPCUpdate, CharacterStat, CharacterStatUpdate, Skill, LustModeFlavor, ApiKeySource, NpcMindset, Ability, DestinyCompassMode, ChronicleEntry, WorldLocation, WorldLocationUpdate } from '../types';
@@ -441,8 +440,17 @@ export function useGameEngine(
             const updatedLocations = applyWorldLocationUpdates(gameState.worldLocations, allLocationUpdates);
 
             if (worldProgressChronicleEntry) {
-                if (!storytellerService.isDuplicateChronicleEntry(worldProgressChronicleEntry, newPlotChronicle)) {
-                    newPlotChronicle.push(worldProgressChronicleEntry);
+                // Significance Threshold: Only add WPE chronicles if they are important enough.
+                const WPE_SIGNIFICANCE_THRESHOLD = 3;
+                if (worldProgressChronicleEntry.plotSignificanceScore > WPE_SIGNIFICANCE_THRESHOLD) {
+                    if (!storytellerService.isDuplicateChronicleEntry(worldProgressChronicleEntry, newPlotChronicle)) {
+                        newPlotChronicle.push(worldProgressChronicleEntry);
+                        console.log(`WPE Chronicle added (Score: ${worldProgressChronicleEntry.plotSignificanceScore}): "${worldProgressChronicleEntry.summary}"`);
+                    } else {
+                        console.log(`WPE Chronicle skipped (Duplicate): "${worldProgressChronicleEntry.summary}"`);
+                    }
+                } else {
+                    console.log(`WPE Chronicle skipped due to low significance (Score: ${worldProgressChronicleEntry.plotSignificanceScore}): "${worldProgressChronicleEntry.summary}"`);
                 }
             }
 
