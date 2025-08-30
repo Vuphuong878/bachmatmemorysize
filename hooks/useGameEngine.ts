@@ -357,6 +357,8 @@ export function useGameEngine(
                 playerSkills: initialPlayerSkills,
                 plotChronicle: [],
                 turnsSinceLastChronicle: [initialTurn],
+                turnCount: 1,
+                worldInfoSheet: 'Thế giới đang trong trạng thái khởi đầu, chưa có thông tin tình báo đặc biệt.'
             };
             setGameState(newState);
             GameSaveService.saveAutoSave(newState); // Auto-save after initialization
@@ -462,10 +464,35 @@ export function useGameEngine(
                 worldLocations: updatedLocations,
                 plotChronicle: newPlotChronicle,
                 turnsSinceLastChronicle: finalShortTermMemory,
+                turnCount: (gameState.turnCount || 0) + 1,
+            };
+            
+            let finalWorldInfoSheet = newState.worldInfoSheet;
+            const shouldSimulate = (newState.turnCount % 30 === 0) || isSceneBreak;
+
+            if (shouldSimulate) {
+                console.log(`World simulation triggered: turn ${newState.turnCount}, sceneBreak: ${isSceneBreak}`);
+                try {
+                    const newInfoSheet = await callApiWithRetry(service => storytellerService.simulateOffscreenWorld(
+                        newState,
+                        newPresentNpcIds,
+                        newTurn.storyText,
+                        service
+                    ));
+                    finalWorldInfoSheet = newInfoSheet;
+                } catch (simError: any) {
+                    console.error("World simulation failed:", simError);
+                    // Don't crash the game, just log the error and keep the old sheet
+                }
+            }
+
+            const finalState: GameState = {
+                ...newState,
+                worldInfoSheet: finalWorldInfoSheet,
             };
 
-            setGameState(newState);
-            GameSaveService.saveAutoSave(newState);
+            setGameState(finalState);
+            GameSaveService.saveAutoSave(finalState);
             setPresentNpcIds(newPresentNpcIds);
             
             const tokenCount = newTurn.tokenCount || 0;
@@ -483,9 +510,9 @@ export function useGameEngine(
                     ));
                     setGeneratedImageUrl(imageUrl);
                     if (imageUrl) {
-                        const updatedState: GameState = { ...newState, lastImageUrl: imageUrl };
-                        setGameState(updatedState);
-                        GameSaveService.saveAutoSave(updatedState);
+                        const updatedStateWithImage: GameState = { ...finalState, lastImageUrl: imageUrl };
+                        setGameState(updatedStateWithImage);
+                        GameSaveService.saveAutoSave(updatedStateWithImage);
                     }
                 } catch (imgErr: any) {
                     console.error("Image generation failed:", imgErr);

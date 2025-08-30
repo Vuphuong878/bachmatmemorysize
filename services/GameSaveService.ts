@@ -81,6 +81,14 @@ function validateAndHydrateGameState(parsedState: any): GameState | null {
         const otherStatKeys = allStatKeys.filter((key: string) => !CORE_STATS.includes(key)).sort((a: string, b: string) => a.localeCompare(b));
         parsedState.playerStatOrder = [...coreStatKeys, ...otherStatKeys];
     }
+    
+    // Add turnCount and worldInfoSheet for old saves
+    if (typeof parsedState.turnCount !== 'number') {
+        parsedState.turnCount = parsedState.history.length;
+    }
+    if (typeof parsedState.worldInfoSheet !== 'string') {
+        parsedState.worldInfoSheet = 'Chưa có thông tin tình báo đặc biệt về thế giới.';
+    }
 
     return parsedState as GameState;
   }

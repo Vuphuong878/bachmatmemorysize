@@ -164,6 +164,8 @@ export interface GameState {
   plotChronicle: ChronicleEntry[]; // The structured, summarized history of major plot points.
   turnsSinceLastChronicle: GameTurn[]; // Track turns for the next summary
   lastImageUrl?: string; // The URL for the AI-generated image for the latest turn.
+  turnCount: number; // The total number of turns played.
+  worldInfoSheet: string; // A summary of off-screen world events.
   // UI/gameplay settings (optional)
   uiSettings?: {
     destinyCompassMode: DestinyCompassMode;

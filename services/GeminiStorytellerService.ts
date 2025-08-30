@@ -1,5 +1,3 @@
-
-
 import { GoogleGenAI, Type, GenerateContentResponse, HarmCategory, HarmBlockThreshold } from '@google/genai';
 import { WorldCreationState, GameState, GameTurn, NPCUpdate, CharacterStatUpdate, NPC, Skill, NarrativePerspective, LustModeFlavor, NpcMindset, DestinyCompassMode, ChronicleEntry, WorldLocationUpdate } from '../types';
 
@@ -943,7 +941,10 @@ const CORE_LOGIC_SYSTEM_PROMPT = `Bạn là một AI kể chuyện và quản l�
 Nhiệm vụ cốt lõi của bạn là **tiếp nối** câu chuyện, mô tả những gì xảy ra **SAU** hành động của người chơi. TUYỆT ĐỐI KHÔNG được phép sửa đổi, tóm tắt, hay kể lại những sự kiện đã xảy ra trong lượt truyện trước. Phản hồi của bạn phải là một phân đoạn truyện **hoàn toàn mới**.
 
 **TẦNG KÝ ỨC (CỰC KỲ QUAN TRỌNG):**
-Bạn sẽ được cung cấp 3 tầng ký ức để duy trì sự nhất quán. Sự mâu thuẫn với NỀN TẢNG hoặc BIÊN NIÊN SỬ sẽ phá hỏng trò chơi.
+Bạn sẽ được cung cấp các tầng ký ức để duy trì sự nhất quán. Sự mâu thuẫn với các tầng ký ức cốt lõi sẽ phá hỏng trò chơi.
+
+**BÁO CÁO TÌNH BÁO THẾ GIỚI (World Info Sheet):** Đây là một bản tóm tắt về các sự kiện đang diễn ra 'ngoài màn hình'. Bạn PHẢI đọc nó. Nếu câu chuyện bạn đang viết có nhắc đến một NPC, địa danh, hoặc sự kiện có trong báo cáo này, bạn BẮT BUỘC phải lồng ghép thông tin từ báo cáo vào lời kể của mình để tạo cảm giác thế giới đang sống.
+
 1.  **NỀN TẢNG THẾ GIỚI (World Foundation):** Đây là các quy tắc cốt lõi, bất biến của thế giới (thể loại, bối cảnh, tiểu sử nhân vật). Bạn PHẢI tuyệt đối tuân thủ, không được phép thay đổi hay mâu thuẫn.
 2.  **BIÊN NIÊN SỬ CỐT TRUYỆN (Plot Chronicle):** Đây là một danh sách được tuyển chọn gồm các sự kiện quan trọng nhất, gần đây nhất, và **một vài sự kiện ngẫu nhiên trong quá khứ** của toàn bộ cốt truyện. Hãy dùng các sự kiện ngẫu nhiên này làm nguồn cảm hứng để tạo ra những hành động hoặc lời thoại bất ngờ, sâu sắc từ NPC (ví dụ: đột nhiên nhớ lại một ân oán cũ).
     -   **ƯU TIÊN TUYỆT ĐỐI:** Bạn BẮT BUỘC phải đọc kỹ các \`keyDetail\`. Đây là những "hạt giống cốt truyện" đã được gieo từ trước. Nhiệm vụ của bạn là làm cho chúng nảy mầm.
@@ -1274,6 +1275,39 @@ const SHORT_TERM_SUMMARIZER_PROMPT = `Bạn là một AI tóm tắt viên. Nhi�
 **ĐOẠN TÓM TẮT CÔ ĐỌNG:**
 `;
 
+const WORLD_SIMULATOR_PROMPT = `Bạn là một AI mô phỏng thế giới sống. Nhiệm vụ của bạn là mô tả ngắn gọn những gì đang diễn ra 'ngoài màn hình' trong thế giới game.
+
+**QUY TRÌNH LÀM VIỆC:**
+1.  **Phân tích Bối cảnh:** Bạn sẽ nhận được bối cảnh thế giới, các sự kiện cốt truyện chính đã xảy ra, và danh sách đầy đủ các NPC/Địa danh. Quan trọng nhất, bạn sẽ biết những ai/cái gì đang 'trên màn hình' (hiện diện trong cảnh truyện hiện tại).
+2.  **Mô phỏng 'Ngoài Màn hình':** Tập trung vào các NPC và Địa danh **KHÔNG** có mặt trong cảnh hiện tại. Dựa trên tính cách, mục tiêu, và các sự kiện đã qua, hãy suy luận xem họ đang làm gì.
+    *   Họ có đang phản ứng lại các sự kiện trong \`Plot Chronicle\` không?
+    *   Họ có đang theo đuổi mục tiêu riêng của mình không?
+    *   Một địa danh không có người trông coi có đang thay đổi (xuống cấp, bị chiếm đóng) không?
+    *   Có một sự kiện lớn nào (chiến tranh, thiên tai) đang âm thầm diễn ra ở một nơi khác không?
+3.  **Tạo Báo cáo Tình báo (World Info Sheet):** Dựa trên mô phỏng của bạn, hãy viết một bản tóm tắt súc tích từ 3-5 câu.
+    *   **Giọng văn:** Khách quan, ngắn gọn, như một báo cáo tình báo.
+    *   **Nội dung:** Chỉ tập trung vào những diễn biến mới và đáng chú ý nhất.
+    *   **Mục tiêu:** Cung cấp thông tin để AI kể chuyện chính có thể sử dụng, tạo cảm giác thế giới đang tự vận động.
+
+**VÍ DỤ:**
+*   Nếu một NPC phản diện vừa thua trận và bỏ chạy, báo cáo có thể là: "Lão ma đầu đang lẩn trốn trong Hắc Ám Sơn Mạch để chữa thương, lòng đầy căm hận. Hắn đã tập hợp được một nhóm lâu la mới. Trong khi đó, tại kinh thành, tin đồn về chiến thắng của người chơi đang lan truyền, làm tăng uy tín của hoàng gia."
+
+**BỐI CẢNH ĐẦU VÀO:**
+---
+**Bối cảnh Thế giới:** {WORLD_CONTEXT}
+---
+**Biên niên sử Cốt truyện (Sự kiện đã qua):**
+{PLOT_CHRONICLE}
+---
+**Danh sách Toàn bộ NPC & Địa danh:**
+{ALL_ENTITIES}
+---
+**NPC & Địa danh đang 'Trên Màn hình' (KHÔNG cần mô phỏng):**
+{PRESENT_ENTITIES}
+---
+
+**Báo cáo Tình báo Thế giới (3-5 câu):**
+`;
 
 const SKILL_GENERATOR_PROMPT = `Bạn là một AI chuyên thiết kế kỹ năng game. Nhiệm vụ duy nhất của bạn là dựa vào tên một năng lực và bối cảnh thế giới được cung cấp, sau đó tạo ra một bộ kỹ năng (Skill object) hoàn chỉnh theo schema JSON.
 QUAN TRỌNG:
@@ -1491,6 +1525,44 @@ export async function summarizeShortTermMemory(
         isCondensedMemory: true, // Mark this turn as condensed
     };
 }
+
+export async function simulateOffscreenWorld(
+    gameState: GameState,
+    presentNpcIds: string[],
+    lastStoryText: string,
+    geminiService: GoogleGenAI
+): Promise<string> {
+    const offscreenNpcs = gameState.npcs.filter(npc => !presentNpcIds.includes(npc.id));
+
+    const presentLocationNames = new Set<string>();
+    const lastTurnTextLower = lastStoryText.toLowerCase();
+    gameState.worldLocations.forEach(loc => {
+        if (lastTurnTextLower.includes(loc.name.toLowerCase())) {
+            presentLocationNames.add(loc.name);
+        }
+    });
+
+    if (offscreenNpcs.length === 0 && gameState.worldLocations.every(loc => presentLocationNames.has(loc.name))) {
+        return "Mọi thứ trong thế giới dường như đang yên ắng.";
+    }
+
+    const worldContextText = `Thể loại: ${gameState.worldContext.genre}. Mô tả: ${gameState.worldContext.description}`;
+    const plotChronicleText = gameState.plotChronicle.map(c => `- ${c.summary}`).join('\n') || "Chưa có sự kiện lớn.";
+    
+    const allEntitiesText = `NPCs:\n${gameState.npcs.map(n => `- ${n.name} (ID: ${n.id}, Tính cách: ${n.personality}, Mối quan hệ: ${n.relationship})`).join('\n')}\nĐịa danh:\n${gameState.worldLocations.map(l => `- ${l.name}: ${l.description}`).join('\n')}`;
+    
+    const presentEntitiesText = `NPCs hiện diện: ${presentNpcIds.length > 0 ? presentNpcIds.join(', ') : 'Không có'}\nĐịa danh hiện diện: ${presentLocationNames.size > 0 ? Array.from(presentLocationNames).join(', ') : 'Không có'}`;
+
+    const prompt = WORLD_SIMULATOR_PROMPT
+        .replace('{WORLD_CONTEXT}', worldContextText)
+        .replace('{PLOT_CHRONICLE}', plotChronicleText)
+        .replace('{ALL_ENTITIES}', allEntitiesText)
+        .replace('{PRESENT_ENTITIES}', presentEntitiesText);
+
+    const response = await callCreativeTextAI(prompt, geminiService, gameState.worldContext.isNsfw);
+    return response.text.trim();
+}
+
 
 export async function initializeStory(worldState: WorldCreationState, geminiService: GoogleGenAI): Promise<{
     initialTurn: GameTurn;
@@ -1919,7 +1991,12 @@ Khi chế độ Logic Nghiêm ngặt TẮT, người chơi không còn hành đ�
 
 
     // --- Request 1: Core Logic (JSON) ---
-    const corePrompt = `${systemPromptWithModes}\n\n**--- TẦNG 1: NỀN TẢNG THẾ GIỚI (BẤT BIẾN) ---**
+    const corePrompt = `${systemPromptWithModes}
+
+**--- BÁO CÁO TÌNH BÁO THẾ GIỚI (Đọc Kỹ) ---**
+${gameState.worldInfoSheet || "Chưa có thông tin."}
+
+**--- TẦNG 1: NỀN TẢNG THẾ GIỚI (BẤT BIẾN) ---**
 ${worldFoundation}\n\n**--- TẦNG 2: BIÊN NIÊN SỬ CỐT TRUYỆN (SỰ KIỆN LỚN ĐÃ XẢY RA) ---**
 ${plotChronicleText}\n\n**--- TẦNG 3: BỐI CẢNH GẦN NHẤT ---**
 - **Các sự kiện gần nhất:**
