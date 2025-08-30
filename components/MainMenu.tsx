@@ -144,16 +144,16 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStart, onContinueManualSave, onCo
           <Button onClick={triggerFileLoad} variant="secondary">
             Tải game từ file...
           </Button>
-          <div className="flex flex-row gap-3">
-            <Button onClick={onSettings} variant="secondary" style={{ minWidth: 120, fontSize: 16, padding: '10px 0' }}>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button onClick={onSettings} variant="secondary" className="!py-2.5 !text-base flex-1 whitespace-nowrap">
               Thiết lập
             </Button>
-            <Button onClick={() => setChangelogOpen(true)} variant="secondary" style={{ minWidth: 120, fontSize: 16, padding: '10px 0' }}>
+            <Button onClick={() => setChangelogOpen(true)} variant="secondary" className="!py-2.5 !text-base flex-1 whitespace-nowrap">
               Thông Tin
             </Button>
             <Button
               variant="secondary"
-              style={{ minWidth: 90, fontSize: 15, padding: '10px 0' }}
+              className="!py-2.5 !text-base !w-auto whitespace-nowrap"
               onClick={() => window.open('https://docs.google.com/document/d/1xqN7Qmy7XV3X7P0wNjHsZcN-6kxHnPXi-c-FXT5cfuM/edit?usp=sharing', '_blank', 'noopener,noreferrer')}
             >
               Wiki

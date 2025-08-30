@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSettings } from '../../hooks/useSettings';
@@ -321,8 +320,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
               )}
               <TokenCounter lastTurn={lastTurnTokenCount} total={totalTokenCount} />
               <RequestCounter count={totalRequests} />
-              <Button onClick={triggerSaveToFile} variant="secondary" className="!py-2 !px-3 !text-xs sm:!text-sm" disabled={!isGameInitialized}>Lưu File</Button>
-              <Button onClick={() => setIsExitModalOpen(true)} variant="secondary" className="!py-2 !px-3 !text-xs sm:!text-sm">Thoát</Button>
+              <Button onClick={triggerSaveToFile} variant="compact" disabled={!isGameInitialized}>Lưu File</Button>
+              <Button onClick={() => setIsExitModalOpen(true)} variant="compact">Thoát</Button>
             </div>
           </div>
       </header>
