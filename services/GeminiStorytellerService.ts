@@ -76,9 +76,9 @@ const npcUpdatePayloadCoreSchema = {
     properties: {
         name: { type: Type.STRING, description: "Tên riêng của nhân vật. Tên phải phù hợp với bối cảnh và lai lịch nhân vật. AI sẽ tự quyết định phong cách tên (ví dụ: Anh, Nhật, Hán Việt...)." },
         gender: { type: Type.STRING },
-    personality: { type: Type.STRING, description: "Tính cách của NPC. Đây là chỉ số cố định, được xác định khi tạo NPC và không thay đổi hoặc tiến hoá trong suốt quá trình chơi." },
+        personality: { type: Type.STRING, description: "Tính cách của NPC. Đây là chỉ số cố định, được xác định khi tạo NPC và không thay đổi hoặc tiến hoá trong suốt quá trình chơi." },
         identity: { type: Type.STRING, description: "Thân phận, vai trò, xuất thân, nghề nghiệp hoặc vị trí xã hội của NPC." },
-        appearance: { type: Type.STRING, description: "Mô tả ngoại hình, dáng vẻ, hoặc điểm nổi bật về hình thể của NPC." },
+        appearance: { type: Type.STRING, description: "Mô tả ngoại hình, dáng vẻ, hoặc điểm nổi bật về hình thể của NPC.  LƯU Ý: Dù ngoại hình có thay đổi (ví dụ: lấm lem, dính bùn, bị thương...), khuôn mặt và dáng vẻ nhận diện vốn có của NPC luôn được giữ nguyên. Chỉ mô tả sự thay đổi tác động lên khuôn mặt/dáng vẻ gốc (ví dụ: 'khuôn mặt xinh đẹp lấm lem bùn đất', 'gương mặt lạnh lùng bị xước nhẹ'), không được thay đổi đặc điểm nhận diện khuôn mặt gốc." },
         virginity: { type: Type.STRING, description: "Trinh tiết hoặc Nguyên Âm (chỉ cho NPC nữ, mô tả theo chủ đề truyện)." },
         relationship: { type: Type.STRING, description: "Mối quan hệ với người chơi." },
         isProtected: { type: Type.BOOLEAN, description: "Trạng thái bảo vệ NPC khỏi bị xóa bởi AI. Bạn không được thay đổi giá trị này trừ khi được yêu cầu." },
@@ -1096,6 +1096,7 @@ Bạn BẮT BUỘC phải tạo ra chính xác 8 lựa chọn hành động ti�
     -   Ngoại trừ các lựa chọn chiến đấu hoặc phản xạ cơ bản, các lựa chọn khác phải phản ánh tính cách \`personality\` và tiểu sử \`biography\` của nhân vật chính. Một nhân vật "Lạnh lùng, tà ác" không nên có các lựa chọn như "An ủi đứa trẻ mồ côi" trừ khi có một mục đích ngầm rõ ràng.
 
 - LỜI KỂ & HÀNH ĐỘNG:
+- Chủ động tạo thêm các đoạn hội thoại phụ giữa NPC hoặc nhân vật phụ, đặc biệt khi nhân vật chính đi ngang qua các địa điểm công cộng (như quán trà, chợ, quán rượu...). Ví dụ: khi đi ngang quán trà, hãy mô tả nhân vật chính nghe được hội thoại giữa hai vị khách về các sự kiện, tin đồn, hoặc chuyện đời thường. Các hội thoại này giúp thế giới trở nên sống động, giàu thông tin nền và tạo cảm giác thế giới đang vận động độc lập với người chơi.
 - Tập trung mô tả môi trường, cảm xúc, diễn biến, giao tiếp, hành động vật lý khách quan, không suy đoán tâm lý NPC.
 - Tôn trọng tính cách, động cơ NPC; không để mọi tình tiết chỉ xoay quanh người chơi.
 - Duy trì độ khó, có thể có bất lợi/thất bại hợp lý.
@@ -1153,8 +1154,7 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
         -   **Hiệu ứng trung bình/nghiêm trọng:** gán 'duration' từ **25 đến 75 lượt**. (Ví dụ: 'Gãy xương', 'Trúng độc').
         -   **Hiệu ứng rất lâu dài/lời nguyền:** có thể gán 'duration' lớn hơn **(75+ lượt)**.
         Mục tiêu là để các trạng thái tồn tại đủ lâu để người chơi cảm nhận được tác động của chúng. TUYỆT ĐỐI CẤM gán 'duration' cho 4 chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Cảnh Giới).
-    3.  **SỰ DIỄN BIẾN (EVOLUTION):** Với các trạng thái có thể trở nặng (ví dụ: 'Vết thương nhỏ' -> 'Nhiễm trùng nhẹ'), hãy NÊN thêm thuộc tính 'evolution'.
-        Mục tiêu là để các trạng thái tồn tại đủ lâu để người chơi cảm nhận được tác động của chúng. TUYỆT ĐỐI CẤM gán 'duration' cho 4 chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Cảnh Giới).    
+    3.  **SỰ DIỄN BIẾN (EVOLUTION):** Với các trạng thái có thể trở nặng (ví dụ: 'Vết thương nhỏ' -> 'Lành lại'), hãy NÊN thêm thuộc tính 'evolution'.
     4.  **CÔ ĐỌNG THUỘC TÍNH (ATTRIBUTE CONDENSATION):** Để giữ giao diện gọn gàng, bạn BẮT BUỘC phải tuân thủ quy tắc cô đọng. Khi bạn cập nhật một chỉ số và thấy rằng giá trị (\`value\`) mới của nó quá dài (ví dụ: hơn 50 ký tự):
         a. **Sáng tạo danh hiệu:** Dựa vào nội dung của giá trị dài đó, hãy tự sáng tạo ra một danh hiệu ngắn gọn, súc tích và mạnh mẽ hơn (dưới 35 ký tự) để làm giá trị \`value\` mới.
         b. **Lưu trữ lịch sử:** Lấy giá trị dài ban đầu và thêm nó vào đầu mảng \`history\` của chỉ số đó (nếu mảng history đã tồn tại, hãy thêm vào đầu).
