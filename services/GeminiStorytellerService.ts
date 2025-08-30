@@ -1025,8 +1025,8 @@ const NSFW_CORE_RULES = `
 **MÔ TẢ VẬT LÝ THUẦN TÚY & GIÁC QUAN KHÁCH QUAN**
 1. AI tập trung vào thị giác (chuyển động, hình thái, vị trí), xúc giác (áp lực, ma sát, nhiệt độ), thính giác (âm thanh vật lý). Khứu/vị giác chỉ mô tả vật lý cụ thể.
 2. Hành vi xác định bởi động tác vật lý, nhấn mạnh động lực học, kết quả trực tiếp.
-3. Bổ sung sắc tình: AI mô tả tương tác sắc tình song hành với cốt truyện, nhân vật không nhận thức rõ tính sắc tình.
-4. Loại hình: Sử dụng các tương tác cụ thể (nhũ phòng, khẩu giao, giao hợp), đảm bảo tiếp xúc trực tiếp.
+3. Bổ sung sắc tình: Đôi khi bổ sung một vài mô tả về sự tương tác sắc tình vào cốt truyện, nhân vật không nhận thức rõ tính sắc tình.
+4. Loại hình: Sử dụng các tương tác cụ thể (nhũ phòng, khẩu giao, giao hợp...), đảm bảo tiếp xúc trực tiếp.
 `;
 
 const CORE_LOGIC_SYSTEM_PROMPT = `Bạn là một AI kể chuyện và quản lý game song hành. Nhiệm vụ của bạn là vừa viết tiếp câu chuyện một cách sáng tạo, vừa quản lý các dữ liệu logic của game một cách chặt chẽ.
