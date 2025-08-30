@@ -166,7 +166,7 @@ const StoryLog: React.FC<StoryLogProps> = ({
                     font-weight: italic;
                 }
                 .highlight-quote {
-                    color: #be98ffff;
+                    color: #c7adf3ff;
                     font-style: bold;
                 }
             `}</style>
