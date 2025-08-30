@@ -18,6 +18,14 @@ interface MainMenuProps {
 
 const changelogs = [
   {
+    version: '1.7.0',
+    date: '2025-08-30',
+    content: [
+      '- Nâng cấp groupAndSummarizeMinorEvents: Cho phép tóm tắt ký ức dài hạn theo chủ đề, giai đoạn hoặc theo NPC, giúp giảm tải bộ nhớ mà vẫn giữ continuity cốt truyện.',
+      '- Thiết kế lại WORLD_SIMULATOR_PROMPT: Cho phép AI mô phỏng thế giới ngoài màn hình và cập nhật trực tiếp trạng thái NPC, địa danh thông qua lệnh JSON, giúp thế giới game vận động độc lập và logic hơn.'
+    ].join('\n'),
+  },
+  {
     version: '1.6.0',
     date: '2025-08-27',
     content: [

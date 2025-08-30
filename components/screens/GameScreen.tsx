@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSettings } from '../../hooks/useSettings';
@@ -32,6 +33,8 @@ import InventorySheet from '../game/InventorySheet';
 import AiControlPanelModal from '../game/AiControlPanelModal';
 import WorldCodex from '../game/WorldCodex';
 import LocationEditModal from '../game/LocationEditModal';
+import { PencilIcon } from '../icons/PencilIcon';
+import { TrashIcon } from '../icons/TrashIcon';
 
 
 interface GameScreenProps {
@@ -41,7 +44,7 @@ interface GameScreenProps {
 }
 
 type LeftPanelTab = 'info' | 'skills' | 'inventory' | 'memory';
-type RightPanelTab = 'npcs' | 'world';
+type RightPanelTab = 'npcs' | 'world' | 'tinh-bao';
 
 const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, settingsHook }) => {
   const { 
@@ -55,7 +58,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
       editingAbility, requestAbilityEdit, confirmAbilityEdit, cancelAbilityEdit,
       reorderPlayerStat, movePlayerStatToTop,
       recentlyUpdatedPlayerStats, recentlyUpdatedNpcStats,
-      updatePlotChronicleEntry, updateShortTermMemoryTurn,
+      updatePlotChronicleEntry, updateShortTermMemoryTurn, updateWorldInfoSheet,
+      deletingChronicleIndex, requestPlotChronicleDeletion, confirmPlotChronicleDeletion, cancelPlotChronicleDeletion,
       generatedImageUrl, isGeneratingImage, imageGenerationError, regenerateLastImage,
       undoLastTurn,
       previousGameState,
@@ -67,6 +71,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   const [editingChronicleValue, setEditingChronicleValue] = useState('');
   const [editingMemoryType, setEditingMemoryType] = useState<'long' | 'short' | null>(null);
   const [detailModal, setDetailModal] = useState<{ type: 'long' | 'short'; idx: number; content: string } | null>(null);
+  const [isEditingWorldInfo, setIsEditingWorldInfo] = useState(false);
+  const [isClearingWorldInfo, setIsClearingWorldInfo] = useState(false);
 
   // --- UI/gameplay settings state ---
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>('bms-view-mode', 'desktop');
@@ -413,6 +419,10 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
                                     className="px-2 py-1 rounded bg-[#32284a] text-[#cfc6e0] text-xs font-bold hover:bg-[#6d4e8e] hover:text-white"
                                     onClick={() => setDetailModal({ type: 'long', idx, content: entry.summary })}
                                   >Chi tiết</button>
+                                   <button
+                                    className="px-2 py-1 rounded bg-red-900/70 text-red-300 text-xs font-bold hover:bg-red-700 hover:text-white"
+                                    onClick={() => requestPlotChronicleDeletion(idx)}
+                                  >Xóa</button>
                                 </div>
                               </li>
                             ))}
@@ -585,7 +595,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
                 <div className="bg-[#1d1526]/95 backdrop-blur-sm rounded-2xl border border-solid border-[#633aab]/70 shadow-[0_0_20px_rgba(99,58,171,0.4)] h-full flex flex-col">
                   <div className="flex-shrink-0 flex overflow-hidden rounded-t-xl">
                     <TabButton tabId="npcs" currentTab={activeRightTab} onClick={setActiveRightTab}>Nhân Vật</TabButton>
-                    <TabButton tabId="world" currentTab={activeRightTab} onClick={setActiveRightTab}>Thế Giới</TabButton>
+                    <TabButton tabId="world" currentTab={activeRightTab} onClick={setActiveRightTab}>Địa Danh</TabButton>
+                    <TabButton tabId="tinh-bao" currentTab={activeRightTab} onClick={setActiveRightTab}>Tình Báo</TabButton>
                   </div>
 
                   <div className="flex-grow min-h-0 overflow-y-auto">
@@ -608,6 +619,36 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
                           onReorderLocation={reorderLocation}
                           onEditRequest={requestLocationEdit}
                        />
+                    </div>
+                    <div style={{ display: activeRightTab === 'tinh-bao' ? 'block' : 'none' }}>
+                        <div>
+                            <div className="relative">
+                                <h2 className="text-xl font-bold text-center text-white p-4 border-b-2 border-[#3a2d47] flex-shrink-0" style={{textShadow: '0 0 5px rgba(224, 37, 133, 0.7)'}}>
+                                    Bảng Tin Thế Giới
+                                </h2>
+                                <div className="absolute top-1/2 -translate-y-1/2 right-3 flex items-center gap-1">
+                                    <button
+                                        onClick={() => setIsEditingWorldInfo(true)}
+                                        disabled={isLoading}
+                                        className="p-2 rounded-full text-cyan-400 hover:bg-cyan-400/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="Chỉnh Sửa Bảng Tin"
+                                    >
+                                        <PencilIcon />
+                                    </button>
+                                    <button
+                                        onClick={() => setIsClearingWorldInfo(true)}
+                                        disabled={isLoading || !gameState.worldInfoSheet}
+                                        className="p-2 rounded-full text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="Xóa Bảng Tin"
+                                    >
+                                        <TrashIcon />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="p-4 text-base leading-relaxed text-[#e8dff5] whitespace-pre-wrap">
+                                {gameState.worldInfoSheet || 'Chưa có thông tin tình báo đặc biệt về thế giới.'}
+                            </div>
+                        </div>
                     </div>
                   </div>
                 </div>
@@ -769,6 +810,43 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
         isImageGenerationEnabled={isImageGenerationEnabled}
         setIsImageGenerationEnabled={setIsImageGenerationEnabled}
       />
+       <MemoryEditModal
+        isOpen={isEditingWorldInfo}
+        onClose={() => setIsEditingWorldInfo(false)}
+        onSave={(newValue) => {
+            updateWorldInfoSheet(newValue);
+            setIsEditingWorldInfo(false);
+        }}
+        initialValue={gameState?.worldInfoSheet || ''}
+        title="Chỉnh Sửa Bảng Tin Thế Giới"
+      />
+      <ConfirmationModal
+        isOpen={isClearingWorldInfo}
+        onClose={() => setIsClearingWorldInfo(false)}
+        onConfirm={() => {
+            updateWorldInfoSheet('');
+            setIsClearingWorldInfo(false);
+        }}
+        title="Xác nhận Xóa Bảng Tin"
+        confirmText="Xóa Sạch"
+        cancelText="Hủy"
+        confirmVariant="primary"
+      >
+        <p>Hành động này sẽ xóa toàn bộ nội dung của Bảng Tin Thế Giới.</p>
+        <p className="font-bold mt-2">Bạn có chắc chắn không?</p>
+      </ConfirmationModal>
+      <ConfirmationModal
+        isOpen={deletingChronicleIndex !== null}
+        onClose={cancelPlotChronicleDeletion}
+        onConfirm={confirmPlotChronicleDeletion}
+        title="Xác nhận Xóa Ký Ức"
+        confirmText="Xóa Vĩnh Viễn"
+        cancelText="Hủy"
+        confirmVariant="primary"
+      >
+        <p>Hành động này sẽ xóa vĩnh viễn ký ức dài hạn này.</p>
+        <p className="font-bold mt-2">Bạn có chắc chắn muốn xóa không?</p>
+      </ConfirmationModal>
     </div>
   );
 };

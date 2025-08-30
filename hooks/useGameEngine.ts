@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSettings } from './useSettings';
 import { WorldCreationState, GameState, GameTurn, CharacterStats, NPC, NPCUpdate, CharacterStat, CharacterStatUpdate, Skill, LustModeFlavor, ApiKeySource, NpcMindset, Ability, DestinyCompassMode, ChronicleEntry, WorldLocation, WorldLocationUpdate } from '../types';
@@ -261,6 +262,7 @@ export function useGameEngine(
     // State for new skill management features
     const [skillToDelete, setSkillToDelete] = useState<Skill | null>(null);
     const [editingAbility, setEditingAbility] = useState<{ skillName: string; ability: Ability } | null>(null);
+    const [deletingChronicleIndex, setDeletingChronicleIndex] = useState<number | null>(null);
 
     // State for image generation
     const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
@@ -1048,6 +1050,36 @@ export function useGameEngine(
             return { ...prevState, turnsSinceLastChronicle: updatedTurns };
         });
     }
+    
+    const updateWorldInfoSheet = (newContent: string) => {
+        setGameState(prevState => {
+            if (!prevState) return null;
+            return {
+                ...prevState,
+                worldInfoSheet: newContent,
+            };
+        });
+    };
+
+    const requestPlotChronicleDeletion = (index: number) => {
+        setDeletingChronicleIndex(index);
+    };
+
+    const cancelPlotChronicleDeletion = () => {
+        setDeletingChronicleIndex(null);
+    };
+
+    const confirmPlotChronicleDeletion = () => {
+        if (gameState === null || deletingChronicleIndex === null) return;
+
+        setGameState(prevState => {
+            if (!prevState) return null;
+            const newPlotChronicle = prevState.plotChronicle.filter((_, idx) => idx !== deletingChronicleIndex);
+            return { ...prevState, plotChronicle: newPlotChronicle };
+        });
+        setDeletingChronicleIndex(null);
+    };
+
 
     const regenerateLastImage = async () => {
         if (!gameState) return;
@@ -1118,6 +1150,11 @@ export function useGameEngine(
         recentlyUpdatedNpcStats,
         updatePlotChronicleEntry,
         updateShortTermMemoryTurn,
+        updateWorldInfoSheet,
+        deletingChronicleIndex,
+        requestPlotChronicleDeletion,
+        confirmPlotChronicleDeletion,
+        cancelPlotChronicleDeletion,
         generatedImageUrl,
         isGeneratingImage,
         imageGenerationError,
