@@ -397,7 +397,8 @@ export function useGameEngine(
         worldSimulatorOnSceneBreak: boolean
     ) => {
         if (!gameState) return;
-        setPreviousGameState(gameState); // Save the complete old state for undo
+        // Deep copy the state to prevent mutations from affecting the undo buffer.
+        setPreviousGameState(JSON.parse(JSON.stringify(gameState)));
         
         // Create a copy of the state for the new turn, without the old image URL.
         const { lastImageUrl, ...gameStateForNewTurn } = gameState;
