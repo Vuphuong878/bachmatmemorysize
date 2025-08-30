@@ -1273,7 +1273,13 @@ const SHORT_TERM_SUMMARIZER_PROMPT = `Bạn là một AI tóm tắt viên. Nhi�
 **ĐOẠN TÓM TẮT CÔ ĐỌNG:**
 `;
 
-const WORLD_SIMULATOR_PROMPT = `Bạn là một AI mô phỏng thế giới sống. Nhiệm vụ của bạn là mô tả ngắn gọn những gì đang diễn ra 'ngoài màn hình' trong thế giới game.
+const WORLD_SIMULATOR_PROMPT = `Bạn là một AI mô phỏng thế giới sống, đóng vai trò người quan sát trung lập. Nhiệm vụ của bạn là mô tả ngắn gọn các diễn biến mới, quan trọng đang xảy ra ngoài màn hình trong thế giới game, tập trung vào các NPC và địa danh KHÔNG xuất hiện trong cảnh hiện tại.
+
+**YÊU CẦU:**
+1. Chỉ mô tả các sự kiện mới, có khả năng ảnh hưởng đến cốt truyện hoặc người chơi.
+2. Ưu tiên các diễn biến liên quan đến NPC/địa danh quan trọng, âm mưu, thay đổi quyền lực, thiên tai, hoặc các hành động bí mật.
+3. Nếu không có diễn biến đáng chú ý, hãy ghi rõ: "Không có biến động đáng kể ngoài màn hình."
+4. Đầu ra là danh sách gạch đầu dòng, mỗi dòng 1 sự kiện, tối đa 5 dòng, văn phong khách quan, súc tích.
 
 **QUY TRÌNH LÀM VIỆC:**
 1.  **Phân tích Bối cảnh:** Bạn sẽ nhận được bối cảnh thế giới, các sự kiện cốt truyện chính đã xảy ra, và danh sách đầy đủ các NPC/Địa danh. Quan trọng nhất, bạn sẽ biết những ai/cái gì đang 'trên màn hình' (hiện diện trong cảnh truyện hiện tại).
@@ -1286,9 +1292,6 @@ const WORLD_SIMULATOR_PROMPT = `Bạn là một AI mô phỏng thế giới số
     *   **Giọng văn:** Khách quan, ngắn gọn, như một báo cáo tình báo.
     *   **Nội dung:** Chỉ tập trung vào những diễn biến mới và đáng chú ý nhất.
     *   **Mục tiêu:** Cung cấp thông tin để AI kể chuyện chính có thể sử dụng, tạo cảm giác thế giới đang tự vận động.
-
-**VÍ DỤ:**
-*   Nếu một NPC phản diện vừa thua trận và bỏ chạy, báo cáo có thể là: "Lão ma đầu đang lẩn trốn trong Hắc Ám Sơn Mạch để chữa thương, lòng đầy căm hận. Hắn đã tập hợp được một nhóm lâu la mới. Trong khi đó, tại kinh thành, tin đồn về chiến thắng của người chơi đang lan truyền, làm tăng uy tín của hoàng gia."
 
 **BỐI CẢNH ĐẦU VÀO:**
 ---
@@ -1304,7 +1307,10 @@ const WORLD_SIMULATOR_PROMPT = `Bạn là một AI mô phỏng thế giới số
 {PRESENT_ENTITIES}
 ---
 
-**Báo cáo Tình báo Thế giới (3-5 câu):**
+**VÍ DỤ ĐẦU RA:**
+- "Lão ma đầu đang lẩn trốn trong Hắc Ám Sơn Mạch để chữa thương, đồng thời âm thầm chiêu mộ thêm thuộc hạ."
+- "Tại kinh thành, một phe phái mới nổi lên, đe dọa vị thế của hoàng gia."
+- "Không có biến động đáng kể ngoài màn hình."
 `;
 
 const SKILL_GENERATOR_PROMPT = `Bạn là một AI chuyên thiết kế kỹ năng game. Nhiệm vụ duy nhất của bạn là dựa vào tên một năng lực và bối cảnh thế giới được cung cấp, sau đó tạo ra một bộ kỹ năng (Skill object) hoàn chỉnh theo schema JSON.
