@@ -174,5 +174,7 @@ export interface GameState {
     isLogicModeOn: boolean;
     isConscienceModeOn: boolean;
     isStrictInterpretationOn: boolean;
+    worldSimulatorTurns?: number;
+    worldSimulatorOnSceneBreak?: boolean;
   };
 }

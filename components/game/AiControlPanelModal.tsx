@@ -21,6 +21,10 @@ interface AiControlPanelModalProps {
     onStrictInterpretationChange: (isOn: boolean) => void;
     destinyCompassMode: DestinyCompassMode;
     onDestinyCompassModeChange: (mode: DestinyCompassMode) => void;
+    worldSimulatorTurns: number;
+    onWorldSimulatorTurnsChange: (turns: number) => void;
+    worldSimulatorOnSceneBreak: boolean;
+    onWorldSimulatorOnSceneBreakChange: (isOn: boolean) => void;
 }
 
 const LUST_FLAVOR_TEXT: Record<LustModeFlavor, string> = {
@@ -185,6 +189,10 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
     onStrictInterpretationChange,
     destinyCompassMode,
     onDestinyCompassModeChange,
+    worldSimulatorTurns,
+    onWorldSimulatorTurnsChange,
+    worldSimulatorOnSceneBreak,
+    onWorldSimulatorOnSceneBreakChange,
 }) => {
     const [isLustPanelVisible, setLustPanelVisible] = useState(false);
 
@@ -250,6 +258,47 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
                         })}
                     </div>
                 </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-center text-white mb-2 font-rajdhani uppercase tracking-wider">Mô Phỏng Thế Giới</label>
+                    <div className="grid grid-cols-1 gap-4 bg-black/20 p-3 rounded-lg">
+                        <div className="flex items-center justify-between" title="Kích hoạt mô phỏng thế giới sau một số lượt nhất định. Đặt thành 0 để tắt.">
+                            <span className="text-xs font-semibold text-gray-300">Chạy sau mỗi</span>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={worldSimulatorTurns}
+                                    onChange={(e) => onWorldSimulatorTurnsChange(Number(e.target.value))}
+                                    disabled={isLoading}
+                                    className="w-20 bg-[#120c18] text-white rounded-md p-1.5 border border-[#3a2d47] text-center text-sm focus:ring-2 focus:ring-[#e02585] focus:border-[#e02585] disabled:opacity-50"
+                                />
+                                <span className="text-xs font-semibold text-gray-300">lượt</span>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between" title="Tự động chạy mô phỏng thế giới sau một sự kiện lớn hoặc chuyển cảnh.">
+                            <span className={`text-xs font-semibold transition-colors ${worldSimulatorOnSceneBreak ? 'text-green-400' : 'text-gray-500'}`}>Chạy sau Chuyển Cảnh</span>
+                            <button
+                                type="button"
+                                className={`${
+                                worldSimulatorOnSceneBreak ? 'bg-green-500' : 'bg-gray-600'
+                                } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-[#1d1526] disabled:opacity-50`}
+                                role="switch"
+                                aria-checked={worldSimulatorOnSceneBreak}
+                                onClick={() => onWorldSimulatorOnSceneBreakChange(!worldSimulatorOnSceneBreak)}
+                                disabled={isLoading}
+                            >
+                                <span
+                                aria-hidden="true"
+                                className={`${
+                                    worldSimulatorOnSceneBreak ? 'translate-x-5' : 'translate-x-0'
+                                } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                                />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
 
                 <div className="grid grid-cols-2 gap-4">
                     {/* Lust Mode Button & Panel */}

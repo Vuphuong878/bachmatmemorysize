@@ -90,6 +90,16 @@ function validateAndHydrateGameState(parsedState: any): GameState | null {
         parsedState.worldInfoSheet = 'Chưa có thông tin tình báo đặc biệt về thế giới.';
     }
 
+    // Hydrate new UI settings for saves that have uiSettings but not the new fields
+    if (parsedState.uiSettings) {
+        if (typeof parsedState.uiSettings.worldSimulatorTurns !== 'number') {
+            parsedState.uiSettings.worldSimulatorTurns = 30; // Default value
+        }
+        if (typeof parsedState.uiSettings.worldSimulatorOnSceneBreak !== 'boolean') {
+            parsedState.uiSettings.worldSimulatorOnSceneBreak = true; // Default value
+        }
+    }
+
     return parsedState as GameState;
   }
   return null;

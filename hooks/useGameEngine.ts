@@ -382,7 +382,18 @@ export function useGameEngine(
     }, [initialData, initializeGame]);
 
 
-    const handlePlayerChoice = async (choice: string, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode, isImageGenerationEnabled: boolean) => {
+    const handlePlayerChoice = async (
+        choice: string, 
+        isLogicModeOn: boolean, 
+        lustModeFlavor: LustModeFlavor | null, 
+        npcMindset: NpcMindset, 
+        isConscienceModeOn: boolean, 
+        isStrictInterpretationOn: boolean, 
+        destinyCompassMode: DestinyCompassMode, 
+        isImageGenerationEnabled: boolean,
+        worldSimulatorTurns: number,
+        worldSimulatorOnSceneBreak: boolean
+    ) => {
         if (!gameState) return;
         setPreviousGameState(gameState); // Save state before making the move
         setIsLoading(true);
@@ -468,10 +479,13 @@ export function useGameEngine(
             };
             
             let finalWorldInfoSheet = newState.worldInfoSheet;
-            const shouldSimulate = (newState.turnCount % 30 === 0) || isSceneBreak;
+            
+            const shouldSimulateByTurns = worldSimulatorTurns > 0 && newState.turnCount % worldSimulatorTurns === 0;
+            const shouldSimulateBySceneBreak = worldSimulatorOnSceneBreak && isSceneBreak;
+            const shouldSimulate = shouldSimulateByTurns || shouldSimulateBySceneBreak;
 
             if (shouldSimulate) {
-                console.log(`World simulation triggered: turn ${newState.turnCount}, sceneBreak: ${isSceneBreak}`);
+                console.log(`World simulation triggered: turn ${newState.turnCount}, sceneBreak: ${isSceneBreak}, turnTrigger: ${shouldSimulateByTurns}, sceneBreakTrigger: ${shouldSimulateBySceneBreak}`);
                 try {
                     const newInfoSheet = await callApiWithRetry(service => storytellerService.simulateOffscreenWorld(
                         newState,
@@ -489,6 +503,16 @@ export function useGameEngine(
             const finalState: GameState = {
                 ...newState,
                 worldInfoSheet: finalWorldInfoSheet,
+                uiSettings: {
+                    destinyCompassMode,
+                    lustModeFlavor,
+                    npcMindset,
+                    isLogicModeOn,
+                    isConscienceModeOn,
+                    isStrictInterpretationOn,
+                    worldSimulatorTurns,
+                    worldSimulatorOnSceneBreak,
+                }
             };
 
             setGameState(finalState);

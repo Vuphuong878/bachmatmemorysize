@@ -69,20 +69,6 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   const [detailModal, setDetailModal] = useState<{ type: 'long' | 'short'; idx: number; content: string } | null>(null);
 
   // --- UI/gameplay settings state ---
-  // ...existing useState hooks...
-
-  // Restore UI settings from save (if any)
-  useEffect(() => {
-    if (gameState && gameState.uiSettings) {
-      setDestinyCompassMode(gameState.uiSettings.destinyCompassMode);
-      setLustModeFlavor(gameState.uiSettings.lustModeFlavor);
-      setNpcMindset(gameState.uiSettings.npcMindset);
-      setIsLogicModeOn(gameState.uiSettings.isLogicModeOn);
-      setIsConscienceModeOn(gameState.uiSettings.isConscienceModeOn);
-      setIsStrictInterpretationOn(gameState.uiSettings.isStrictInterpretationOn);
-    }
-  }, [gameState]);
-  
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>('bms-view-mode', 'desktop');
   const [autoHideActionPanel, setAutoHideActionPanel] = useLocalStorage<boolean>('bms-auto-hide-panel', false);
   const [isImageGenerationEnabled, setIsImageGenerationEnabled] = useLocalStorage<boolean>('bms-image-gen-enabled', false);
@@ -105,6 +91,22 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   const [isActionsPanelCollapsed, setIsActionsPanelCollapsed] = useState(false);
   const [destinyCompassMode, setDestinyCompassMode] = useState<DestinyCompassMode>('NORMAL');
   const [activeMemoryTab, setActiveMemoryTab] = useState<'long' | 'short'>('long');
+  const [worldSimulatorTurns, setWorldSimulatorTurns] = useState<number>(30);
+  const [worldSimulatorOnSceneBreak, setWorldSimulatorOnSceneBreak] = useState<boolean>(true);
+  
+  // Restore UI settings from save (if any)
+  useEffect(() => {
+    if (gameState && gameState.uiSettings) {
+      setDestinyCompassMode(gameState.uiSettings.destinyCompassMode);
+      setLustModeFlavor(gameState.uiSettings.lustModeFlavor);
+      setNpcMindset(gameState.uiSettings.npcMindset);
+      setIsLogicModeOn(gameState.uiSettings.isLogicModeOn);
+      setIsConscienceModeOn(gameState.uiSettings.isConscienceModeOn);
+      setIsStrictInterpretationOn(gameState.uiSettings.isStrictInterpretationOn);
+      setWorldSimulatorTurns(gameState.uiSettings.worldSimulatorTurns ?? 30);
+      setWorldSimulatorOnSceneBreak(gameState.uiSettings.worldSimulatorOnSceneBreak ?? true);
+    }
+  }, [gameState]);
   
   const isNewGame = useMemo(() => initialData && !('history' in initialData), [initialData]);
 
@@ -189,6 +191,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
           isLogicModeOn,
           isConscienceModeOn,
           isStrictInterpretationOn,
+          worldSimulatorTurns,
+          worldSimulatorOnSceneBreak,
         }
       };
       GameSaveService.saveManualSave(gameStateWithSettings);
@@ -197,7 +201,18 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   };
   
   const doPlayerChoice = async (choice: string) => {
-    await handlePlayerChoice(choice, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode, isImageGenerationEnabled);
+    await handlePlayerChoice(
+        choice, 
+        isLogicModeOn, 
+        lustModeFlavor, 
+        npcMindset, 
+        isConscienceModeOn, 
+        isStrictInterpretationOn, 
+        destinyCompassMode, 
+        isImageGenerationEnabled,
+        worldSimulatorTurns,
+        worldSimulatorOnSceneBreak
+    );
     setCustomAction(''); // Clear input after any action
     if (autoHideActionPanel) {
       setIsActionsPanelCollapsed(true);
@@ -646,6 +661,10 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
         onStrictInterpretationChange={setIsStrictInterpretationOn}
         destinyCompassMode={destinyCompassMode}
         onDestinyCompassModeChange={setDestinyCompassMode}
+        worldSimulatorTurns={worldSimulatorTurns}
+        onWorldSimulatorTurnsChange={setWorldSimulatorTurns}
+        worldSimulatorOnSceneBreak={worldSimulatorOnSceneBreak}
+        onWorldSimulatorOnSceneBreakChange={setWorldSimulatorOnSceneBreak}
       />
       <ExitConfirmationModal
         isOpen={isExitModalOpen}
