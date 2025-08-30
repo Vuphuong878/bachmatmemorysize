@@ -772,49 +772,143 @@ export function findEmotionalContinuityRecalls(
     return emotionalRecalls.slice(0, maxRecalls).map(r => r.entry);
 }
 
-// Group and summarize similar minor events to save context space
-export function groupAndSummarizeMinorEvents(chronicles: ChronicleEntry[]): ChronicleEntry[] {
+// Group and summarize similar events to save context space
+export function groupAndSummarizeMinorEvents(chronicles: ChronicleEntry[], options?: {
+    thematicGrouping?: boolean; // Enable grouping by theme/arc
+    importantEventThreshold?: number; // Điểm quan trọng để xem xét gộp nhóm (mặc định: 6)
+    minEventsToGroup?: number; // Số lượng sự kiện tối thiểu để gộp (mặc định: 3)
+    enableGroupingByNpc?: boolean; // Cho phép gộp theo NPC
+}): ChronicleEntry[] {
     if (chronicles.length <= 5) return chronicles; // Don't group if we have few chronicles
     
-    const grouped: { [key: string]: ChronicleEntry[] } = {};
-    const standalone: ChronicleEntry[] = [];
+    // Set default options
+    const importantEventThreshold = options?.importantEventThreshold || 6;
+    const minEventsToGroup = options?.minEventsToGroup || 3;
+    const thematicGrouping = options?.thematicGrouping || false;
+    const enableGroupingByNpc = options?.enableGroupingByNpc || false;
     
-    // Group chronicles by event type
+    // Initialize containers
+    const minorGrouped: { [key: string]: ChronicleEntry[] } = {}; // Group by event type for minor events
+    const thematicGrouped: { [key: string]: ChronicleEntry[] } = {}; // Group by theme for important events
+    const npcGrouped: { [key: string]: ChronicleEntry[] } = {}; // Group by main NPC
+    const standalone: ChronicleEntry[] = []; // Keep truly significant events separate
+    
+    // Group chronicles by different criteria
     for (const chronicle of chronicles) {
-        if (chronicle.plotSignificanceScore < 6) { // Only group minor events
-            if (!grouped[chronicle.eventType]) {
-                grouped[chronicle.eventType] = [];
+        // Skip unforgettable events
+        if (chronicle.isUnforgettable) {
+            standalone.push(chronicle);
+            continue;
+        }
+        
+        // Group minor events by event type
+        if (chronicle.plotSignificanceScore < importantEventThreshold) {
+            if (!minorGrouped[chronicle.eventType]) {
+                minorGrouped[chronicle.eventType] = [];
             }
-            grouped[chronicle.eventType].push(chronicle);
-        } else {
-            standalone.push(chronicle); // Keep significant events separate
+            minorGrouped[chronicle.eventType].push(chronicle);
+        } 
+        // Group important events by theme or arc if enabled
+        else if (thematicGrouping && chronicle.plotSignificanceScore < 9) { // Very important events (9-10) stay standalone
+            // Try to determine a "theme" from event type and involved NPCs
+            const mainNpc = chronicle.involvedNpcIds[0] || 'unknown';
+            const themeKey = `${chronicle.eventType}_${mainNpc}`;
+            
+            if (!thematicGrouped[themeKey]) {
+                thematicGrouped[themeKey] = [];
+            }
+            thematicGrouped[themeKey].push(chronicle);
+        }
+        // Group by main NPC if enabled
+        else if (enableGroupingByNpc && chronicle.involvedNpcIds.length > 0 && chronicle.plotSignificanceScore < 8) {
+            const mainNpc = chronicle.involvedNpcIds[0];
+            if (!npcGrouped[mainNpc]) {
+                npcGrouped[mainNpc] = [];
+            }
+            npcGrouped[mainNpc].push(chronicle);
+        }
+        else {
+            standalone.push(chronicle); // Keep very significant events separate
         }
     }
     
     const result: ChronicleEntry[] = [...standalone];
     
-    // For each group with multiple events, create a summary entry
-    for (const [eventType, events] of Object.entries(grouped)) {
-        if (events.length > 2) { // Only group if we have 3+ similar events
-            const summaryText = `Nhiều sự kiện ${eventType.toLowerCase()}: ${events.map(e => e.summary).join('; ')}`;
+    // Process minor event groups
+    processGroups(minorGrouped, result, minEventsToGroup, "Tổng hợp sự kiện", 7);
+    
+    // Process thematic groups if enabled
+    if (thematicGrouping) {
+        processGroups(thematicGrouped, result, minEventsToGroup, "Giai đoạn", 8);
+    }
+    
+    // Process NPC-based groups if enabled
+    if (enableGroupingByNpc) {
+        processGroups(npcGrouped, result, minEventsToGroup, "Cuộc gặp gỡ với", 8);
+    }
+    
+    return result;
+}
+
+// Helper function to process groups and create summary entries
+function processGroups(
+    grouped: { [key: string]: ChronicleEntry[] },
+    result: ChronicleEntry[],
+    minEventsToGroup: number,
+    groupPrefix: string,
+    maxScore: number
+): void {
+    for (const [groupKey, events] of Object.entries(grouped)) {
+        if (events.length >= minEventsToGroup) {
+            // Extract meaningful parts from group key if it contains multiple parts
+            const parts = groupKey.split('_');
+            const eventType = parts[0];
+            const npcId = parts.length > 1 ? parts[1] : '';
+            
+            // Create a more natural-sounding summary based on group type
+            let summaryIntro = '';
+            if (groupPrefix === "Giai đoạn") {
+                summaryIntro = `Trong giai đoạn ${eventType.toLowerCase()}`;
+                if (npcId && npcId !== 'unknown') {
+                    summaryIntro += ` liên quan đến ${npcId}`;
+                }
+                summaryIntro += ", nhóm đã trải qua: ";
+            } else if (groupPrefix === "Cuộc gặp gỡ với") {
+                summaryIntro = `Các tương tác với ${npcId} bao gồm: `;
+            } else {
+                summaryIntro = `Nhiều sự kiện ${eventType.toLowerCase()}: `;
+            }
+            
+            const summaryText = `${summaryIntro}${events.map(e => e.summary).join('; ')}`;
             const allInvolvedNpcs = [...new Set(events.flatMap(e => e.involvedNpcIds))];
             const avgScore = Math.round(events.reduce((sum, e) => sum + e.plotSignificanceScore, 0) / events.length);
             
+            // Create combined key details if available
+            const keyDetails = events
+                .filter(e => e.keyDetail)
+                .map(e => e.keyDetail)
+                .filter((detail, index, self) => self.indexOf(detail) === index) // Remove duplicates
+                .slice(0, 2) // Limit to 2 key details
+                .join('; ');
+            
             const groupedEntry: ChronicleEntry = {
-                summary: summaryText.length > 200 ? summaryText.substring(0, 197) + '...' : summaryText,
-                eventType: `Tổng hợp ${eventType}`,
+                summary: summaryText.length > 250 ? summaryText.substring(0, 247) + '...' : summaryText,
+                eventType: `${groupPrefix} ${eventType}`,
                 involvedNpcIds: allInvolvedNpcs,
-                plotSignificanceScore: Math.min(avgScore, 7), // Cap grouped events at 7
+                plotSignificanceScore: Math.min(avgScore + 1, maxScore), // Slightly increase score but cap it
                 isUnforgettable: false
             };
+            
+            // Add key details if available
+            if (keyDetails) {
+                groupedEntry.keyDetail = keyDetails;
+            }
             
             result.push(groupedEntry);
         } else {
             result.push(...events); // Keep individual events if too few to group
         }
     }
-    
-    return result;
 }
 
 // Levenshtein distance algorithm for string similarity
