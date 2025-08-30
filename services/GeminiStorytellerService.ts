@@ -1155,12 +1155,7 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
         -   **Hiệu ứng rất lâu dài/lời nguyền:** có thể gán 'duration' lớn hơn **(75+ lượt)**.
         Mục tiêu là để các trạng thái tồn tại đủ lâu để người chơi cảm nhận được tác động của chúng. TUYỆT ĐỐI CẤM gán 'duration' cho 4 chỉ số cốt lõi (Sinh Lực, Thể Lực, Lý trí, Cảnh Giới).
     3.  **SỰ DIỄN BIẾN (EVOLUTION):** Với các trạng thái có thể trở nặng (ví dụ: 'Vết thương nhỏ' -> 'Lành lại'), hãy NÊN thêm thuộc tính 'evolution'.
-    4.  **CÔ ĐỌNG THUỘC TÍNH (ATTRIBUTE CONDENSATION):** Để giữ giao diện gọn gàng, bạn BẮT BUỘC phải tuân thủ quy tắc cô đọng. Khi bạn cập nhật một chỉ số và thấy rằng giá trị (\`value\`) mới của nó quá dài (ví dụ: hơn 50 ký tự):
-        a. **Sáng tạo danh hiệu:** Dựa vào nội dung của giá trị dài đó, hãy tự sáng tạo ra một danh hiệu ngắn gọn, súc tích và mạnh mẽ hơn (dưới 35 ký tự) để làm giá trị \`value\` mới.
-        b. **Lưu trữ lịch sử:** Lấy giá trị dài ban đầu và thêm nó vào đầu mảng \`history\` của chỉ số đó (nếu mảng history đã tồn tại, hãy thêm vào đầu).
-        c. **Ví dụ:** Nếu giá trị cũ là \`'Đã thấu triệt bản chất của nội công và hòa hợp thân tâm một cách hoàn hảo'\`, bạn có thể cập nhật chỉ số thành: \`value: 'Tâm Pháp Hợp Nhất'\`, \`history: ['Đã thấu triệt bản chất của nội công và hòa hợp thân tâm một cách hoàn hảo', ...các giá trị cũ hơn]\`.
-        d. Quy tắc này áp dụng cho mọi chỉ số, kể cả các chỉ số cốt lõi.
-    5.  **PHÂN LOẠI VẬT PHẨM (\`isItem\`):** Khi tạo hoặc cập nhật một chỉ số, nếu nó đại diện cho một vật phẩm hữu hình mà nhân vật có thể sở hữu (kiếm, bình thuốc, chìa khóa, v.v.), bạn BẮT BUỘC phải đặt thuộc tính \`isItem\` thành \`true\` trong đối tượng chỉ số đó và phải miêu tả số lượng nếu có và không được thêm 'duration'.
+    4.  **PHÂN LOẠI VẬT PHẨM (\`isItem\`):** Khi tạo hoặc cập nhật một chỉ số, nếu nó đại diện cho một vật phẩm hữu hình mà nhân vật có thể sở hữu (kiếm, bình thuốc, chìa khóa, v.v.), bạn BẮT BUỘC phải đặt thuộc tính \`isItem\` thành \`true\` trong đối tượng chỉ số đó và phải miêu tả số lượng nếu có và không được thêm 'duration'.
 - **QUY TẮC HỢP NHẤT & DỌN DẸP CHỈ SỐ (STAT CONSOLIDATION & CLEANUP):**
     Bạn có quyền và trách nhiệm giữ cho bảng chỉ số của người chơi và NPC gọn gàng và hợp lý. Sau mỗi lượt, hãy rà soát các chỉ số hiện có và áp dụng các quy tắc sau thông qua các trường \`playerStatUpdates\` và \`npcUpdates.payload.stats\`:
 
