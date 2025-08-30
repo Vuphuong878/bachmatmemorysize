@@ -395,17 +395,23 @@ export function useGameEngine(
         worldSimulatorOnSceneBreak: boolean
     ) => {
         if (!gameState) return;
-        setPreviousGameState(gameState); // Save state before making the move
+        setPreviousGameState(gameState); // Save the complete old state for undo
+        
+        // Create a copy of the state for the new turn, without the old image URL.
+        const { lastImageUrl, ...gameStateForNewTurn } = gameState;
+
         setIsLoading(true);
         setError(null);
-        const { newPlayerStats: processedPlayerStats, newNpcs: processedNpcs } = processEndOfTurnStatChanges(gameState.playerStats, gameState.npcs);
+        // Use the state without the image for processing end-of-turn changes
+        const { newPlayerStats: processedPlayerStats, newNpcs: processedNpcs } = processEndOfTurnStatChanges(gameStateForNewTurn.playerStats, gameStateForNewTurn.npcs);
         
         try {
             const npcsForAI = presentNpcIds
                 ? processedNpcs.filter(npc => presentNpcIds.includes(npc.id))
                 : processedNpcs;
 
-            const stateForAI: GameState = { ...gameState, playerStats: processedPlayerStats, npcs: npcsForAI };
+            // Send the state without the image to the AI as well
+            const stateForAI: GameState = { ...gameStateForNewTurn, playerStats: processedPlayerStats, npcs: npcsForAI };
             
             const { newTurn, playerStatUpdates, npcUpdates, worldLocationUpdates, newlyAcquiredSkill, newChronicleEntry, presentNpcIds: newPresentNpcIds, isSceneBreak } = 
                 await callApiWithRetry(service => storytellerService.continueStory(stateForAI, choice, service, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode));
@@ -426,16 +432,16 @@ export function useGameEngine(
 
 
             const updatedNpcs = applyNpcUpdates(processedNpcs, npcUpdates);
-            const updatedLocations = applyWorldLocationUpdates(gameState.worldLocations, worldLocationUpdates);
+            const updatedLocations = applyWorldLocationUpdates(gameStateForNewTurn.worldLocations, worldLocationUpdates);
             const playerStatChanges = convertStatUpdatesArrayToObject(playerStatUpdates);
             const newPlayerStats = smartMergeStats(processedPlayerStats, playerStatChanges);
             
-            const currentOrder = gameState.playerStatOrder || [];
+            const currentOrder = gameStateForNewTurn.playerStatOrder || [];
             const newStatKeys = Object.keys(newPlayerStats);
             const newlyAddedKeys = newStatKeys.filter(key => !currentOrder.includes(key));
             const newPlayerStatOrder = [...currentOrder, ...newlyAddedKeys];
 
-            let currentShortTermMemory = [...(gameState.turnsSinceLastChronicle || []), newTurn];
+            let currentShortTermMemory = [...(gameStateForNewTurn.turnsSinceLastChronicle || []), newTurn];
             let additionalTokensFromCondensation = 0;
 
             const rawTurns = currentShortTermMemory.filter(turn => !turn.isCondensedMemory);
@@ -445,7 +451,7 @@ export function useGameEngine(
                 console.log(`Short-term memory condensation triggered. Summarizing ${rawTurns.length} turns.`);
                 try {
                     const condensedTurn = await callApiWithRetry(service => storytellerService.summarizeShortTermMemory(
-                        rawTurns, service, gameState.worldContext.isNsfw
+                        rawTurns, service, gameStateForNewTurn.worldContext.isNsfw
                     ));
                     const previouslyCondensedTurns = currentShortTermMemory.filter(turn => turn.isCondensedMemory);
                     currentShortTermMemory = [...previouslyCondensedTurns, condensedTurn];
@@ -455,9 +461,9 @@ export function useGameEngine(
                 }
             }
 
-            const newPlotChronicle = [...gameState.plotChronicle];
+            const newPlotChronicle = [...gameStateForNewTurn.plotChronicle];
             if (newChronicleEntry) {
-                if (!storytellerService.isDuplicateChronicleEntry(newChronicleEntry, gameState.plotChronicle)) {
+                if (!storytellerService.isDuplicateChronicleEntry(newChronicleEntry, gameStateForNewTurn.plotChronicle)) {
                     newPlotChronicle.push(newChronicleEntry);
                 } else {
                     console.log('Game engine: Duplicate chronicle entry blocked at final check');
@@ -466,16 +472,17 @@ export function useGameEngine(
             
             const finalShortTermMemory = isSceneBreak ? [] : currentShortTermMemory;
 
+            // Use gameStateForNewTurn as the base for the new state.
             const newState: GameState = {
-                ...gameState,
-                history: [...gameState.history, newTurn],
+                ...gameStateForNewTurn,
+                history: [...gameStateForNewTurn.history, newTurn],
                 playerStats: newPlayerStats,
                 playerStatOrder: newPlayerStatOrder,
                 npcs: updatedNpcs,
                 worldLocations: updatedLocations,
                 plotChronicle: newPlotChronicle,
                 turnsSinceLastChronicle: finalShortTermMemory,
-                turnCount: (gameState.turnCount || 0) + 1,
+                turnCount: (gameStateForNewTurn.turnCount || 0) + 1,
             };
             
             let finalWorldInfoSheet = newState.worldInfoSheet;
@@ -496,7 +503,7 @@ export function useGameEngine(
                     finalWorldInfoSheet = newInfoSheet;
                 } catch (simError: any) {
                     console.error("World simulation failed:", simError);
-                    // Don't crash the game, just log the error and keep the old sheet
+                    // Don't crash the game, just log the old sheet
                 }
             }
 
