@@ -415,7 +415,7 @@ export function useGameEngine(
             // Send the state without the image to the AI as well
             const stateForAI: GameState = { ...gameStateForNewTurn, playerStats: processedPlayerStats, npcs: npcsForAI };
             
-            const { newTurn, playerStatUpdates, npcUpdates, worldLocationUpdates, newlyAcquiredSkill, newChronicleEntry, presentNpcIds: newPresentNpcIds, isSceneBreak } = 
+            const { newTurn, playerStatUpdates, npcUpdates, worldLocationUpdates, newlyAcquiredSkill, newChronicleEntry, presentNpcIds: newPresentNpcIds, isSceneBreak: isSceneBreakFromAI } = 
                 await callApiWithRetry(service => storytellerService.continueStory(stateForAI, choice, service, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode));
             
             const playerChanges = new Set(playerStatUpdates.map(u => u.statName));
@@ -461,6 +461,16 @@ export function useGameEngine(
                 } catch (e: any) {
                     console.error("Short-term memory summarization failed, continuing without condensation:", e);
                 }
+            }
+            
+            // Safety net for short-term memory: force a scene break if too many condensed memories accumulate.
+            let isSceneBreak = isSceneBreakFromAI;
+            const condensedMemoryCount = currentShortTermMemory.filter(turn => turn.isCondensedMemory).length;
+            const CONDENSED_MEMORY_LIMIT = 50;
+
+            if (condensedMemoryCount >= CONDENSED_MEMORY_LIMIT) {
+                console.log(`Bảo hiểm Ký ức Ngắn hạn: Đạt giới hạn ${CONDENSED_MEMORY_LIMIT} bản tóm tắt. Bắt buộc chuyển cảnh.`);
+                isSceneBreak = true;
             }
 
             const newPlotChronicle = [...gameStateForNewTurn.plotChronicle];
