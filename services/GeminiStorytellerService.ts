@@ -78,7 +78,7 @@ const npcUpdatePayloadCoreSchema = {
         gender: { type: Type.STRING },
         personality: { type: Type.STRING, description: "Tính cách của NPC. Đây là chỉ số cố định, được xác định khi tạo NPC và không thay đổi hoặc tiến hoá trong suốt quá trình chơi." },
         identity: { type: Type.STRING, description: "Thân phận, vai trò, xuất thân, nghề nghiệp hoặc vị trí xã hội của NPC." },
-        appearance: { type: Type.STRING, description: "Mô tả ngoại hình, dáng vẻ, hoặc điểm nổi bật về hình thể của NPC.  LƯU Ý: Dù ngoại hình có thay đổi (ví dụ: lấm lem, dính bùn, bị thương...), khuôn mặt và dáng vẻ nhận diện vốn có của NPC luôn được giữ nguyên. Chỉ mô tả sự thay đổi tác động lên khuôn mặt/dáng vẻ gốc (ví dụ: 'khuôn mặt xinh đẹp lấm lem bùn đất', 'gương mặt lạnh lùng bị xước nhẹ'), không được thay đổi đặc điểm nhận diện khuôn mặt gốc." },
+        appearance: { type: Type.STRING, description: "Mô tả ngoại hình, dáng vẻ, hoặc điểm nổi bật về hình thể của NPC." },
         virginity: { type: Type.STRING, description: "Trinh tiết hoặc Nguyên Âm (chỉ cho NPC nữ, mô tả theo chủ đề truyện)." },
         relationship: { type: Type.STRING, description: "Mối quan hệ với người chơi." },
         isProtected: { type: Type.BOOLEAN, description: "Trạng thái bảo vệ NPC khỏi bị xóa bởi AI. Bạn không được thay đổi giá trị này trừ khi được yêu cầu." },
@@ -1190,7 +1190,7 @@ Bạn phải phân tích câu chuyện vừa viết để cập nhật trạng t
         -   Nếu bối cảnh là Viễn Tây, hãy dùng tên **Anh-Mỹ** (ví dụ: John, Sarah).
         -   Nếu bối cảnh là Tiên hiệp, hãy dùng tên **Hán Việt** (ví dụ: Mộ Dung Tuyết).
     3.  Tên phải nghe tự nhiên trong thế giới đó.
-    4.  **Mô tả ngoại hình:** Khi tạo mới hoặc cập nhật NPC, luôn mô tả ngoại hình, dáng vẻ, hoặc điểm nổi bật về hình thể của NPC trong trường \`history\`, \`genre\` và \`description\` nhưng phải ngắn gọn. Ngoại hình nên phù hợp với bối cảnh, giới tính, và vai trò của nhân vật và phải kết hợp với ngoại hình ban đầu của họ.
+    4.  **Mô tả ngoại hình:** Khi tạo mới hoặc cập nhật NPC, luôn mô tả ngoại hình, dáng vẻ, hoặc điểm nổi bật về hình thể của NPC trong trường \`history\`, \`genre\` và \`description\` nhưng phải ngắn gọn. Ngoại hình nên phù hợp với bối cảnh, giới tính, và vai trò của nhân vật và phải kết hợp với ngoại hình ban đầu của họ.  LƯU Ý: Dù ngoại hình có thay đổi (ví dụ: lấm lem, dính bùn, bị thương...), khuôn mặt và dáng vẻ nhận diện vốn có của NPC luôn được giữ nguyên. Chỉ mô tả sự thay đổi tác động lên khuôn mặt/dáng vẻ gốc (ví dụ: 'khuôn mặt xinh đẹp lấm lem bùn đất', 'gương mặt lạnh lùng bị xước nhẹ'), không được thay đổi đặc điểm nhận diện khuôn mặt gốc.
     5.  **Mô tả thân phận:** Khi tạo mới hoặc cập nhật NPC, luôn mô tả thân phận, vai trò, xuất thân, nghề nghiệp hoặc vị trí xã hội của NPC trong trường \`history\`, \`genre\` và \`description\` nhưng phải ngắn gọn và tuyệt đối không cập nhật các trạng thái (ví dụ: đang nằm bất động, bị thương,...). Thân phận nên phù hợp với bối cảnh, giới tính, và vai trò của nhân vật và phải kết hợp với thân phận ban đầu của họ.
     6.  **Mô tả nguyên âm:** Khi tạo mới hoặc cập nhật NPC, luôn mô tả nguyên âm của NPC (nếu có) ở trạng thái còn, mất, bị tổn hại,... trong trường \`history\`, \`genre\` và \`description\` nhưng phải ngắn gọn và phù hợp với bối cảnh, giới tính, và vai trò của nhân vật (**CẤM TUYỆT ĐỐI** viết ra miêu tả trạng thái này vào trong câu truyện nếu không có hoạt động tình dục vì đó là bộ phận nhạy cảm nên sẽ không biết được trừ khi tiếp súc).
 
