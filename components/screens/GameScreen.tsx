@@ -64,7 +64,6 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
       previousGameState,
       toggleLocationProtection, reorderLocation, locationToDelete, requestLocationDeletion, confirmLocationDeletion, cancelLocationDeletion,
       editingLocation, requestLocationEdit, confirmLocationEdit, cancelLocationEdit,
-      activateNoRepeatMode,
   } = useGameEngine(initialData, settingsHook);
 
   const [editingChronicleIdx, setEditingChronicleIdx] = useState<number | string | null>(null);
@@ -588,7 +587,6 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
                                 onUndo={undoLastTurn}
                                 isUndoDisabled={!previousGameState || gameState.history.length <= 1}
                                 onOpenAiControls={() => setIsAiControlPanelOpen(true)}
-                                onFixRepetition={activateNoRepeatMode}
                             />
                         </div>
                     </div>

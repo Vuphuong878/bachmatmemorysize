@@ -15,7 +15,6 @@ interface ChoiceBoxProps {
     onUndo: () => void;
     isUndoDisabled: boolean;
     onOpenAiControls: () => void;
-    onFixRepetition?: () => void;
 }
 
 
@@ -28,7 +27,6 @@ const ChoiceBox: React.FC<ChoiceBoxProps> = ({
     onUndo,
     isUndoDisabled,
     onOpenAiControls,
-    onFixRepetition,
 }) => {
     const handleCustomAction = () => {
         if (!isLoading && customAction.trim()) {
@@ -87,10 +85,9 @@ const ChoiceBox: React.FC<ChoiceBoxProps> = ({
                                 <RedoIcon />
                             </button>
                              <button
-                                onClick={onFixRepetition}
-                                disabled={isLoading}
+                                disabled={true}
                                 className="flex-shrink-0 p-3 bg-[#120c18] rounded-lg border-2 border-[#3a2d47] text-[#a08cb6] hover:text-white hover:border-[#e02585] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Chỉnh sửa lượt đi"
+                                title="Chỉnh sửa lượt đi (Sắp có)"
                             >
                                 <PencilIcon />
                             </button>

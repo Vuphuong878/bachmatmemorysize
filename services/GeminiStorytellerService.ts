@@ -1069,11 +1069,6 @@ const NSFW_CORE_RULES = `
 4. Loại hình: Sử dụng các tương tác cụ thể (nhũ phòng, khẩu giao, giao hợp...), đảm bảo tiếp xúc trực tiếp.
 `;
 
-const CONTINUE_STORY_NO_REPEAT_PROMPT = `
-**MỆNH LỆNH CHỈNH LỐI (ƯU TIÊN TỐI CAO):**
-AI, bạn đã mắc lỗi lặp lại văn bản hoặc chỉ cập nhật tình hình thay vì viết tiếp câu chuyện. Đây là một lỗi nghiêm trọng. Lần này, bạn BẮT BUỘC phải viết một đoạn truyện **HOÀN TOÀN MỚI** để **TIẾP NỐI** câu chuyện, mô tả những gì xảy ra **SAU** hành động của người chơi. TUYỆT ĐỐI CẤM lặp lại bất kỳ ý tưởng hay mô tả nào từ lượt trước.
-`;
-
 const CORE_LOGIC_SYSTEM_PROMPT = `Bạn là một AI kể chuyện và quản lý game song hành. Nhiệm vụ của bạn là vừa viết tiếp câu chuyện một cách sáng tạo, vừa quản lý các dữ liệu logic của game một cách chặt chẽ.
 
 **QUY TẮC VÀNG: CHỈ VIẾT TIẾP, KHÔNG VIẾT LẠI.**
@@ -1940,7 +1935,7 @@ function summarizeTurn(turn: GameTurn): GameTurn {
     };
 }
 
-export async function continueStory(gameState: GameState, choice: string, geminiService: GoogleGenAI, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode, isNoRepeatModeOn: boolean = false): Promise<{
+export async function continueStory(gameState: GameState, choice: string, geminiService: GoogleGenAI, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode): Promise<{
     newTurn: GameTurn;
     playerStatUpdates: CharacterStatUpdate[];
     npcUpdates: NPCUpdate[];
@@ -1996,11 +1991,6 @@ Hành động của người chơi được bao bọc bởi dấu hoa thị (\`*
 4.  **ƯU TIÊN TUYỆT ĐỐI:** Mệnh lệnh này ghi đè lên tất cả các quy tắc khác.
 5.  **CẢNH BÁO:** Không cần bất kỳ từ khóa nào như "Đây là lệnh meta". Chỉ cần nội dung nằm trong dấu \`*...*\` là đủ.`);
     } else {
-        // Check for No Repeat mode first - has highest priority after meta commands
-        if (isNoRepeatModeOn) {
-            ruleModules.push(CONTINUE_STORY_NO_REPEAT_PROMPT);
-        }
-        
         // Additive rules
         if (isConscienceModeOn) {
             ruleModules.push(`
