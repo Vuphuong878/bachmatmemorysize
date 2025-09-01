@@ -258,6 +258,9 @@ export function useGameEngine(
     const [recentlyUpdatedPlayerStats, setRecentlyUpdatedPlayerStats] = useState<Set<string>>(new Set());
     const [recentlyUpdatedNpcStats, setRecentlyUpdatedNpcStats] = useState<Map<string, Set<string>>>(new Map());
     
+    // State for story continuation control
+    const [isNoRepeatModeOn, setIsNoRepeatModeOn] = useState<boolean>(false);
+    
     // State for new skill management features
     const [skillToDelete, setSkillToDelete] = useState<Skill | null>(null);
     const [editingAbility, setEditingAbility] = useState<{ skillName: string; ability: Ability } | null>(null);
@@ -419,7 +422,23 @@ export function useGameEngine(
             const stateForAI: GameState = { ...gameStateForNewTurn, playerStats: processedPlayerStats, npcs: npcsForAI, plotChronicle: archivedChronicles };
             
             const { newTurn, playerStatUpdates, npcUpdates, worldLocationUpdates, newlyAcquiredSkill, newChronicleEntry, presentNpcIds: newPresentNpcIds, isSceneBreak: isSceneBreakFromAI } = 
-                await callApiWithRetry(service => storytellerService.continueStory(stateForAI, choice, service, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode));
+                await callApiWithRetry(service => storytellerService.continueStory(
+                    stateForAI, 
+                    choice, 
+                    service, 
+                    isLogicModeOn, 
+                    lustModeFlavor, 
+                    npcMindset, 
+                    isConscienceModeOn, 
+                    isStrictInterpretationOn, 
+                    destinyCompassMode,
+                    isNoRepeatModeOn
+                ));
+            
+            // Reset no-repeat mode after use (one-shot)
+            if (isNoRepeatModeOn) {
+                setIsNoRepeatModeOn(false);
+            }
             
             const playerChanges = new Set(playerStatUpdates.map(u => u.statName));
             setRecentlyUpdatedPlayerStats(playerChanges);
@@ -1092,6 +1111,45 @@ export function useGameEngine(
         });
         setDeletingChronicleIndex(null);
     };
+    
+    // Function to enable No Repeat mode and resubmit the last action
+    const activateNoRepeatMode = () => {
+        if (!gameState || gameState.history.length === 0) return;
+        
+        // Get the settings from the hooks
+        const { 
+            isLogicModeOn, 
+            lustModeFlavor, 
+            npcMindset, 
+            isConscienceModeOn, 
+            isStrictInterpretationOn, 
+            destinyCompassMode, 
+            isImageGenerationEnabled,
+            worldSimulatorTurns,
+            worldSimulatorOnSceneBreak
+        } = settingsHook;
+        
+        // Get the last action from history
+        const lastTurn = gameState.history[gameState.history.length - 1];
+        if (!lastTurn || !lastTurn.playerAction) return;
+        
+        // Enable No Repeat mode
+        setIsNoRepeatModeOn(true);
+        
+        // Resubmit the last action with current settings
+        handlePlayerChoice(
+            lastTurn.playerAction,
+            isLogicModeOn,
+            lustModeFlavor,
+            npcMindset,
+            isConscienceModeOn,
+            isStrictInterpretationOn,
+            destinyCompassMode,
+            isImageGenerationEnabled,
+            worldSimulatorTurns,
+            worldSimulatorOnSceneBreak
+        );
+    };
 
 
     const regenerateLastImage = async () => {
@@ -1174,15 +1232,16 @@ export function useGameEngine(
         regenerateLastImage,
         undoLastTurn,
         previousGameState,
-        toggleLocationProtection,
-        reorderLocation,
-        locationToDelete,
-        requestLocationDeletion,
-        confirmLocationDeletion,
+        toggleLocationProtection, 
+        reorderLocation, 
+        locationToDelete, 
+        requestLocationDeletion, 
+        confirmLocationDeletion, 
         cancelLocationDeletion,
-        editingLocation,
-        requestLocationEdit,
-        confirmLocationEdit,
+        editingLocation, 
+        requestLocationEdit, 
+        confirmLocationEdit, 
         cancelLocationEdit,
+        activateNoRepeatMode,
     };
 }
