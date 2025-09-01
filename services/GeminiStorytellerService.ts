@@ -1069,6 +1069,12 @@ const NSFW_CORE_RULES = `
 4. Loại hình: Sử dụng các tương tác cụ thể (nhũ phòng, khẩu giao, giao hợp...), đảm bảo tiếp xúc trực tiếp.
 `;
 
+// PROMPT: CẤM LẶP LẠI, PHẢI VIẾT TIẾP TRUYỆN
+const CONTINUE_STORY_NO_REPEAT_PROMPT = `
+**MỆNH LỆNH CHỈNH LỐI (ƯU TIÊN TỐI CAO):**
+AI, bạn đã mắc lỗi lặp lại văn bản hoặc chỉ cập nhật tình hình thay vì viết tiếp câu chuyện. Đây là một lỗi nghiêm trọng. Lần này, bạn BẮT BUỘC phải viết một đoạn truyện **HOÀN TOÀN MỚI** để **TIẾP NỐI** câu chuyện, mô tả những gì xảy ra **SAU** hành động của người chơi. TUYỆT ĐỐI CẤM lặp lại bất kỳ ý tưởng hay mô tả nào từ lượt trước.
+`;
+
 const CORE_LOGIC_SYSTEM_PROMPT = `Bạn là một AI kể chuyện và quản lý game song hành. Nhiệm vụ của bạn là vừa viết tiếp câu chuyện một cách sáng tạo, vừa quản lý các dữ liệu logic của game một cách chặt chẽ.
 
 **QUY TẮC VÀNG: CHỈ VIẾT TIẾP, KHÔNG VIẾT LẠI.**

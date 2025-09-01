@@ -258,6 +258,9 @@ export function useGameEngine(
     const [recentlyUpdatedPlayerStats, setRecentlyUpdatedPlayerStats] = useState<Set<string>>(new Set());
     const [recentlyUpdatedNpcStats, setRecentlyUpdatedNpcStats] = useState<Map<string, Set<string>>>(new Map());
     
+    // State for story continuation control
+    const [isNoRepeatModeOn, setIsNoRepeatModeOn] = useState<boolean>(false);
+    
     // State for new skill management features
     const [skillToDelete, setSkillToDelete] = useState<Skill | null>(null);
     const [editingAbility, setEditingAbility] = useState<{ skillName: string; ability: Ability } | null>(null);
@@ -1091,6 +1094,45 @@ export function useGameEngine(
             return { ...prevState, plotChronicle: newPlotChronicle };
         });
         setDeletingChronicleIndex(null);
+    };
+    
+    // Function to enable No Repeat mode and resubmit the last action
+    const activateNoRepeatMode = () => {
+        if (!gameState || gameState.history.length === 0) return;
+        
+        // Get the settings from the settings object
+        const { 
+            isLogicModeOn, 
+            lustModeFlavor, 
+            npcMindset, 
+            isConscienceModeOn, 
+            isStrictInterpretationOn, 
+            destinyCompassMode, 
+            isImageGenerationEnabled,
+            worldSimulatorTurns,
+            worldSimulatorOnSceneBreak
+        } = settingsHook.settings;
+        
+        // Get the last action from history
+        const lastTurn = gameState.history[gameState.history.length - 1];
+        if (!lastTurn || !lastTurn.playerAction) return;
+        
+        // Enable No Repeat mode
+        setIsNoRepeatModeOn(true);
+        
+        // Resubmit the last action with current settings
+        handlePlayerChoice(
+            lastTurn.playerAction,
+            isLogicModeOn,
+            lustModeFlavor,
+            npcMindset,
+            isConscienceModeOn,
+            isStrictInterpretationOn,
+            destinyCompassMode,
+            isImageGenerationEnabled,
+            worldSimulatorTurns,
+            worldSimulatorOnSceneBreak
+        );
     };
 
 
