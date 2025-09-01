@@ -586,6 +586,72 @@ function calculateStringSimilarity(str1: string, str2: string): number {
     return (longer.length - editDistance) / longer.length;
 }
 
+// Levenshtein distance algorithm for string similarity
+function levenshteinDistance(str1: string, str2: string): number {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+        matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+        matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+        for (let j = 1; j <= str1.length; j++) {
+            if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+    
+    return matrix[str2.length][str1.length];
+}
+
+/**
+ * NEW: Archives memories related to NPCs who are confirmed dead.
+ * This prevents old, irrelevant memories from cluttering the AI's context.
+ */
+export function archiveMemoriesOfDeadNpcs(chronicles: ChronicleEntry[], npcs: NPC[]): ChronicleEntry[] {
+    const deadNpcIds = new Set(
+        npcs
+            .filter(npc => npc.status && (npc.status.includes('chết') || npc.status.includes('tử vong') || npc.status.includes('qua đời')))
+            .map(npc => npc.id)
+    );
+
+    if (deadNpcIds.size === 0) {
+        return chronicles; // No dead NPCs, no changes needed.
+    }
+
+    return chronicles.map(chronicle => {
+        // If already archived, skip.
+        if (chronicle.eventType.startsWith('[ĐÃ LƯU TRỮ]')) {
+            return chronicle;
+        }
+
+        const involvedIds = chronicle.involvedNpcIds || [];
+        // Archive only if there are involved NPCs and ALL of them are dead.
+        const shouldArchive = involvedIds.length > 0 && involvedIds.every(id => deadNpcIds.has(id));
+
+        if (shouldArchive) {
+            console.log(`Archiving memory: "${chronicle.summary}"`);
+            return {
+                ...chronicle,
+                eventType: `[ĐÃ LƯU TRỮ] ${chronicle.eventType}`
+            };
+        }
+
+        return chronicle;
+    });
+}
+
 // Intelligent contextual recall system for retrieving relevant past events
 export function findContextualRecalls(
     lessImportantChronicles: ChronicleEntry[], 
@@ -594,7 +660,8 @@ export function findContextualRecalls(
     gameState: GameState,
     maxRecalls: number = 2
 ): ChronicleEntry[] {
-    if (lessImportantChronicles.length === 0) return [];
+     const activeChronicles = lessImportantChronicles.filter(c => !c.eventType.startsWith('[ĐÃ LƯU TRỮ]'));
+    if (activeChronicles.length === 0) return [];
     
     const recalls: Array<{ entry: ChronicleEntry, score: number }> = [];
     const actionLower = currentAction.toLowerCase();
@@ -602,7 +669,7 @@ export function findContextualRecalls(
     // Get current player stats for context matching
     const currentStats = Object.keys(gameState.playerStats);
     
-    for (const chronicle of lessImportantChronicles) {
+    for (const chronicle of activeChronicles) {
         let contextScore = 0; // contextScore là điểm nội bộ để xếp hạng mức độ liên quan, KHÔNG liên quan đến plotSignificanceScore (1-10)
         
         // 1. NPC-based relevance (highest priority)
@@ -714,7 +781,8 @@ export function findEmotionalContinuityRecalls(
     gameState: GameState,
     maxRecalls: number = 1
 ): ChronicleEntry[] {
-    if (chronicles.length === 0) return [];
+    const activeChronicles = chronicles.filter(c => !c.eventType.startsWith('[ĐÃ LƯU TRỮ]'));
+    if (activeChronicles.length === 0) return [];
     
     const emotionalRecalls: Array<{ entry: ChronicleEntry, score: number }> = [];
     
@@ -726,7 +794,7 @@ export function findEmotionalContinuityRecalls(
                keyLower.includes('cảnh giới') || keyLower.includes('tâm trạng');
     });
     
-    for (const chronicle of chronicles) {
+    for (const chronicle of activeChronicles) {
         let emotionalScore = 0;
         const summaryLower = chronicle.summary.toLowerCase();
         
@@ -779,7 +847,8 @@ export function groupAndSummarizeMinorEvents(chronicles: ChronicleEntry[], optio
     minEventsToGroup?: number; // Số lượng sự kiện tối thiểu để gộp (mặc định: 3)
     enableGroupingByNpc?: boolean; // Cho phép gộp theo NPC
 }): ChronicleEntry[] {
-    if (chronicles.length <= 5) return chronicles; // Don't group if we have few chronicles
+    const activeChronicles = chronicles.filter(c => !c.eventType.startsWith('[ĐÃ LƯU TRỮ]'));
+    if (activeChronicles.length <= 5) return activeChronicles;
     
     // Set default options
     const importantEventThreshold = options?.importantEventThreshold || 6;
@@ -794,7 +863,7 @@ export function groupAndSummarizeMinorEvents(chronicles: ChronicleEntry[], optio
     const standalone: ChronicleEntry[] = []; // Keep truly significant events separate
     
     // Group chronicles by different criteria
-    for (const chronicle of chronicles) {
+    for (const chronicle of activeChronicles) {
         // Skip unforgettable events
         if (chronicle.isUnforgettable) {
             standalone.push(chronicle);
@@ -909,35 +978,6 @@ function processGroups(
             result.push(...events); // Keep individual events if too few to group
         }
     }
-}
-
-// Levenshtein distance algorithm for string similarity
-function levenshteinDistance(str1: string, str2: string): number {
-    const matrix = [];
-    
-    for (let i = 0; i <= str2.length; i++) {
-        matrix[i] = [i];
-    }
-    
-    for (let j = 0; j <= str1.length; j++) {
-        matrix[0][j] = j;
-    }
-    
-    for (let i = 1; i <= str2.length; i++) {
-        for (let j = 1; j <= str1.length; j++) {
-            if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-                matrix[i][j] = matrix[i - 1][j - 1];
-            } else {
-                matrix[i][j] = Math.min(
-                    matrix[i - 1][j - 1] + 1,
-                    matrix[i][j - 1] + 1,
-                    matrix[i - 1][j] + 1
-                );
-            }
-        }
-    }
-    
-    return matrix[str2.length][str1.length];
 }
 
 function parseAndValidateJsonResponse(text: string): any {
@@ -2035,7 +2075,7 @@ Khi chế độ Logic Nghiêm ngặt TẮT, người chơi không còn hành đ�
 
     // Rule 1 & 2: Get essential chronicles (recent and significant)
     const recentChronicles = allChronicles.slice(-5);
-    const significantChronicles = allChronicles.filter(c => c.plotSignificanceScore >= 8);
+    const significantChronicles = allChronicles.filter(c => c.plotSignificanceScore >= 8 && !c.eventType.startsWith('[ĐÃ LƯU TRỮ]'));
     
     const essentialChronicleMap = new Map<string, ChronicleEntry>();
     [...significantChronicles, ...recentChronicles].forEach(c => { // Prioritize significant, then recent
@@ -2135,74 +2175,59 @@ Hành động của người chơi là **sự kiện hiện tại duy nhất**. 
         if (existingNpc) {
             npcsForCreativeUpdate.push({ id, name: existingNpc.name, currentSummary: existingNpc.lastInteractionSummary || 'Chưa có tương tác.' });
         } else {
-            const newNpcInfo = (coreResponse.npcUpdates || []).find(u => u.id === id && u.action === 'CREATE');
-            if (newNpcInfo && newNpcInfo.payload?.name) {
-                npcsForCreativeUpdate.push({ id, name: newNpcInfo.payload.name, currentSummary: 'Vừa xuất hiện.' });
+            // It's a newly created NPC
+            const newNpcUpdate = (coreResponse.npcUpdates || []).find((u: NPCUpdate) => u.id === id && u.action === 'CREATE');
+            if (newNpcUpdate && newNpcUpdate.payload?.name) {
+                npcsForCreativeUpdate.push({ id, name: newNpcUpdate.payload.name, currentSummary: 'Vừa xuất hiện.' });
             }
         }
     });
 
     if (npcsForCreativeUpdate.length > 0) {
-        const creativePrompt = `${CREATIVE_TEXT_SYSTEM_PROMPT}\n\n**Bối cảnh:**\n${coreResponse.storyText}\n\n**Hành động của người chơi:** "${choice}"\n\n**Danh sách NPC cần xử lý:**\n${npcsForCreativeUpdate.map(npc => `- ${npc.name} (id: ${npc.id}, tóm tắt cũ: "${npc.currentSummary}")`).join('\n')}\n\nHãy tạo 'status' và 'lastInteractionSummary' cho các NPC trên.`;
-        
+        const creativePrompt = `${CREATIVE_TEXT_SYSTEM_PROMPT}\n\n**Bối cảnh:**\n${coreResponse.storyText}\n\n**Danh sách NPC cần xử lý:**\n${npcsForCreativeUpdate.map(npc => `- ${npc.name} (id: ${npc.id}, tóm tắt cũ: "${npc.currentSummary}")`).join('\n')}\n\nHãy tạo 'status' và 'lastInteractionSummary' cho các NPC trên.`;
+
         const creativeResult = await callCreativeTextAI(creativePrompt, geminiService, gameState.worldContext.isNsfw);
         creativeTokens = creativeResult.usageMetadata?.totalTokenCount || 0;
 
         const creativeData = parseNpcCreativeText(creativeResult.text);
 
+        // Merge creative text data into npcUpdates
         npcUpdates = npcUpdates.map(update => {
             const data = creativeData.get(update.id);
-            if (data && update.payload && (update.action === 'CREATE' || update.action === 'UPDATE')) {
+            if (data && update.payload) {
                 return { ...update, payload: { ...update.payload, ...data } };
             }
             return update;
         });
     }
-
-
-    const newTurn: GameTurn = { 
-        playerAction: choice,
-        storyText: coreResponse.storyText, 
-        choices: coreResponse.choices,
-        isMajorEvent: !!coreResponse.isMajorEvent,
-        tokenCount: 0 // Will be updated later
-    };
-
+    
     // --- Request 3: Chronicle Summarizer (JSON) ---
     if (isSceneBreak) {
-        const turnsToSummarize = [...(gameState.turnsSinceLastChronicle || []), newTurn];
-        const summarizerContent = turnsToSummarize.map(turn => 
-            `${turn.playerAction ? `Hành động: "${turn.playerAction}"` : 'Bắt đầu.'}\nKết quả: ${turn.storyText}`
-        ).join('\n\n---\n\n');
+        const chroniclePrompt = `${CHRONICLE_SUMMARIZER_PROMPT}\n\n**CÁC LƯỢT CHƠI TRONG PHÂN CẢNH:**\n${[...gameState.turnsSinceLastChronicle, { storyText: coreResponse.storyText, playerAction: choice, choices: [] }].map(turn => `${turn.playerAction ? `Hành động: "${turn.playerAction}"` : 'Bắt đầu.'}\nKết quả: ${turn.storyText}`).join('\n\n---\n\n')}\n\n**DANH SÁCH NPC HIỆN CÓ:**\n${gameState.npcs.map(n => `- ${n.name} (id: ${n.id})`).join('\n')}\n\nHãy tạo đối tượng JSON tóm tắt cho phân cảnh này.`;
         
-        const summarizerPrompt = `${CHRONICLE_SUMMARIZER_PROMPT}\n\n**DIỄN BIẾN PHÂN CẢNH CẦN TÓM TẮT:**\n${summarizerContent}`;
-
-        const summarizerResult = await callJsonAI(summarizerPrompt, chronicleEntrySchema, geminiService, gameState.worldContext.isNsfw);
-        chronicleTokens = summarizerResult.usageMetadata?.totalTokenCount || 0;
+        const chronicleResult = await callJsonAI(chroniclePrompt, chronicleEntrySchema, geminiService, gameState.worldContext.isNsfw);
+        chronicleTokens = chronicleResult.usageMetadata?.totalTokenCount || 0;
         
-        const rawChronicleEntry = parseAndValidateJsonResponse(summarizerResult.text);
-        const validatedChronicleEntry = validateChronicleEntry(rawChronicleEntry);
-        
-        // Check for duplicates before adding to chronicle
-        if (!isDuplicateChronicleEntry(validatedChronicleEntry, gameState.plotChronicle)) {
-            newChronicleEntry = validatedChronicleEntry;
-        } else {
-            console.log('Duplicate chronicle entry detected and skipped:', validatedChronicleEntry.summary);
-            newChronicleEntry = undefined; // Don't add duplicate entry
-        }
+        const rawChronicle = parseAndValidateJsonResponse(chronicleResult.text);
+        newChronicleEntry = validateChronicleEntry(rawChronicle);
     }
-    
-    newTurn.tokenCount = coreTokens + creativeTokens + chronicleTokens;
 
-    return { 
-        newTurn, 
-        playerStatUpdates: (coreResponse.playerStatUpdates || []) as CharacterStatUpdate[], 
+    const newTurn: GameTurn = {
+        playerAction: choice,
+        storyText: coreResponse.storyText,
+        choices: coreResponse.choices,
+        tokenCount: coreTokens + creativeTokens + chronicleTokens,
+        isMajorEvent: !!coreResponse.isMajorEvent,
+    };
+    // FIX: A function whose declared type is neither 'undefined', 'void', nor 'any' must return a value.
+    return {
+        newTurn,
+        playerStatUpdates: coreResponse.playerStatUpdates || [],
         npcUpdates,
-        // Fix: Return worldLocationUpdates
         worldLocationUpdates: coreResponse.worldLocationUpdates || [],
         newlyAcquiredSkill: coreResponse.newlyAcquiredSkill,
         newChronicleEntry,
         isSceneBreak,
-        presentNpcIds
+        presentNpcIds,
     };
 }

@@ -400,31 +400,40 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
                       <>
                         {gameState.plotChronicle && gameState.plotChronicle.length > 0 ? (
                           <ul className="space-y-2">
-                            {gameState.plotChronicle.map((entry, idx) => (
-                              <li key={idx} className="bg-[#201a2a]/80 rounded p-2 text-left border-l-4 border-[#6d4e8e]/40 flex flex-col gap-1 shadow-none">
-                                <div className="font-bold text-[#cfc6e0] truncate" title={entry.summary}>{entry.summary}</div>
-                                <div className="text-xs text-[#a08cb6] mt-1 truncate">Loại: {entry.eventType}</div>
-                                <div className="text-xs text-[#cfc6e0] mt-1">Điểm quan trọng: <span className="font-bold">{entry.plotSignificanceScore}</span></div>
-                                <div className="flex gap-2 mt-1">
-                                  <button
-                                    className="px-2 py-1 rounded bg-[#6d4e8e] text-[#e8dff5] text-xs font-bold hover:bg-[#32284a] hover:text-white"
-                                    onClick={() => {
-                                      setEditingChronicleIdx(idx);
-                                      setEditingChronicleValue(entry.summary);
-                                      setEditingMemoryType('long');
-                                    }}
-                                  >Chỉnh sửa</button>
-                                  <button
-                                    className="px-2 py-1 rounded bg-[#32284a] text-[#cfc6e0] text-xs font-bold hover:bg-[#6d4e8e] hover:text-white"
-                                    onClick={() => setDetailModal({ type: 'long', idx, content: entry.summary })}
-                                  >Chi tiết</button>
-                                   <button
-                                    className="px-2 py-1 rounded bg-red-900/70 text-red-300 text-xs font-bold hover:bg-red-700 hover:text-white"
-                                    onClick={() => requestPlotChronicleDeletion(idx)}
-                                  >Xóa</button>
-                                </div>
-                              </li>
-                            ))}
+                            {gameState.plotChronicle.map((entry, idx) => {
+                                const isArchived = entry.eventType.startsWith('[ĐÃ LƯU TRỮ]');
+                                return (
+                                  <li 
+                                    key={idx} 
+                                    className={`bg-[#201a2a]/80 rounded p-2 text-left border-l-4 flex flex-col gap-1 shadow-none transition-opacity ${isArchived ? 'opacity-50 border-gray-600/40' : 'border-[#6d4e8e]/40'}`}
+                                    title={isArchived ? 'Ký ức này đã được lưu trữ vì các NPC liên quan đã chết.' : entry.summary}
+                                >
+                                    <div className="font-bold text-[#cfc6e0] truncate">{entry.summary}</div>
+                                    <div className="text-xs text-[#a08cb6] mt-1 truncate">Loại: {entry.eventType}</div>
+                                    <div className="text-xs text-[#cfc6e0] mt-1">Điểm quan trọng: <span className="font-bold">{entry.plotSignificanceScore}</span></div>
+                                    <div className="flex gap-2 mt-1">
+                                      <button
+                                        className="px-2 py-1 rounded bg-[#6d4e8e] text-[#e8dff5] text-xs font-bold hover:bg-[#32284a] hover:text-white disabled:bg-gray-700 disabled:cursor-not-allowed"
+                                        onClick={() => {
+                                          setEditingChronicleIdx(idx);
+                                          setEditingChronicleValue(entry.summary);
+                                          setEditingMemoryType('long');
+                                        }}
+                                        disabled={isArchived}
+                                      >Chỉnh sửa</button>
+                                      <button
+                                        className="px-2 py-1 rounded bg-[#32284a] text-[#cfc6e0] text-xs font-bold hover:bg-[#6d4e8e] hover:text-white"
+                                        onClick={() => setDetailModal({ type: 'long', idx, content: entry.summary })}
+                                      >Chi tiết</button>
+                                       <button
+                                        className="px-2 py-1 rounded bg-red-900/70 text-red-300 text-xs font-bold hover:bg-red-700 hover:text-white disabled:bg-red-900/30 disabled:cursor-not-allowed"
+                                        onClick={() => requestPlotChronicleDeletion(idx)}
+                                        disabled={isArchived}
+                                      >Xóa</button>
+                                    </div>
+                                  </li>
+                                );
+                            })}
                           </ul>
                         ) : (
                           <div className="text-center text-sm text-[#a08cb6]/70 mt-8">Chưa có ký ức dài hạn nào.</div>

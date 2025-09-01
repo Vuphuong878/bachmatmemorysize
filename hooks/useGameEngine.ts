@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSettings } from './useSettings';
 import { WorldCreationState, GameState, GameTurn, CharacterStats, NPC, NPCUpdate, CharacterStat, CharacterStatUpdate, Skill, LustModeFlavor, ApiKeySource, NpcMindset, Ability, DestinyCompassMode, ChronicleEntry, WorldLocation, WorldLocationUpdate } from '../types';
@@ -408,13 +407,16 @@ export function useGameEngine(
         // Use the state without the image for processing end-of-turn changes
         const { newPlayerStats: processedPlayerStats, newNpcs: processedNpcs } = processEndOfTurnStatChanges(gameStateForNewTurn.playerStats, gameStateForNewTurn.npcs);
         
+        // **NEW**: Archive memories of dead NPCs before calling the AI
+        const archivedChronicles = storytellerService.archiveMemoriesOfDeadNpcs(gameStateForNewTurn.plotChronicle, processedNpcs);
+
         try {
             const npcsForAI = presentNpcIds
                 ? processedNpcs.filter(npc => presentNpcIds.includes(npc.id))
                 : processedNpcs;
 
-            // Send the state without the image to the AI as well
-            const stateForAI: GameState = { ...gameStateForNewTurn, playerStats: processedPlayerStats, npcs: npcsForAI };
+            // Send the state with archived chronicles to the AI
+            const stateForAI: GameState = { ...gameStateForNewTurn, playerStats: processedPlayerStats, npcs: npcsForAI, plotChronicle: archivedChronicles };
             
             const { newTurn, playerStatUpdates, npcUpdates, worldLocationUpdates, newlyAcquiredSkill, newChronicleEntry, presentNpcIds: newPresentNpcIds, isSceneBreak: isSceneBreakFromAI } = 
                 await callApiWithRetry(service => storytellerService.continueStory(stateForAI, choice, service, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode));
@@ -474,9 +476,9 @@ export function useGameEngine(
                 isSceneBreak = true;
             }
 
-            const newPlotChronicle = [...gameStateForNewTurn.plotChronicle];
+            const newPlotChronicle = [...archivedChronicles]; // Start with the already archived list
             if (newChronicleEntry) {
-                if (!storytellerService.isDuplicateChronicleEntry(newChronicleEntry, gameStateForNewTurn.plotChronicle)) {
+                if (!storytellerService.isDuplicateChronicleEntry(newChronicleEntry, archivedChronicles)) {
                     newPlotChronicle.push(newChronicleEntry);
                 } else {
                     console.log('Game engine: Duplicate chronicle entry blocked at final check');
