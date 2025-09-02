@@ -1069,12 +1069,6 @@ const NSFW_CORE_RULES = `
 4. Loại hình: Sử dụng các tương tác cụ thể (nhũ phòng, khẩu giao, giao hợp...), đảm bảo tiếp xúc trực tiếp.
 `;
 
-// PROMPT: CẤM LẶP LẠI, PHẢI VIẾT TIẾP TRUYỆN
-const CONTINUE_STORY_NO_REPEAT_PROMPT = `
-**MỆNH LỆNH CHỈNH LỐI (ƯU TIÊN TỐI CAO):**
-AI, bạn đã mắc lỗi lặp lại văn bản hoặc chỉ cập nhật tình hình thay vì viết tiếp câu chuyện. Đây là một lỗi nghiêm trọng. Lần này, bạn BẮT BUỘC phải viết một đoạn truyện **HOÀN TOÀN MỚI** để **TIẾP NỐI** câu chuyện, mô tả những gì xảy ra **SAU** hành động của người chơi. TUYỆT ĐỐI CẤM lặp lại bất kỳ ý tưởng hay mô tả nào từ lượt trước.
-`;
-
 const CORE_LOGIC_SYSTEM_PROMPT = `Bạn là một AI kể chuyện và quản lý game song hành. Nhiệm vụ của bạn là vừa viết tiếp câu chuyện một cách sáng tạo, vừa quản lý các dữ liệu logic của game một cách chặt chẽ.
 
 **QUY TẮC VÀNG: CHỈ VIẾT TIẾP, KHÔNG VIẾT LẠI.**
@@ -1941,7 +1935,7 @@ function summarizeTurn(turn: GameTurn): GameTurn {
     };
 }
 
-export async function continueStory(gameState: GameState, choice: string, geminiService: GoogleGenAI, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode): Promise<{
+export async function continueStory(gameState: GameState, choice: string, geminiService: GoogleGenAI, isLogicModeOn: boolean, lustModeFlavor: LustModeFlavor | null, npcMindset: NpcMindset, isConscienceModeOn: boolean, isStrictInterpretationOn: boolean, destinyCompassMode: DestinyCompassMode, isFixRepetitionOn: boolean = false): Promise<{
     newTurn: GameTurn;
     playerStatUpdates: CharacterStatUpdate[];
     npcUpdates: NPCUpdate[];
@@ -2006,6 +2000,13 @@ Mục tiêu của lượt này không phải là tiếp diễn câu chuyện m�
 1.  **DIỄN GIẢI HÀNH ĐỘNG THEO NGHĨA ĐEN:** Bạn PHẢI diễn giải hành động của người chơi theo đúng nghĩa đen là một nỗ lực **chân thành** để cứu vãn tình hình. Một hành động an ủi là an ủi. Một hành động dừng lại là dừng lại. TUYỆT ĐỐI không diễn giải chúng thành sự trêu ghẹo hay một phần của màn kịch.
 2.  **ƯU TIÊN PHỤC HỒI CHỈ SỐ:** Kết quả của câu chuyện và các lựa chọn bạn tạo ra phải hướng đến việc **tăng hoặc ổn định lại chỉ số 'Lý trí'** của NPC. Hãy mô tả NPC dần lấy lại sự tỉnh táo, cảm thấy biết ơn, hoặc bối rối trước sự tử tế của người chơi.
 3.  **TẠO LỰA CHỌN "THOÁT HIỂM":** Các lựa chọn bạn đưa ra (trường 'choices') phải là những lựa chọn mang tính xây dựng và giảm căng thẳng. Ví dụ: "An ủi cô ấy.", "Đề nghị nói chuyện một cách nghiêm túc.", "Giúp cô ấy mặc lại quần áo.", "Rời khỏi phòng để cô ấy được yên tĩnh."`);
+        }
+        
+        if (isFixRepetitionOn) {
+            ruleModules.push(`
+**MODULE QUY TẮC: CHỐNG LẶP LẠI (KÍCH HOẠT)**
+AI, bạn đã mắc lỗi lặp lại văn bản hoặc chỉ cập nhật tình hình thay vì viết tiếp câu chuyện. Đây là một lỗi nghiêm trọng. Lần này, bạn BẮT BUỘC phải viết một đoạn truyện **HOÀN TOÀN MỚI** để **TIẾP NỐI** câu chuyện, mô tả những gì xảy ra **SAU** hành động của người chơi. TUYỆT ĐỐI CẤM lặp lại bất kỳ ý tưởng hay mô tả nào từ lượt trước.
+`);
         }
 
         if (lustModeFlavor) {

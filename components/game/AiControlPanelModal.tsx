@@ -18,6 +18,8 @@ interface AiControlPanelModalProps {
     onNpcMindsetChange: (mindset: NpcMindset) => void;
     isConscienceModeOn: boolean;
     onConscienceModeChange: (isOn: boolean) => void;
+    isFixRepetitionOn: boolean;
+    onFixRepetitionChange: (isOn: boolean) => void;
     isStrictInterpretationOn: boolean;
     onStrictInterpretationChange: (isOn: boolean) => void;
     destinyCompassMode: DestinyCompassMode;
@@ -96,9 +98,10 @@ const AIStateAnnunciator: React.FC<{
     isLogicModeOn: boolean;
     lustModeFlavor: LustModeFlavor | null;
     isConscienceModeOn: boolean;
+    isFixRepetitionOn: boolean;
     isStrictInterpretationOn: boolean;
     destinyCompassMode: DestinyCompassMode;
-}> = ({ isLogicModeOn, lustModeFlavor, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode }) => {
+}> = ({ isLogicModeOn, lustModeFlavor, isConscienceModeOn, isFixRepetitionOn, isStrictInterpretationOn, destinyCompassMode }) => {
 
     const getMessage = (): { text: string; className: string } => {
         if (!isLogicModeOn) {
@@ -130,6 +133,13 @@ const AIStateAnnunciator: React.FC<{
             return {
                text: `Trạng thái AI: Chế độ <strong class="text-cyan-400">Lương Tâm</strong> được kích hoạt. AI sẽ ưu tiên các hành động cứu vãn ${compassMessage}.`,
                className: 'text-cyan-300'
+           };
+        }
+        
+        if (isFixRepetitionOn) {
+            return {
+               text: `Trạng thái AI: Chế độ <strong class="text-orange-400">Chống Lặp Lại</strong> được kích hoạt ${compassMessage}.`,
+               className: 'text-orange-300'
            };
         }
 
@@ -186,6 +196,8 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
     onNpcMindsetChange,
     isConscienceModeOn,
     onConscienceModeChange,
+    isFixRepetitionOn,
+    onFixRepetitionChange,
     isStrictInterpretationOn,
     onStrictInterpretationChange,
     destinyCompassMode,
@@ -377,6 +389,29 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
                             />
                         </button>
                     </div>
+                    
+                    {/* Fix Repetition Toggle */}
+                    <div className="flex items-center justify-between" title="Giúp khắc phục tình trạng AI lặp lại văn bản">
+                        <span className={`text-xs font-semibold transition-colors ${isFixRepetitionOn ? 'text-orange-400' : 'text-gray-500'}`}>Chống Lặp Lại</span>
+                         <button
+                            type="button"
+                            className={`${
+                            isFixRepetitionOn ? 'bg-orange-500' : 'bg-gray-600'
+                            } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-[#1d1526] disabled:opacity-50 disabled:cursor-not-allowed`}
+                            role="switch"
+                            aria-checked={isFixRepetitionOn}
+                            onClick={() => onFixRepetitionChange(!isFixRepetitionOn)}
+                            disabled={isLoading}
+                        >
+                            <span
+                            aria-hidden="true"
+                            className={`${
+                                isFixRepetitionOn ? 'translate-x-5' : 'translate-x-0'
+                            } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                            />
+                        </button>
+                    </div>
+                    
                     {/* Strict Logic Toggle */}
                     <div className="flex items-center justify-between">
                         <span className={`text-xs font-semibold transition-colors ${isLogicModeOn ? 'text-cyan-400' : 'text-gray-500'}`}>Logic Nghiêm ngặt</span>
@@ -404,6 +439,7 @@ const AiControlPanelModal: React.FC<AiControlPanelModalProps> = ({
                     isLogicModeOn={isLogicModeOn}
                     lustModeFlavor={lustModeFlavor}
                     isConscienceModeOn={isConscienceModeOn}
+                    isFixRepetitionOn={isFixRepetitionOn}
                     isStrictInterpretationOn={isStrictInterpretationOn}
                     destinyCompassMode={destinyCompassMode}
                 />

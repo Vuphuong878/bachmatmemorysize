@@ -168,13 +168,14 @@ export interface GameState {
   worldInfoSheet: string; // A summary of off-screen world events.
   // UI/gameplay settings (optional)
   uiSettings?: {
-    destinyCompassMode: DestinyCompassMode;
-    lustModeFlavor: LustModeFlavor | null;
-    npcMindset: NpcMindset;
-    isLogicModeOn: boolean;
-    isConscienceModeOn: boolean;
-    isStrictInterpretationOn: boolean;
-    worldSimulatorTurns?: number;
-    worldSimulatorOnSceneBreak?: boolean;
+  destinyCompassMode: DestinyCompassMode;
+  lustModeFlavor: LustModeFlavor | null;
+  npcMindset: NpcMindset;
+  isLogicModeOn: boolean;
+  isConscienceModeOn: boolean;
+  isFixRepetitionOn: boolean;
+  isStrictInterpretationOn: boolean;
+  worldSimulatorTurns?: number;
+  worldSimulatorOnSceneBreak?: boolean;
   };
 }

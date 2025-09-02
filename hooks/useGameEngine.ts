@@ -396,7 +396,8 @@ export function useGameEngine(
         destinyCompassMode: DestinyCompassMode, 
         isImageGenerationEnabled: boolean,
         worldSimulatorTurns: number,
-        worldSimulatorOnSceneBreak: boolean
+        worldSimulatorOnSceneBreak: boolean,
+        isFixRepetitionOn: boolean = false
     ) => {
         if (!gameState) return;
         // Deep copy the state to prevent mutations from affecting the undo buffer.
@@ -422,7 +423,7 @@ export function useGameEngine(
             const stateForAI: GameState = { ...gameStateForNewTurn, playerStats: processedPlayerStats, npcs: npcsForAI, plotChronicle: archivedChronicles };
             
             const { newTurn, playerStatUpdates, npcUpdates, worldLocationUpdates, newlyAcquiredSkill, newChronicleEntry, presentNpcIds: newPresentNpcIds, isSceneBreak: isSceneBreakFromAI } = 
-                await callApiWithRetry(service => storytellerService.continueStory(stateForAI, choice, service, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode));
+                await callApiWithRetry(service => storytellerService.continueStory(stateForAI, choice, service, isLogicModeOn, lustModeFlavor, npcMindset, isConscienceModeOn, isStrictInterpretationOn, destinyCompassMode, isFixRepetitionOn));
             
             const playerChanges = new Set(playerStatUpdates.map(u => u.statName));
             setRecentlyUpdatedPlayerStats(playerChanges);
@@ -534,6 +535,7 @@ export function useGameEngine(
                     npcMindset,
                     isLogicModeOn,
                     isConscienceModeOn,
+                    isFixRepetitionOn,
                     isStrictInterpretationOn,
                     worldSimulatorTurns,
                     worldSimulatorOnSceneBreak,
@@ -1131,7 +1133,8 @@ export function useGameEngine(
             destinyCompassMode,
             isImageGenerationEnabled,
             worldSimulatorTurns,
-            worldSimulatorOnSceneBreak
+            worldSimulatorOnSceneBreak,
+            false // isFixRepetitionOn
         );
     };
 

@@ -87,6 +87,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
   const [lustModeFlavor, setLustModeFlavor] = useState<LustModeFlavor | null>(null);
   const [npcMindset, setNpcMindset] = useState<NpcMindset>('IRON_WILL');
   const [isConscienceModeOn, setIsConscienceModeOn] = useState(false);
+  const [isFixRepetitionOn, setIsFixRepetitionOn] = useState(false);
   const [isStrictInterpretationOn, setIsStrictInterpretationOn] = useState(true);
   const [isIntroModalOpen, setIsIntroModalOpen] = useState(false);
   const [isGameInitialized, setIsGameInitialized] = useState(false);
@@ -107,6 +108,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
       setNpcMindset(gameState.uiSettings.npcMindset);
       setIsLogicModeOn(gameState.uiSettings.isLogicModeOn);
       setIsConscienceModeOn(gameState.uiSettings.isConscienceModeOn);
+      setIsFixRepetitionOn(gameState.uiSettings.isFixRepetitionOn ?? false);
       setIsStrictInterpretationOn(gameState.uiSettings.isStrictInterpretationOn);
       setWorldSimulatorTurns(gameState.uiSettings.worldSimulatorTurns ?? 30);
       setWorldSimulatorOnSceneBreak(gameState.uiSettings.worldSimulatorOnSceneBreak ?? true);
@@ -195,6 +197,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
           npcMindset,
           isLogicModeOn,
           isConscienceModeOn,
+          isFixRepetitionOn,
           isStrictInterpretationOn,
           worldSimulatorTurns,
           worldSimulatorOnSceneBreak,
@@ -216,7 +219,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
         destinyCompassMode, 
         isImageGenerationEnabled,
         worldSimulatorTurns,
-        worldSimulatorOnSceneBreak
+        worldSimulatorOnSceneBreak,
+        isFixRepetitionOn
     );
     setCustomAction(''); // Clear input after any action
     if (autoHideActionPanel) {
@@ -706,6 +710,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
         onNpcMindsetChange={setNpcMindset}
         isConscienceModeOn={isConscienceModeOn}
         onConscienceModeChange={setIsConscienceModeOn}
+        isFixRepetitionOn={isFixRepetitionOn}
+        onFixRepetitionChange={setIsFixRepetitionOn}
         isStrictInterpretationOn={isStrictInterpretationOn}
         onStrictInterpretationChange={setIsStrictInterpretationOn}
         destinyCompassMode={destinyCompassMode}
