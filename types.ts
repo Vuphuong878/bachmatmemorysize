@@ -175,6 +175,8 @@ export interface GameState {
   isConscienceModeOn: boolean;
   isFixRepetitionOn: boolean;
   isStrictInterpretationOn: boolean;
+  // Fix: Add isImageGenerationEnabled to allow persisting this setting in the save file.
+  isImageGenerationEnabled?: boolean;
   worldSimulatorTurns?: number;
   worldSimulatorOnSceneBreak?: boolean;
   };

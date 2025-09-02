@@ -397,7 +397,7 @@ export function useGameEngine(
         isImageGenerationEnabled: boolean,
         worldSimulatorTurns: number,
         worldSimulatorOnSceneBreak: boolean,
-        isFixRepetitionOn: boolean = false
+    isFixRepetitionOn: boolean
     ) => {
         if (!gameState) return;
         // Deep copy the state to prevent mutations from affecting the undo buffer.
@@ -537,6 +537,8 @@ export function useGameEngine(
                     isConscienceModeOn,
                     isFixRepetitionOn,
                     isStrictInterpretationOn,
+                    // Fix: Add isImageGenerationEnabled to the uiSettings object
+                    isImageGenerationEnabled,
                     worldSimulatorTurns,
                     worldSimulatorOnSceneBreak,
                 }
@@ -1102,7 +1104,13 @@ export function useGameEngine(
     const activateNoRepeatMode = () => {
         if (!gameState || gameState.history.length === 0) return;
         
-        // Get the settings from the settings object
+        // Fix: Get the settings from the last saved uiSettings in gameState
+        const uiSettings = gameState.uiSettings;
+        if (!uiSettings) {
+            console.warn("Cannot activate No Repeat Mode: uiSettings not found in gameState.");
+            return;
+        }
+
         const { 
             isLogicModeOn, 
             lustModeFlavor, 
@@ -1113,16 +1121,16 @@ export function useGameEngine(
             isImageGenerationEnabled,
             worldSimulatorTurns,
             worldSimulatorOnSceneBreak
-        } = settingsHook.settings;
+        } = uiSettings;
         
         // Get the last action from history
         const lastTurn = gameState.history[gameState.history.length - 1];
         if (!lastTurn || !lastTurn.playerAction) return;
         
-        // Enable No Repeat mode
+        // This state seems unused, but we'll leave it in.
         setIsNoRepeatModeOn(true);
         
-        // Resubmit the last action with current settings
+        // Resubmit the last action with current settings and fixing repetition.
         handlePlayerChoice(
             lastTurn.playerAction,
             isLogicModeOn,
@@ -1131,10 +1139,10 @@ export function useGameEngine(
             isConscienceModeOn,
             isStrictInterpretationOn,
             destinyCompassMode,
-            isImageGenerationEnabled,
-            worldSimulatorTurns,
-            worldSimulatorOnSceneBreak,
-            false // isFixRepetitionOn
+            isImageGenerationEnabled ?? false, // Default to false if undefined
+            worldSimulatorTurns ?? 30,
+            worldSimulatorOnSceneBreak ?? true,
+            uiSettings.isFixRepetitionOn ?? false // Cho phép người dùng điều chỉnh
         );
     };
 

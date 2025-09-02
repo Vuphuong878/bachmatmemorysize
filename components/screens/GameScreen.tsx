@@ -324,8 +324,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ onBackToMenu, initialData, sett
               )}
               <TokenCounter lastTurn={lastTurnTokenCount} total={totalTokenCount} />
               <RequestCounter count={totalRequests} />
-              <Button onClick={triggerSaveToFile} variant="compact" disabled={!isGameInitialized}>Lưu File</Button>
-              <Button onClick={() => setIsExitModalOpen(true)} variant="compact">Thoát</Button>
+              <Button onClick={triggerSaveToFile} variant="compact" disabled={!isGameInitialized} className="!border-none !py-1 !px-2 !text-xs normal-case tracking-normal sm:!py-1.5 sm:!px-4 sm:!text-sm sm:uppercase sm:tracking-wider">Lưu File</Button>
+              <Button onClick={() => setIsExitModalOpen(true)} variant="compact" className="!border-none !py-1 !px-2 !text-xs normal-case tracking-normal sm:!py-1.5 sm:!px-4 sm:!text-sm sm:uppercase sm:tracking-wider">Thoát</Button>
             </div>
           </div>
       </header>
